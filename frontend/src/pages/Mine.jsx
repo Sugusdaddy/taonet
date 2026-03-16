@@ -253,6 +253,7 @@ export default function Mine() {
             }));
             
             addLog('success', `Completed! Generated ${result.tokensGenerated} tokens in ${(result.processingTime/1000).toFixed(1)}s (+${earned} TAO)`);
+            addLog('proof', `Proof submitted to chain - view in Explorer`);
             
             // Clear current task after a moment
             setTimeout(() => {

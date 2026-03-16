@@ -349,6 +349,7 @@
 .log-error .log-msg { color: var(--red); }
 .log-task .log-msg { color: var(--blue); }
 .log-jackpot .log-msg { color: var(--gold); }
+.log-proof .log-msg { color: #a855f7; }
 
 /* Utilities */
 .mt-sm { margin-top: var(--space-sm); }

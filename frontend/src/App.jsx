@@ -12,6 +12,7 @@ import Tournaments from './pages/Tournaments';
 import Achievements from './pages/Achievements';
 import Referrals from './pages/Referrals';
 import Developers from './pages/Developers';
+import Explorer from './pages/Explorer';
 import './styles/index.css';
 
 export default function App() {
@@ -30,6 +31,7 @@ export default function App() {
           <Route path="/achievements" element={<Achievements />} />
           <Route path="/referrals" element={<Referrals />} />
           <Route path="/developers" element={<Developers />} />
+          <Route path="/explorer" element={<Explorer />} />
         </Routes>
         <Footer />
       </BrowserRouter>
