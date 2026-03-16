@@ -85,24 +85,27 @@ export default function Mine() {
           }, 1000);
         } 
         else if (msg.type === 'task') {
-          addLog('task', `Task received: ${msg.taskId?.substring(0, 8)}...`);
+          const taskId = msg.task?.id || msg.taskId;
+          const taskPrompt = msg.task?.prompt || msg.prompt || 'Processing...';
+          addLog('task', `Task received: ${taskId?.substring(0, 8)}... - ${taskPrompt.substring(0, 30)}`);
           
-          // Process task
+          // Process task (simulate AI inference)
           setTimeout(() => {
             ws.send(JSON.stringify({
-              type: 'task_result',
-              taskId: msg.taskId,
-              result: `Completed by ${miner.name}`,
-              responseTime: 800 + Math.random() * 500
+              type: 'task_response',
+              taskId: taskId,
+              response: `Completed by ${miner.name}: Result for "${taskPrompt.substring(0, 20)}..."`,
+              processingTime: 800 + Math.random() * 500
             }));
             
+            const earned = 10 + Math.floor(Math.random() * 5);
             setStats(s => ({ 
               ...s, 
               tasks: s.tasks + 1,
-              tokens: s.tokens + 10 + Math.floor(Math.random() * 5)
+              tokens: s.tokens + earned
             }));
-            addLog('success', `Task completed +${10 + Math.floor(Math.random() * 5)} tokens`);
-          }, 800);
+            addLog('success', `Task completed +${earned} tokens`);
+          }, 800 + Math.random() * 500);
         }
         else if (msg.type === 'jackpot') {
           addLog('jackpot', `JACKPOT! ${msg.jackpotType} - ${msg.multiplier}x multiplier!`);
