@@ -5,7 +5,7 @@ import api from '../api';
 import './Mine.css';
 
 export default function Mine() {
-  const { wallet, isConnected, connect, miner } = useWallet();
+  const { wallet, isConnected, connect, miner, register, refreshMiner } = useWallet();
   const { 
     isMining, startMining, stopMining, 
     currentTask, taskOutput, 
@@ -15,16 +15,12 @@ export default function Mine() {
   
   const [minerName, setMinerName] = useState('');
   const [registering, setRegistering] = useState(false);
-  const [isRegistered, setIsRegistered] = useState(false);
+  const [error, setError] = useState('');
   const logsRef = useRef(null);
 
   useEffect(() => {
     checkGPUSupport();
   }, []);
-
-  useEffect(() => {
-    if (miner) setIsRegistered(true);
-  }, [miner]);
 
   useEffect(() => {
     if (logsRef.current) {
@@ -35,16 +31,29 @@ export default function Mine() {
   const handleRegister = async () => {
     if (!minerName.trim()) return;
     setRegistering(true);
-    const result = await api.registerMiner(wallet, minerName);
-    if (result?.miner) {
-      setIsRegistered(true);
+    setError('');
+    try {
+      await register(minerName);
+    } catch (err) {
+      setError(err.message);
     }
     setRegistering(false);
   };
 
+  const handleStartMining = async () => {
+    setError('');
+    try {
+      // Refresh miner data before starting
+      await refreshMiner();
+      await startMining();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   const getStep = () => {
     if (!isConnected) return 1;
-    if (!isRegistered) return 2;
+    if (!miner) return 2;
     return 3;
   };
 
@@ -124,6 +133,11 @@ export default function Mine() {
               </div>
             )}
 
+            {/* Error message */}
+            {error && (
+              <div className="error-msg">{error}</div>
+            )}
+
             {/* Action Area */}
             <div className="setup-action">
               {step === 1 && (
@@ -166,7 +180,7 @@ export default function Mine() {
                     </button>
                   ) : (
                     <button 
-                      onClick={startMining} 
+                      onClick={handleStartMining} 
                       className="btn btn-primary btn-lg full-width"
                     >
                       Start Mining
