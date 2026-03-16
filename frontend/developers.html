@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Developer API - TaoNet</title>
+  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root { --green: #00ff41; --dark-green: #00cc33; --bg: #0a0a0a; --terminal-bg: #0d1117; --border: #1a3a1a; --gold: #ffd700; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg); color: var(--green); font-family: 'Share Tech Mono', monospace; min-height: 100vh; }
+    body::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: repeating-linear-gradient(0deg, rgba(0,0,0,0.15), rgba(0,0,0,0.15) 1px, transparent 1px, transparent 2px); pointer-events: none; z-index: 1000; }
+    .container { max-width: 1000px; margin: 0 auto; padding: 15px; }
+    header { border-bottom: 1px solid var(--border); padding: 15px 0; margin-bottom: 20px; }
+    .logo { font-family: 'VT323', monospace; font-size: 11px; line-height: 1.2; white-space: pre; text-shadow: 0 0 10px var(--green); overflow-x: auto; }
+    @media (max-width: 600px) { .logo { font-size: 8px; } }
+    nav { display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap; }
+    nav a { color: var(--green); text-decoration: none; padding: 8px 12px; border: 1px solid var(--border); transition: all 0.3s; font-size: 11px; }
+    nav a:hover, nav a.active { background: var(--green); color: var(--bg); }
+    
+    .card { background: var(--terminal-bg); border: 1px solid var(--border); border-radius: 5px; padding: 20px; margin-bottom: 15px; }
+    @media (max-width: 600px) { .card { padding: 15px; } }
+    .card-title { font-family: 'VT323', monospace; font-size: 20px; margin-bottom: 15px; color: var(--dark-green); }
+    .card-title::before { content: "> "; }
+    
+    code { background: var(--bg); padding: 2px 6px; border-radius: 3px; font-family: 'Share Tech Mono', monospace; font-size: 11px; }
+    pre { background: var(--bg); padding: 15px; border-radius: 5px; overflow-x: auto; margin: 12px 0; border: 1px solid var(--border); font-size: 11px; line-height: 1.5; }
+    
+    .btn { display: inline-block; padding: 10px 20px; border: 2px solid var(--green); color: var(--green); text-decoration: none; font-family: 'Share Tech Mono', monospace; text-transform: uppercase; transition: all 0.3s; cursor: pointer; background: transparent; font-size: 11px; }
+    .btn:hover { background: var(--green); color: var(--bg); }
+    .btn-small { padding: 5px 10px; font-size: 10px; }
+    .btn-danger { border-color: #ff4444; color: #ff4444; }
+    .btn-danger:hover { background: #ff4444; }
+    
+    .input-group { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+    .input-group input, .input-group select { flex: 1; min-width: 150px; background: var(--bg); border: 1px solid var(--border); padding: 10px; color: var(--green); font-family: 'Share Tech Mono', monospace; font-size: 12px; }
+    .input-group input:focus, .input-group select:focus { outline: none; border-color: var(--green); }
+    
+    .key-list { max-height: 300px; overflow-y: auto; }
+    .key-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid var(--border); gap: 10px; flex-wrap: wrap; }
+    .key-info { flex: 1; min-width: 200px; }
+    .key-id { font-family: 'VT323', monospace; font-size: 14px; }
+    .key-meta { font-size: 10px; color: var(--dark-green); margin-top: 3px; }
+    .key-status { padding: 2px 8px; border-radius: 3px; font-size: 9px; }
+    .key-status.active { background: rgba(0, 255, 65, 0.2); color: var(--green); }
+    .key-status.revoked { background: rgba(255, 68, 68, 0.2); color: #ff4444; }
+    
+    .endpoint { margin-bottom: 20px; }
+    .endpoint-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .method { padding: 3px 8px; border-radius: 3px; font-size: 10px; font-weight: bold; }
+    .method-get { background: rgba(0, 150, 255, 0.2); color: #0096ff; }
+    .method-post { background: rgba(0, 255, 65, 0.2); color: var(--green); }
+    .endpoint-path { font-family: 'VT323', monospace; font-size: 16px; }
+    .endpoint-desc { font-size: 11px; color: var(--dark-green); margin-bottom: 10px; }
+    
+    .secret-display { background: var(--bg); padding: 15px; border: 2px solid var(--gold); border-radius: 5px; margin: 15px 0; }
+    .secret-display h4 { color: var(--gold); margin-bottom: 10px; font-size: 12px; }
+    .secret-value { font-family: 'VT323', monospace; font-size: 14px; word-break: break-all; margin-bottom: 10px; }
+    .secret-warning { font-size: 10px; color: #ff4444; }
+    
+    .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .tab { padding: 10px 20px; border: 1px solid var(--border); background: transparent; color: var(--green); cursor: pointer; font-family: 'Share Tech Mono', monospace; font-size: 11px; }
+    .tab:hover, .tab.active { background: var(--green); color: var(--bg); }
+    
+    footer { border-top: 1px solid var(--border); padding: 25px 0; margin-top: 30px; text-align: center; color: var(--dark-green); font-size: 11px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+████████╗ █████╗  ██████╗ ███╗   ██╗███████╗████████╗
+╚══██╔══╝██╔══██╗██╔═══██╗████╗  ██║██╔════╝╚══██╔══╝
+   ██║   ███████║██║   ██║██╔██╗ ██║█████╗     ██║   
+   ██║   ██╔══██║██║   ██║██║╚██╗██║██╔══╝     ██║   
+   ██║   ██║  ██║╚██████╔╝██║ ╚████║███████╗   ██║   
+   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝   ╚═╝   
+      </div>
+      <nav>
+        <a href="index.html">[HOME]</a>
+        <a href="docs.html">[DOCS]</a>
+        <a href="developers.html" class="active">[DEVELOPERS]</a>
+        <a href="playground.html">[PLAYGROUND]</a>
+      </nav>
+    </header>
+
+    <!-- API Keys Management -->
+    <div class="card">
+      <div class="card-title">API KEYS</div>
+      <p style="color: var(--dark-green); margin-bottom: 15px; font-size: 12px;">Generate API keys to integrate TaoNet into your applications.</p>
+      
+      <div class="input-group">
+        <input type="text" id="ownerAddress" placeholder="Your wallet address">
+        <input type="text" id="keyName" placeholder="Key name (e.g., My App)">
+        <button class="btn" onclick="generateKey()">GENERATE KEY</button>
+      </div>
+      
+      <div id="newKeyDisplay" class="secret-display" style="display: none;">
+        <h4>NEW API KEY GENERATED</h4>
+        <div class="secret-value" id="newKeyValue">--</div>
+        <button class="btn btn-small" onclick="copyKey()">COPY</button>
+        <div class="secret-warning">Save this key now. It will not be shown again.</div>
+      </div>
+      
+      <div class="key-list" id="keyList">
+        <div style="text-align: center; padding: 30px; color: var(--dark-green);">Enter your wallet address and click "Generate Key" to create API keys</div>
+      </div>
+    </div>
+
+    <!-- Quick Start -->
+    <div class="card">
+      <div class="card-title">QUICK START</div>
+      
+      <h4 style="font-size: 14px; margin-bottom: 10px;">1. Get an API Key</h4>
+      <p style="font-size: 11px; color: var(--dark-green); margin-bottom: 15px;">Generate an API key above using your wallet address.</p>
+      
+      <h4 style="font-size: 14px; margin-bottom: 10px;">2. Make Authenticated Requests</h4>
+      <pre>curl -X GET "http://204.168.139.31/api/stats" \
+  -H "Authorization: Bearer YOUR_API_KEY"</pre>
+      
+      <h4 style="font-size: 14px; margin: 15px 0 10px;">3. Submit Tasks</h4>
+      <pre>curl -X POST "http://204.168.139.31/api/tasks/submit" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "text",
+    "prompt": "What is machine learning?"
+  }'</pre>
+    </div>
+
+    <!-- API Reference -->
+    <div class="card">
+      <div class="card-title">API REFERENCE</div>
+      
+      <div class="tabs">
+        <button class="tab active" data-section="tasks">Tasks</button>
+        <button class="tab" data-section="miners">Miners</button>
+        <button class="tab" data-section="stats">Stats</button>
+        <button class="tab" data-section="game">Gamification</button>
+      </div>
+      
+      <div id="apiSection-tasks">
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method method-post">POST</span>
+            <span class="endpoint-path">/api/tasks/submit</span>
+          </div>
+          <div class="endpoint-desc">Submit a new task to the network</div>
+          <pre>{
+  "type": "text|code|image|trading",
+  "prompt": "Your prompt here",
+  "parameters": {
+    "maxTokens": 2000,
+    "temperature": 0.7
+  }
+}</pre>
+        </div>
+        
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method method-get">GET</span>
+            <span class="endpoint-path">/api/tasks/:id</span>
+          </div>
+          <div class="endpoint-desc">Get task status and result</div>
+        </div>
+        
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method method-get">GET</span>
+            <span class="endpoint-path">/api/tasks/:id/result</span>
+          </div>
+          <div class="endpoint-desc">Get task result once completed</div>
+        </div>
+      </div>
+      
+      <div id="apiSection-miners" style="display: none;">
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method method-get">GET</span>
+            <span class="endpoint-path">/api/miners/leaderboard</span>
+          </div>
+          <div class="endpoint-desc">Get miner leaderboard</div>
+        </div>
+        
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method method-get">GET</span>
+            <span class="endpoint-path">/api/miners/:address</span>
+          </div>
+          <div class="endpoint-desc">Get miner profile</div>
+        </div>
+      </div>
+      
+      <div id="apiSection-stats" style="display: none;">
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method method-get">GET</span>
+            <span class="endpoint-path">/api/stats</span>
+          </div>
+          <div class="endpoint-desc">Get network statistics</div>
+        </div>
+        
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method method-get">GET</span>
+            <span class="endpoint-path">/api/analytics/snapshot</span>
+          </div>
+          <div class="endpoint-desc">Get detailed analytics snapshot</div>
+        </div>
+      </div>
+      
+      <div id="apiSection-game" style="display: none;">
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method method-get">GET</span>
+            <span class="endpoint-path">/api/game/:address/profile</span>
+          </div>
+          <div class="endpoint-desc">Get gamification profile for a miner</div>
+        </div>
+        
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method method-get">GET</span>
+            <span class="endpoint-path">/api/game/jackpots/active</span>
+          </div>
+          <div class="endpoint-desc">Get active jackpots</div>
+        </div>
+        
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method method-get">GET</span>
+            <span class="endpoint-path">/api/tournaments/active</span>
+          </div>
+          <div class="endpoint-desc">Get active tournaments</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rate Limits -->
+    <div class="card">
+      <div class="card-title">RATE LIMITS</div>
+      <div style="display: grid; gap: 10px;">
+        <div style="display: flex; justify-content: space-between; padding: 10px; background: var(--bg); border-radius: 5px;">
+          <span>Requests per minute</span>
+          <span style="color: var(--gold);">60</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 10px; background: var(--bg); border-radius: 5px;">
+          <span>Requests per day</span>
+          <span style="color: var(--gold);">10,000</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 10px; background: var(--bg); border-radius: 5px;">
+          <span>Max keys per wallet</span>
+          <span style="color: var(--gold);">5</span>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <p>TaoNet - Decentralized AI Inference Network</p>
+    </footer>
+  </div>
+
+  <script>
+    const API_URL = 'http://204.168.139.31';
+    let currentOwner = null;
+
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        document.querySelectorAll('[id^="apiSection-"]').forEach(s => s.style.display = 'none');
+        document.getElementById(`apiSection-${tab.dataset.section}`).style.display = 'block';
+      });
+    });
+
+    async function generateKey() {
+      const owner = document.getElementById('ownerAddress').value.trim();
+      const name = document.getElementById('keyName').value.trim();
+      
+      if (!owner || !name) {
+        alert('Please enter wallet address and key name');
+        return;
+      }
+      
+      try {
+        const res = await fetch(`${API_URL}/api/keys/generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ owner, name })
+        });
+        
+        const data = await res.json();
+        
+        if (data.success) {
+          document.getElementById('newKeyValue').textContent = data.secret;
+          document.getElementById('newKeyDisplay').style.display = 'block';
+          currentOwner = owner;
+          loadKeys();
+        } else {
+          alert(data.error || 'Failed to generate key');
+        }
+      } catch (error) {
+        alert('Failed to generate key');
+      }
+    }
+
+    async function loadKeys() {
+      if (!currentOwner) return;
+      
+      try {
+        const res = await fetch(`${API_URL}/api/keys/list/${currentOwner}`);
+        const data = await res.json();
+        
+        const list = document.getElementById('keyList');
+        
+        if (!data.keys || data.keys.length === 0) {
+          list.innerHTML = '<div style="text-align: center; padding: 30px; color: var(--dark-green);">No API keys</div>';
+          return;
+        }
+        
+        list.innerHTML = data.keys.map(k => `
+          <div class="key-item">
+            <div class="key-info">
+              <div class="key-id">${k.keyId}</div>
+              <div class="key-meta">${k.name} | ${k.usage.totalRequests} requests | Last: ${k.usage.lastUsed ? new Date(k.usage.lastUsed).toLocaleString() : 'Never'}</div>
+            </div>
+            <span class="key-status ${k.status}">${k.status}</span>
+            ${k.status === 'active' ? `<button class="btn btn-small btn-danger" onclick="revokeKey('${k.keyId}')">REVOKE</button>` : ''}
+          </div>
+        `).join('');
+      } catch (error) {
+        console.error('Failed to load keys:', error);
+      }
+    }
+
+    async function revokeKey(keyId) {
+      if (!confirm('Are you sure you want to revoke this key?')) return;
+      
+      try {
+        await fetch(`${API_URL}/api/keys/revoke/${keyId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ owner: currentOwner })
+        });
+        loadKeys();
+      } catch (error) {
+        alert('Failed to revoke key');
+      }
+    }
+
+    function copyKey() {
+      const key = document.getElementById('newKeyValue').textContent;
+      navigator.clipboard.writeText(key);
+      alert('API key copied to clipboard');
+    }
+
+    // Auto-load keys if address is entered
+    document.getElementById('ownerAddress').addEventListener('change', (e) => {
+      currentOwner = e.target.value.trim();
+      if (currentOwner) loadKeys();
+    });
+  </script>
+</body>
+</html>

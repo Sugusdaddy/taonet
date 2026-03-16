@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Achievements - TaoNet</title>
+  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root { --green: #00ff41; --dark-green: #00cc33; --bg: #0a0a0a; --terminal-bg: #0d1117; --border: #1a3a1a; --gold: #ffd700; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg); color: var(--green); font-family: 'Share Tech Mono', monospace; min-height: 100vh; }
+    body::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: repeating-linear-gradient(0deg, rgba(0,0,0,0.15), rgba(0,0,0,0.15) 1px, transparent 1px, transparent 2px); pointer-events: none; z-index: 1000; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 15px; }
+    header { border-bottom: 1px solid var(--border); padding: 15px 0; margin-bottom: 20px; }
+    .logo { font-family: 'VT323', monospace; font-size: 11px; line-height: 1.2; white-space: pre; text-shadow: 0 0 10px var(--green); overflow-x: auto; }
+    @media (max-width: 600px) { .logo { font-size: 8px; } }
+    nav { display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap; }
+    nav a { color: var(--green); text-decoration: none; padding: 8px 12px; border: 1px solid var(--border); transition: all 0.3s; font-size: 11px; }
+    nav a:hover, nav a.active { background: var(--green); color: var(--bg); }
+    
+    .terminal { background: var(--terminal-bg); border: 1px solid var(--border); border-radius: 5px; padding: 20px; margin-bottom: 15px; }
+    @media (max-width: 600px) { .terminal { padding: 15px; } }
+    .section-title { font-family: 'VT323', monospace; font-size: 22px; margin-bottom: 15px; color: var(--dark-green); }
+    
+    /* Category Tabs */
+    .category-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+    .category-tab { background: var(--bg); border: 1px solid var(--border); padding: 8px 12px; cursor: pointer; transition: all 0.3s; font-size: 11px; }
+    .category-tab:hover, .category-tab.active { background: var(--green); color: var(--bg); }
+    
+    /* Achievement Grid */
+    .achievement-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+    @media (max-width: 600px) { .achievement-grid { grid-template-columns: 1fr; } }
+    .achievement-card { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 15px; display: flex; gap: 12px; align-items: flex-start; transition: all 0.3s; }
+    .achievement-card:hover { border-color: var(--green); transform: translateY(-2px); }
+    .achievement-card.unlocked { border-color: var(--gold); background: rgba(255, 215, 0, 0.05); }
+    .achievement-card.locked { opacity: 0.6; }
+    .achievement-icon { font-family: 'VT323', monospace; font-size: 28px; flex-shrink: 0; color: var(--gold); }
+    .achievement-card.locked .achievement-icon { color: #444; }
+    .achievement-info { flex: 1; min-width: 0; }
+    .achievement-name { font-size: 13px; font-weight: bold; margin-bottom: 4px; }
+    .achievement-card.unlocked .achievement-name { color: var(--gold); }
+    .achievement-desc { font-size: 10px; color: var(--dark-green); margin-bottom: 6px; line-height: 1.4; }
+    .achievement-reward { font-size: 10px; display: flex; align-items: center; gap: 5px; }
+    .achievement-reward span { color: var(--green); font-family: 'VT323', monospace; font-size: 14px; }
+    .achievement-badge { font-size: 9px; padding: 2px 6px; border-radius: 3px; background: rgba(255, 215, 0, 0.2); color: var(--gold); }
+    
+    /* Progress Bar */
+    .progress-bar-container { margin: 20px 0; }
+    .progress-label { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 12px; }
+    .progress-bar { background: var(--bg); height: 16px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--gold)); transition: width 0.5s; }
+    .progress-text { font-family: 'VT323', monospace; font-size: 16px; }
+    
+    /* Stats */
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+    @media (max-width: 700px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+    .stat-box { background: var(--bg); border: 1px solid var(--border); padding: 15px; text-align: center; border-radius: 5px; }
+    .stat-value { font-family: 'VT323', monospace; font-size: 28px; color: var(--green); text-shadow: 0 0 10px var(--green); }
+    @media (max-width: 600px) { .stat-value { font-size: 24px; } }
+    .stat-label { font-size: 9px; color: var(--dark-green); text-transform: uppercase; }
+    
+    footer { border-top: 1px solid var(--border); padding: 25px 0; margin-top: 30px; text-align: center; color: var(--dark-green); font-size: 11px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+████████╗ █████╗  ██████╗ ███╗   ██╗███████╗████████╗
+╚══██╔══╝██╔══██╗██╔═══██╗████╗  ██║██╔════╝╚══██╔══╝
+   ██║   ███████║██║   ██║██╔██╗ ██║█████╗     ██║   
+   ██║   ██╔══██║██║   ██║██║╚██╗██║██╔══╝     ██║   
+   ██║   ██║  ██║╚██████╔╝██║ ╚████║███████╗   ██║   
+   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝   ╚═╝   
+      </div>
+      <nav>
+        <a href="index.html">[HOME]</a>
+        <a href="mine.html">[MINE]</a>
+        <a href="leaderboard.html">[LEADERBOARD]</a>
+        <a href="rewards.html">[REWARDS]</a>
+        <a href="tournaments.html">[TOURNAMENTS]</a>
+        <a href="achievements.html" class="active">[ACHIEVEMENTS]</a>
+      </nav>
+    </header>
+
+    <!-- Overall Progress -->
+    <div class="terminal">
+      <h2 style="font-family: 'VT323', monospace; font-size: 28px; margin-bottom: 20px;">ACHIEVEMENTS</h2>
+      
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-value" id="unlockedCount">0</div>
+          <div class="stat-label">Unlocked</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="totalCount">30</div>
+          <div class="stat-label">Total</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="totalXp">0</div>
+          <div class="stat-label">Total XP</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="multiplierBonus">1.0x</div>
+          <div class="stat-label">Achievement Bonus</div>
+        </div>
+      </div>
+      
+      <div class="progress-bar-container">
+        <div class="progress-label">
+          <span>Completion Progress</span>
+          <span class="progress-text" id="progressPercent">0%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category Filter -->
+    <div class="category-tabs" id="categoryTabs">
+      <div class="category-tab active" data-category="all">ALL</div>
+    </div>
+
+    <!-- Achievements Grid -->
+    <div class="achievement-grid" id="achievementGrid">
+      <div style="text-align: center; padding: 30px; color: var(--dark-green); grid-column: 1 / -1;">Loading achievements...</div>
+    </div>
+
+    <footer>
+      <p>TaoNet - Decentralized AI Inference Network</p>
+    </footer>
+  </div>
+
+  <script>
+    const API_URL = 'http://204.168.139.31';
+    let allAchievements = {};
+    let currentCategory = 'all';
+    
+    // Achievement icons (no emojis)
+    const icons = {
+      'first_task': '[>]',
+      'verified_miner': '[V]',
+      'profile_complete': '[P]',
+      'task_10': '[10]',
+      'task_100': '[100]',
+      'task_1000': '[1K]',
+      'streak_7': '[7D]',
+      'streak_30': '[30D]',
+      'streak_100': '[100D]',
+      'quality_master': '[Q]',
+      'perfect_10': '[10*]',
+      'five_star': '[5*]',
+      'speed_demon': '[<1s]',
+      'lightning': '[<500]',
+      'instant': '[<100]',
+      'mini_winner': '[M]',
+      'regular_winner': '[R]',
+      'mega_winner': '[MG]',
+      'networker': '[N1]',
+      'influencer': '[N10]',
+      'network_king': '[N100]',
+      'silver_holder': '[II]',
+      'gold_holder': '[III]',
+      'diamond_holder': '[V]',
+      'early_adopter': '[EA]',
+      'night_owl': '[NO]',
+      'weekend_warrior': '[WW]',
+      'level_5': '[L5]',
+      'level_10': '[L10]',
+      'level_25': '[L25]'
+    };
+
+    async function loadAchievements() {
+      try {
+        const response = await fetch(`${API_URL}/api/game/achievements`);
+        const data = await response.json();
+        
+        allAchievements = data.byCategory;
+        
+        document.getElementById('totalCount').textContent = data.total;
+        
+        const tabs = document.getElementById('categoryTabs');
+        const categories = Object.keys(data.byCategory);
+        
+        tabs.innerHTML = `<div class="category-tab active" data-category="all">ALL (${data.total})</div>` +
+          categories.map(cat => {
+            const count = data.byCategory[cat].length;
+            return `<div class="category-tab" data-category="${cat}">${cat.toUpperCase()} (${count})</div>`;
+          }).join('');
+        
+        tabs.querySelectorAll('.category-tab').forEach(tab => {
+          tab.addEventListener('click', () => {
+            document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            currentCategory = tab.dataset.category;
+            renderAchievements();
+          });
+        });
+        
+        renderAchievements();
+      } catch (error) {
+        console.error('Failed to load achievements:', error);
+      }
+    }
+
+    function renderAchievements() {
+      const grid = document.getElementById('achievementGrid');
+      let achievements = [];
+      
+      if (currentCategory === 'all') {
+        Object.values(allAchievements).forEach(arr => {
+          achievements = achievements.concat(arr);
+        });
+      } else {
+        achievements = allAchievements[currentCategory] || [];
+      }
+      
+      let totalXp = 0;
+      achievements.forEach(a => totalXp += a.xpReward);
+      
+      grid.innerHTML = achievements.map(a => {
+        const isUnlocked = a.unlocked;
+        const icon = icons[a.id] || '[?]';
+        
+        return `
+          <div class="achievement-card ${isUnlocked ? 'unlocked' : 'locked'}">
+            <div class="achievement-icon">${icon}</div>
+            <div class="achievement-info">
+              <div class="achievement-name">${a.name}</div>
+              <div class="achievement-desc">${a.description}</div>
+              <div class="achievement-reward">
+                XP Reward: <span>+${a.xpReward}</span>
+                ${isUnlocked ? '<span class="achievement-badge">UNLOCKED</span>' : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function loadPersonalProgress(address) {
+      try {
+        const response = await fetch(`${API_URL}/api/game/${address}/achievements`);
+        const data = await response.json();
+        
+        document.getElementById('unlockedCount').textContent = data.unlocked;
+        document.getElementById('progressPercent').textContent = `${Math.round(data.unlocked / data.total * 100)}%`;
+        document.getElementById('progressFill').style.width = `${data.unlocked / data.total * 100}%`;
+        
+        const mult = (1 + data.unlocked * 0.01).toFixed(2);
+        document.getElementById('multiplierBonus').textContent = `${mult}x`;
+        
+        allAchievements = data.byCategory;
+        renderAchievements();
+      } catch (error) {
+        console.error('Failed to load personal progress:', error);
+      }
+    }
+
+    loadAchievements();
+    
+    const savedAddress = localStorage.getItem('taonet_address');
+    if (savedAddress) {
+      loadPersonalProgress(savedAddress);
+    }
+  </script>
+</body>
+</html>

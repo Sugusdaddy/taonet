@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Referrals - TaoNet</title>
+  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js"></script>
+  <style>
+    :root { --green: #00ff41; --dark-green: #00cc33; --bg: #0a0a0a; --terminal-bg: #0d1117; --border: #1a3a1a; --gold: #ffd700; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg); color: var(--green); font-family: 'Share Tech Mono', monospace; min-height: 100vh; }
+    body::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: repeating-linear-gradient(0deg, rgba(0,0,0,0.15), rgba(0,0,0,0.15) 1px, transparent 1px, transparent 2px); pointer-events: none; z-index: 1000; }
+    .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+    header { border-bottom: 1px solid var(--border); padding: 20px 0; margin-bottom: 30px; }
+    .logo { font-family: 'VT323', monospace; font-size: 14px; line-height: 1.2; white-space: pre; text-shadow: 0 0 10px var(--green); }
+    nav { display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap; }
+    nav a { color: var(--green); text-decoration: none; padding: 5px 15px; border: 1px solid var(--border); transition: all 0.3s; font-size: 12px; }
+    nav a:hover, nav a.active { background: var(--green); color: var(--bg); }
+    
+    .terminal { background: var(--terminal-bg); border: 1px solid var(--border); border-radius: 5px; padding: 25px; margin-bottom: 20px; }
+    .section-title { font-family: 'VT323', monospace; font-size: 28px; margin-bottom: 15px; }
+    
+    .btn { display: inline-block; padding: 12px 30px; border: 2px solid var(--green); color: var(--green); text-decoration: none; font-family: 'Share Tech Mono', monospace; text-transform: uppercase; letter-spacing: 2px; transition: all 0.3s; cursor: pointer; background: transparent; font-size: 14px; }
+    .btn:hover { background: var(--green); color: var(--bg); }
+    .btn.gold { border-color: var(--gold); color: var(--gold); }
+    .btn.gold:hover { background: var(--gold); color: var(--bg); }
+    
+    /* Referral Box */
+    .referral-box { background: var(--bg); border: 2px solid var(--gold); border-radius: 10px; padding: 30px; text-align: center; margin: 30px 0; }
+    .referral-code { font-family: 'VT323', monospace; font-size: 48px; color: var(--gold); text-shadow: 0 0 20px var(--gold); letter-spacing: 5px; margin: 20px 0; }
+    .referral-link { background: var(--terminal-bg); padding: 15px; border-radius: 5px; margin: 20px 0; word-break: break-all; font-size: 12px; }
+    
+    /* Stats Grid */
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 30px 0; }
+    @media (max-width: 600px) { .stats-grid { grid-template-columns: 1fr; } }
+    .stat-box { background: var(--bg); border: 1px solid var(--border); padding: 25px; text-align: center; border-radius: 5px; }
+    .stat-value { font-family: 'VT323', monospace; font-size: 42px; color: var(--green); text-shadow: 0 0 15px var(--green); }
+    .stat-label { font-size: 11px; color: var(--dark-green); text-transform: uppercase; margin-top: 5px; }
+    
+    /* How it works */
+    .step-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    @media (max-width: 700px) { .step-grid { grid-template-columns: 1fr; } }
+    .step-card { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 25px; text-align: center; }
+    .step-number { font-family: 'VT323', monospace; font-size: 48px; color: var(--gold); margin-bottom: 10px; }
+    .step-title { font-size: 14px; margin-bottom: 10px; }
+    .step-desc { font-size: 12px; color: var(--dark-green); }
+    
+    /* Leaderboard */
+    .referral-leaderboard { max-height: 300px; overflow-y: auto; }
+    .referral-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .referral-rank { font-family: 'VT323', monospace; font-size: 24px; color: var(--gold); width: 40px; }
+    .referral-address { font-size: 12px; flex: 1; }
+    .referral-count { font-family: 'VT323', monospace; font-size: 20px; }
+    
+    /* Input for referral code */
+    .input-group { display: flex; gap: 10px; margin: 20px 0; }
+    .input-group input { flex: 1; background: var(--bg); border: 1px solid var(--border); padding: 12px; color: var(--green); font-family: 'Share Tech Mono', monospace; font-size: 14px; }
+    .input-group input:focus { outline: none; border-color: var(--green); }
+    
+    .not-connected { text-align: center; padding: 60px 20px; }
+    .not-connected h2 { margin-bottom: 20px; }
+    .not-connected p { color: var(--dark-green); margin-bottom: 30px; }
+    
+    footer { border-top: 1px solid var(--border); padding: 30px 0; margin-top: 50px; text-align: center; color: var(--dark-green); font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+████████╗ █████╗  ██████╗ ███╗   ██╗███████╗████████╗
+╚══██╔══╝██╔══██╗██╔═══██╗████╗  ██║██╔════╝╚══██╔══╝
+   ██║   ███████║██║   ██║██╔██╗ ██║█████╗     ██║   
+   ██║   ██╔══██║██║   ██║██║╚██╗██║██╔══╝     ██║   
+   ██║   ██║  ██║╚██████╔╝██║ ╚████║███████╗   ██║   
+   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝   ╚═╝   
+      </div>
+      <nav>
+        <a href="index.html">[HOME]</a>
+        <a href="mine.html">[MINE]</a>
+        <a href="leaderboard.html">[LEADERBOARD]</a>
+        <a href="rewards.html">[REWARDS]</a>
+        <a href="referrals.html" class="active">[REFERRALS]</a>
+        <a href="achievements.html">[ACHIEVEMENTS]</a>
+      </nav>
+    </header>
+
+    <!-- Not Connected View -->
+    <div id="notConnected" class="terminal">
+      <div class="not-connected">
+        <h2>🤝 REFERRAL PROGRAM</h2>
+        <p>Connect your wallet to get your unique referral code and start earning!</p>
+        <button class="btn gold" onclick="connectWallet()">CONNECT WALLET</button>
+      </div>
+    </div>
+
+    <!-- Connected View -->
+    <div id="connectedView" style="display: none;">
+      
+      <!-- Your Referral Code -->
+      <div class="terminal">
+        <h2 class="section-title">🔗 YOUR REFERRAL CODE</h2>
+        <div class="referral-box">
+          <div style="color: var(--dark-green); font-size: 12px;">Share this code with friends:</div>
+          <div class="referral-code" id="referralCode">------</div>
+          <div class="referral-link" id="referralLink">https://taonet.fun/mine?ref=------</div>
+          <button class="btn gold" onclick="copyLink()">COPY LINK</button>
+        </div>
+        
+        <div class="stats-grid">
+          <div class="stat-box">
+            <div class="stat-value" id="referralCount">0</div>
+            <div class="stat-label">Miners Referred</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-value" id="referralEarnings">0</div>
+            <div class="stat-label">Tokens Earned</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-value">10%</div>
+            <div class="stat-label">Commission Rate</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Have a referral code? -->
+      <div class="terminal">
+        <h2 class="section-title">🎁 HAVE A REFERRAL CODE?</h2>
+        <p style="color: var(--dark-green); margin-bottom: 15px;">Enter a friend's code to get a welcome bonus!</p>
+        <div class="input-group">
+          <input type="text" id="inputCode" placeholder="Enter referral code..." maxlength="12">
+          <button class="btn" onclick="useReferralCode()">APPLY</button>
+        </div>
+        <div id="referralStatus" style="margin-top: 10px; font-size: 12px;"></div>
+      </div>
+      
+      <!-- How it works -->
+      <div class="terminal">
+        <h2 class="section-title">📖 HOW IT WORKS</h2>
+        <div class="step-grid">
+          <div class="step-card">
+            <div class="step-number">1</div>
+            <div class="step-title">SHARE YOUR CODE</div>
+            <div class="step-desc">Send your unique referral code or link to friends</div>
+          </div>
+          <div class="step-card">
+            <div class="step-number">2</div>
+            <div class="step-title">THEY JOIN & MINE</div>
+            <div class="step-desc">When they start mining with your code, you both get bonuses</div>
+          </div>
+          <div class="step-card">
+            <div class="step-number">3</div>
+            <div class="step-title">EARN FOREVER</div>
+            <div class="step-desc">Get 10% of their mining rewards automatically</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rewards breakdown -->
+      <div class="terminal">
+        <h2 class="section-title">💰 REFERRAL REWARDS</h2>
+        <div style="display: grid; gap: 15px;">
+          <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border);">
+            <span>New user bonus (both)</span>
+            <span style="color: var(--gold);">0.5 tokens + 100 XP</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border);">
+            <span>Ongoing commission</span>
+            <span style="color: var(--gold);">10% of referral's rewards</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border);">
+            <span>🤝 Networker achievement (1 referral)</span>
+            <span style="color: var(--gold);">+200 XP</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border);">
+            <span>📣 Influencer achievement (10 referrals)</span>
+            <span style="color: var(--gold);">+1000 XP</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 10px 0;">
+            <span>👑 Network King achievement (100 referrals)</span>
+            <span style="color: var(--gold);">+5000 XP</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <p>TaoNet - Share & Earn Together 🤝</p>
+    </footer>
+  </div>
+
+  <script>
+    const API_URL = 'http://204.168.139.31';
+    let connectedAddress = null;
+
+    // Check for existing connection
+    window.onload = () => {
+      const saved = localStorage.getItem('taonet_address');
+      if (saved) {
+        connectedAddress = saved;
+        showConnectedView();
+        loadReferralData();
+      }
+      
+      // Check for ref parameter in URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const refCode = urlParams.get('ref');
+      if (refCode) {
+        document.getElementById('inputCode').value = refCode;
+      }
+    };
+
+    async function connectWallet() {
+      if (typeof window.ethereum === 'undefined') {
+        alert('Please install MetaMask or another Web3 wallet');
+        return;
+      }
+
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        connectedAddress = accounts[0].toLowerCase();
+        localStorage.setItem('taonet_address', connectedAddress);
+        showConnectedView();
+        loadReferralData();
+      } catch (error) {
+        console.error('Connection failed:', error);
+        alert('Failed to connect wallet');
+      }
+    }
+
+    function showConnectedView() {
+      document.getElementById('notConnected').style.display = 'none';
+      document.getElementById('connectedView').style.display = 'block';
+    }
+
+    async function loadReferralData() {
+      try {
+        // Get or generate referral code
+        const response = await fetch(`${API_URL}/api/game/${connectedAddress}/referral-code`, {
+          method: 'POST'
+        });
+        const data = await response.json();
+        
+        document.getElementById('referralCode').textContent = data.referralCode;
+        document.getElementById('referralLink').textContent = data.referralLink;
+        
+        // Get profile for stats
+        const profileRes = await fetch(`${API_URL}/api/game/${connectedAddress}/profile`);
+        const profile = await profileRes.json();
+        
+        document.getElementById('referralCount').textContent = profile.referralCount || 0;
+        document.getElementById('referralEarnings').textContent = 
+          (Number(profile.referralEarnings || 0) / 1e18).toFixed(2);
+      } catch (error) {
+        console.error('Failed to load referral data:', error);
+      }
+    }
+
+    function copyLink() {
+      const link = document.getElementById('referralLink').textContent;
+      navigator.clipboard.writeText(link);
+      alert('Referral link copied!');
+    }
+
+    async function useReferralCode() {
+      const code = document.getElementById('inputCode').value.trim();
+      if (!code) {
+        alert('Please enter a referral code');
+        return;
+      }
+      
+      if (!connectedAddress) {
+        alert('Please connect your wallet first');
+        return;
+      }
+      
+      try {
+        const response = await fetch(`${API_URL}/api/game/${connectedAddress}/use-referral`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ referralCode: code })
+        });
+        
+        const data = await response.json();
+        const status = document.getElementById('referralStatus');
+        
+        if (data.success) {
+          status.innerHTML = `<span style="color: var(--green);">✅ Success! You received ${(Number(data.bonusAmount) / 1e18).toFixed(2)} tokens + ${data.xpEarned} XP</span>`;
+        } else {
+          status.innerHTML = `<span style="color: #ff4444;">❌ ${data.error}</span>`;
+        }
+      } catch (error) {
+        console.error('Failed to use referral code:', error);
+        document.getElementById('referralStatus').innerHTML = 
+          '<span style="color: #ff4444;">❌ Failed to apply code</span>';
+      }
+    }
+  </script>
+</body>
+</html>

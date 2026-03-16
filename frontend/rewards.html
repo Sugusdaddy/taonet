@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rewards - TaoNet</title>
+  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root { --green: #00ff41; --dark-green: #00cc33; --bg: #0a0a0a; --terminal-bg: #0d1117; --border: #1a3a1a; --gold: #ffd700; --purple: #9966ff; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg); color: var(--green); font-family: 'Share Tech Mono', monospace; min-height: 100vh; }
+    body::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: repeating-linear-gradient(0deg, rgba(0,0,0,0.15), rgba(0,0,0,0.15) 1px, transparent 1px, transparent 2px); pointer-events: none; z-index: 1000; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 15px; }
+    header { border-bottom: 1px solid var(--border); padding: 15px 0; margin-bottom: 20px; }
+    .logo { font-family: 'VT323', monospace; font-size: 11px; line-height: 1.2; white-space: pre; text-shadow: 0 0 10px var(--green); overflow-x: auto; }
+    @media (max-width: 600px) { .logo { font-size: 8px; } }
+    nav { display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap; }
+    nav a { color: var(--green); text-decoration: none; padding: 8px 12px; border: 1px solid var(--border); transition: all 0.3s; font-size: 11px; }
+    nav a:hover, nav a.active { background: var(--green); color: var(--bg); }
+    
+    .terminal { background: var(--terminal-bg); border: 1px solid var(--border); border-radius: 5px; padding: 20px; margin-bottom: 15px; }
+    @media (max-width: 600px) { .terminal { padding: 15px; } }
+    .section-title { font-family: 'VT323', monospace; font-size: 22px; margin-bottom: 15px; }
+    .section-title::before { content: "> "; color: var(--dark-green); }
+    
+    /* Jackpot Cards */
+    .jackpot-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; }
+    @media (max-width: 500px) { .jackpot-grid { grid-template-columns: 1fr; } }
+    .jackpot-card { background: var(--terminal-bg); border: 2px solid var(--border); border-radius: 10px; padding: 20px; text-align: center; position: relative; overflow: hidden; transition: all 0.3s; }
+    .jackpot-card:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0, 255, 65, 0.2); }
+    .jackpot-card.mini { border-color: var(--green); }
+    .jackpot-card.regular { border-color: #0096ff; }
+    .jackpot-card.mega { border-color: var(--gold); }
+    .jackpot-card.ultra { border-color: var(--purple); }
+    .jackpot-type { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
+    .jackpot-card.mini .jackpot-type { color: var(--green); }
+    .jackpot-card.regular .jackpot-type { color: #0096ff; }
+    .jackpot-card.mega .jackpot-type { color: var(--gold); }
+    .jackpot-card.ultra .jackpot-type { color: var(--purple); }
+    .jackpot-multiplier { font-family: 'VT323', monospace; font-size: 52px; margin: 10px 0; }
+    @media (max-width: 600px) { .jackpot-multiplier { font-size: 42px; } }
+    .jackpot-card.mini .jackpot-multiplier { color: var(--green); text-shadow: 0 0 20px var(--green); }
+    .jackpot-card.regular .jackpot-multiplier { color: #0096ff; text-shadow: 0 0 20px #0096ff; }
+    .jackpot-card.mega .jackpot-multiplier { color: var(--gold); text-shadow: 0 0 20px var(--gold); }
+    .jackpot-card.ultra .jackpot-multiplier { color: var(--purple); text-shadow: 0 0 20px var(--purple); }
+    .jackpot-progress { background: rgba(255,255,255,0.1); height: 6px; border-radius: 3px; margin: 12px 0; overflow: hidden; }
+    .jackpot-progress-bar { height: 100%; border-radius: 3px; transition: width 0.5s; }
+    .jackpot-card.mini .jackpot-progress-bar { background: var(--green); }
+    .jackpot-card.regular .jackpot-progress-bar { background: #0096ff; }
+    .jackpot-card.mega .jackpot-progress-bar { background: var(--gold); }
+    .jackpot-card.ultra .jackpot-progress-bar { background: var(--purple); }
+    .jackpot-tasks { font-size: 11px; color: var(--dark-green); }
+    .jackpot-prize { font-size: 12px; margin-top: 8px; }
+    
+    /* Staking Tiers */
+    .tier-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+    @media (max-width: 900px) { .tier-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 500px) { .tier-grid { grid-template-columns: repeat(2, 1fr); } }
+    .tier-card { background: var(--terminal-bg); border: 1px solid var(--border); border-radius: 8px; padding: 15px; text-align: center; }
+    .tier-card.bronze { border-color: #cd7f32; }
+    .tier-card.silver { border-color: #c0c0c0; }
+    .tier-card.gold { border-color: var(--gold); }
+    .tier-card.platinum { border-color: #e5e4e2; }
+    .tier-card.diamond { border-color: #b9f2ff; }
+    .tier-icon { font-family: 'VT323', monospace; font-size: 28px; margin-bottom: 8px; }
+    .tier-card.bronze .tier-icon { color: #cd7f32; }
+    .tier-card.silver .tier-icon { color: #c0c0c0; }
+    .tier-card.gold .tier-icon { color: var(--gold); }
+    .tier-card.platinum .tier-icon { color: #e5e4e2; }
+    .tier-card.diamond .tier-icon { color: #b9f2ff; }
+    .tier-name { font-size: 12px; font-weight: bold; margin-bottom: 5px; }
+    .tier-card.bronze .tier-name { color: #cd7f32; }
+    .tier-card.silver .tier-name { color: #c0c0c0; }
+    .tier-card.gold .tier-name { color: var(--gold); }
+    .tier-card.platinum .tier-name { color: #e5e4e2; }
+    .tier-card.diamond .tier-name { color: #b9f2ff; }
+    .tier-requirement { font-size: 10px; color: var(--dark-green); margin-bottom: 8px; }
+    .tier-multiplier { font-family: 'VT323', monospace; font-size: 24px; }
+    
+    /* Recent Winners */
+    .winner-list { max-height: 300px; overflow-y: auto; }
+    .winner-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 8px; }
+    .winner-address { font-size: 11px; }
+    .winner-prize { font-family: 'VT323', monospace; font-size: 16px; }
+    .winner-type { font-size: 9px; padding: 2px 6px; border-radius: 3px; }
+    .winner-type.mini { background: rgba(0, 255, 65, 0.2); color: var(--green); }
+    .winner-type.regular { background: rgba(0, 150, 255, 0.2); color: #0096ff; }
+    .winner-type.mega { background: rgba(255, 215, 0, 0.2); color: var(--gold); }
+    .winner-type.ultra { background: rgba(153, 102, 255, 0.2); color: var(--purple); }
+    
+    /* Multiplier Calculator */
+    .calc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; }
+    .calc-item { background: var(--bg); border: 1px solid var(--border); padding: 12px; text-align: center; border-radius: 5px; }
+    .calc-label { font-size: 10px; color: var(--dark-green); margin-bottom: 5px; }
+    .calc-value { font-family: 'VT323', monospace; font-size: 20px; }
+    .calc-total { background: rgba(0, 255, 65, 0.1); border-color: var(--green); }
+    .calc-total .calc-value { font-size: 28px; color: var(--green); text-shadow: 0 0 15px var(--green); }
+    
+    footer { border-top: 1px solid var(--border); padding: 25px 0; margin-top: 30px; text-align: center; color: var(--dark-green); font-size: 11px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+████████╗ █████╗  ██████╗ ███╗   ██╗███████╗████████╗
+╚══██╔══╝██╔══██╗██╔═══██╗████╗  ██║██╔════╝╚══██╔══╝
+   ██║   ███████║██║   ██║██╔██╗ ██║█████╗     ██║   
+   ██║   ██╔══██║██║   ██║██║╚██╗██║██╔══╝     ██║   
+   ██║   ██║  ██║╚██████╔╝██║ ╚████║███████╗   ██║   
+   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝   ╚═╝   
+      </div>
+      <nav>
+        <a href="index.html">[HOME]</a>
+        <a href="mine.html">[MINE]</a>
+        <a href="leaderboard.html">[LEADERBOARD]</a>
+        <a href="rewards.html" class="active">[REWARDS]</a>
+        <a href="tournaments.html">[TOURNAMENTS]</a>
+        <a href="achievements.html">[ACHIEVEMENTS]</a>
+      </nav>
+    </header>
+
+    <!-- Jackpots Section -->
+    <div class="terminal">
+      <h2 class="section-title">ACTIVE JACKPOTS</h2>
+      <p style="color: var(--dark-green); margin-bottom: 15px; font-size: 12px;">Every task you complete enters you into the jackpot pool. The more you mine, the higher your chances.</p>
+      
+      <div class="jackpot-grid" id="jackpotGrid">
+        <div style="text-align: center; padding: 30px; color: var(--dark-green);">Loading jackpots...</div>
+      </div>
+    </div>
+
+    <!-- Staking Tiers -->
+    <div class="terminal">
+      <h2 class="section-title">STAKING TIERS</h2>
+      <p style="color: var(--dark-green); margin-bottom: 15px; font-size: 12px;">Hold more tokens = Higher multiplier on ALL rewards</p>
+      
+      <div class="tier-grid">
+        <div class="tier-card bronze">
+          <div class="tier-icon">[I]</div>
+          <div class="tier-name">BRONZE</div>
+          <div class="tier-requirement">0+ tokens</div>
+          <div class="tier-multiplier">1.0x</div>
+        </div>
+        <div class="tier-card silver">
+          <div class="tier-icon">[II]</div>
+          <div class="tier-name">SILVER</div>
+          <div class="tier-requirement">10,000+ tokens</div>
+          <div class="tier-multiplier">1.25x</div>
+        </div>
+        <div class="tier-card gold">
+          <div class="tier-icon">[III]</div>
+          <div class="tier-name">GOLD</div>
+          <div class="tier-requirement">100,000+ tokens</div>
+          <div class="tier-multiplier">1.5x</div>
+        </div>
+        <div class="tier-card platinum">
+          <div class="tier-icon">[IV]</div>
+          <div class="tier-name">PLATINUM</div>
+          <div class="tier-requirement">1,000,000+ tokens</div>
+          <div class="tier-multiplier">2.0x</div>
+        </div>
+        <div class="tier-card diamond">
+          <div class="tier-icon">[V]</div>
+          <div class="tier-name">DIAMOND</div>
+          <div class="tier-requirement">10,000,000+ tokens</div>
+          <div class="tier-multiplier">3.0x</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Multiplier Breakdown -->
+    <div class="terminal">
+      <h2 class="section-title">MULTIPLIER STACKING</h2>
+      <p style="color: var(--dark-green); margin-bottom: 15px; font-size: 12px;">All multipliers stack together. Example calculation:</p>
+      
+      <div class="calc-grid">
+        <div class="calc-item">
+          <div class="calc-label">STAKING TIER</div>
+          <div class="calc-value">2.0x</div>
+          <div style="font-size: 9px; color: var(--dark-green);">Platinum</div>
+        </div>
+        <div class="calc-item">
+          <div class="calc-label">STREAK BONUS</div>
+          <div class="calc-value">1.5x</div>
+          <div style="font-size: 9px; color: var(--dark-green);">15 days</div>
+        </div>
+        <div class="calc-item">
+          <div class="calc-label">LEVEL BONUS</div>
+          <div class="calc-value">1.45x</div>
+          <div style="font-size: 9px; color: var(--dark-green);">Level 10</div>
+        </div>
+        <div class="calc-item">
+          <div class="calc-label">ACHIEVEMENTS</div>
+          <div class="calc-value">1.1x</div>
+          <div style="font-size: 9px; color: var(--dark-green);">10 unlocked</div>
+        </div>
+        <div class="calc-item calc-total">
+          <div class="calc-label">TOTAL MULTIPLIER</div>
+          <div class="calc-value">4.79x</div>
+          <div style="font-size: 9px; color: var(--green);">All rewards</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Winners -->
+    <div class="terminal">
+      <h2 class="section-title">RECENT JACKPOT WINNERS</h2>
+      <div class="winner-list" id="winnerList">
+        <div style="text-align: center; padding: 30px; color: var(--dark-green);">
+          No winners yet. Be the first.
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <p>TaoNet - Decentralized AI Inference Network</p>
+    </footer>
+  </div>
+
+  <script>
+    const API_URL = 'http://204.168.139.31';
+
+    async function loadJackpots() {
+      try {
+        const response = await fetch(`${API_URL}/api/game/jackpots/active`);
+        const data = await response.json();
+        
+        const grid = document.getElementById('jackpotGrid');
+        
+        if (!data.jackpots || data.jackpots.length === 0) {
+          grid.innerHTML = '<div style="text-align: center; padding: 30px; color: var(--dark-green);">No active jackpots</div>';
+          return;
+        }
+        
+        const order = ['mini', 'regular', 'mega', 'ultra'];
+        data.jackpots.sort((a, b) => order.indexOf(a.type) - order.indexOf(b.type));
+        
+        grid.innerHTML = data.jackpots.map(jp => {
+          const pool = (Number(jp.poolAmount) / 1e18).toFixed(0);
+          const prize = (Number(jp.poolAmount) * jp.multiplier / 1e18).toFixed(0);
+          
+          return `
+            <div class="jackpot-card ${jp.type}">
+              <div class="jackpot-type">${jp.type} JACKPOT</div>
+              <div class="jackpot-multiplier">${jp.multiplier}x</div>
+              <div class="jackpot-progress">
+                <div class="jackpot-progress-bar" style="width: ${jp.progress}%"></div>
+              </div>
+              <div class="jackpot-tasks">${jp.tasksUntilTrigger} tasks until trigger</div>
+              <div class="jackpot-prize">Prize Pool: ~${prize} tokens</div>
+            </div>
+          `;
+        }).join('');
+      } catch (error) {
+        console.error('Failed to load jackpots:', error);
+      }
+    }
+
+    async function loadWinners() {
+      try {
+        const response = await fetch(`${API_URL}/api/game/jackpots/history`);
+        const data = await response.json();
+        
+        const list = document.getElementById('winnerList');
+        
+        if (!data.history || data.history.length === 0) {
+          return;
+        }
+        
+        list.innerHTML = data.history.map(w => `
+          <div class="winner-item">
+            <div>
+              <span class="winner-type ${w.type}">${w.type.toUpperCase()}</span>
+              <span class="winner-address">${w.winner.slice(0, 10)}...${w.winner.slice(-6)}</span>
+            </div>
+            <div>
+              <span class="winner-prize">${(Number(w.amount) / 1e18).toFixed(2)}</span>
+              <span style="font-size: 10px; color: var(--dark-green);">(${w.multiplier}x)</span>
+            </div>
+          </div>
+        `).join('');
+      } catch (error) {
+        console.error('Failed to load winners:', error);
+      }
+    }
+
+    loadJackpots();
+    loadWinners();
+    setInterval(loadJackpots, 10000);
+  </script>
+</body>
+</html>

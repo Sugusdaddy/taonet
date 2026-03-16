@@ -1,0 +1,10 @@
+{
+  "address": "TestAgent123",
+  "name": "TestBot",
+  "capabilities": [
+    "text",
+    "code"
+  ],
+  "apiUrl": "http://204.168.139.31",
+  "wsUrl": "ws://204.168.139.31/ws"
+}

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task History - TaoNet</title>
+  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root { --green: #00ff41; --dark-green: #00cc33; --bg: #0a0a0a; --terminal-bg: #0d1117; --border: #1a3a1a; --gold: #ffd700; --red: #ff4444; --blue: #0096ff; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg); color: var(--green); font-family: 'Share Tech Mono', monospace; min-height: 100vh; }
+    body::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: repeating-linear-gradient(0deg, rgba(0,0,0,0.15), rgba(0,0,0,0.15) 1px, transparent 1px, transparent 2px); pointer-events: none; z-index: 1000; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 15px; }
+    header { border-bottom: 1px solid var(--border); padding: 15px 0; margin-bottom: 20px; }
+    .logo { font-family: 'VT323', monospace; font-size: 11px; line-height: 1.2; white-space: pre; text-shadow: 0 0 10px var(--green); overflow-x: auto; }
+    @media (max-width: 600px) { .logo { font-size: 8px; } }
+    nav { display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap; }
+    nav a { color: var(--green); text-decoration: none; padding: 8px 12px; border: 1px solid var(--border); transition: all 0.3s; font-size: 11px; }
+    nav a:hover, nav a.active { background: var(--green); color: var(--bg); }
+    
+    .card { background: var(--terminal-bg); border: 1px solid var(--border); border-radius: 5px; padding: 20px; margin-bottom: 15px; }
+    @media (max-width: 600px) { .card { padding: 15px; } }
+    .card-title { font-family: 'VT323', monospace; font-size: 20px; margin-bottom: 15px; color: var(--dark-green); }
+    .card-title::before { content: "> "; }
+    
+    .filters { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .filter-btn { padding: 8px 16px; border: 1px solid var(--border); background: transparent; color: var(--green); cursor: pointer; font-family: 'Share Tech Mono', monospace; font-size: 11px; }
+    .filter-btn:hover, .filter-btn.active { background: var(--green); color: var(--bg); }
+    
+    .task-list { max-height: 600px; overflow-y: auto; }
+    .task-item { padding: 15px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.2s; }
+    .task-item:hover { background: rgba(0, 255, 65, 0.05); }
+    .task-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 10px; }
+    .task-id { font-family: 'VT323', monospace; font-size: 14px; }
+    .task-type { padding: 3px 8px; border-radius: 3px; font-size: 9px; text-transform: uppercase; }
+    .type-text { background: rgba(0, 150, 255, 0.2); color: var(--blue); }
+    .type-code { background: rgba(0, 255, 65, 0.2); color: var(--green); }
+    .type-image { background: rgba(255, 215, 0, 0.2); color: var(--gold); }
+    .type-trading { background: rgba(255, 68, 68, 0.2); color: var(--red); }
+    .task-status { padding: 3px 8px; border-radius: 3px; font-size: 9px; }
+    .status-completed { background: rgba(0, 255, 65, 0.2); color: var(--green); }
+    .status-pending { background: rgba(255, 215, 0, 0.2); color: var(--gold); }
+    .status-failed { background: rgba(255, 68, 68, 0.2); color: var(--red); }
+    .task-prompt { font-size: 11px; color: var(--dark-green); margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+    .task-meta { display: flex; gap: 20px; font-size: 10px; color: var(--dark-green); flex-wrap: wrap; }
+    
+    .task-detail { display: none; padding: 15px; background: var(--bg); margin-top: 10px; border-radius: 5px; }
+    .task-detail.expanded { display: block; }
+    .task-detail h4 { font-size: 12px; margin-bottom: 8px; color: var(--green); }
+    .task-detail pre { font-size: 11px; white-space: pre-wrap; word-break: break-word; background: var(--terminal-bg); padding: 10px; border-radius: 3px; max-height: 200px; overflow-y: auto; }
+    
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+    @media (max-width: 700px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
+    .stat { background: var(--bg); padding: 15px; text-align: center; border-radius: 5px; border: 1px solid var(--border); }
+    .stat-value { font-family: 'VT323', monospace; font-size: 24px; text-shadow: 0 0 10px var(--green); }
+    .stat-label { font-size: 9px; color: var(--dark-green); text-transform: uppercase; margin-top: 5px; }
+    
+    .pagination { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
+    .page-btn { padding: 8px 12px; border: 1px solid var(--border); background: transparent; color: var(--green); cursor: pointer; font-family: 'Share Tech Mono', monospace; }
+    .page-btn:hover, .page-btn.active { background: var(--green); color: var(--bg); }
+    .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    
+    footer { border-top: 1px solid var(--border); padding: 25px 0; margin-top: 30px; text-align: center; color: var(--dark-green); font-size: 11px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+████████╗ █████╗  ██████╗ ███╗   ██╗███████╗████████╗
+╚══██╔══╝██╔══██╗██╔═══██╗████╗  ██║██╔════╝╚══██╔══╝
+   ██║   ███████║██║   ██║██╔██╗ ██║█████╗     ██║   
+   ██║   ██╔══██║██║   ██║██║╚██╗██║██╔══╝     ██║   
+   ██║   ██║  ██║╚██████╔╝██║ ╚████║███████╗   ██║   
+   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝   ╚═╝   
+      </div>
+      <nav>
+        <a href="index.html">[HOME]</a>
+        <a href="mine.html">[MINE]</a>
+        <a href="history.html" class="active">[HISTORY]</a>
+        <a href="leaderboard.html">[LEADERBOARD]</a>
+        <a href="docs.html">[DOCS]</a>
+      </nav>
+    </header>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat">
+        <div class="stat-value" id="statTotal">0</div>
+        <div class="stat-label">Total Tasks</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="statCompleted">0</div>
+        <div class="stat-label">Completed</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="statAvgTime">0s</div>
+        <div class="stat-label">Avg Response</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="statSuccessRate">0%</div>
+        <div class="stat-label">Success Rate</div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card">
+      <div class="card-title">TASK HISTORY</div>
+      
+      <div class="filters">
+        <button class="filter-btn active" data-filter="all">ALL</button>
+        <button class="filter-btn" data-filter="text">TEXT</button>
+        <button class="filter-btn" data-filter="code">CODE</button>
+        <button class="filter-btn" data-filter="image">IMAGE</button>
+        <button class="filter-btn" data-filter="trading">TRADING</button>
+        <span style="margin-left: auto; color: var(--dark-green); font-size: 11px;">
+          Status:
+        </span>
+        <button class="filter-btn" data-status="all">ALL</button>
+        <button class="filter-btn" data-status="completed">COMPLETED</button>
+        <button class="filter-btn" data-status="failed">FAILED</button>
+      </div>
+      
+      <div class="task-list" id="taskList">
+        <div style="text-align: center; padding: 40px; color: var(--dark-green);">Loading tasks...</div>
+      </div>
+      
+      <div class="pagination" id="pagination"></div>
+    </div>
+
+    <footer>
+      <p>TaoNet - Decentralized AI Inference Network</p>
+    </footer>
+  </div>
+
+  <script>
+    const API_URL = 'http://204.168.139.31';
+    let currentPage = 1;
+    let currentFilter = 'all';
+    let currentStatus = 'all';
+    const perPage = 20;
+
+    // Filter buttons
+    document.querySelectorAll('.filter-btn[data-filter]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn[data-filter]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.filter;
+        currentPage = 1;
+        loadTasks();
+      });
+    });
+
+    document.querySelectorAll('.filter-btn[data-status]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn[data-status]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentStatus = btn.dataset.status;
+        currentPage = 1;
+        loadTasks();
+      });
+    });
+
+    async function loadTasks() {
+      try {
+        let url = `${API_URL}/api/tasks?page=${currentPage}&limit=${perPage}`;
+        if (currentFilter !== 'all') url += `&type=${currentFilter}`;
+        if (currentStatus !== 'all') url += `&status=${currentStatus}`;
+        
+        const res = await fetch(url);
+        const data = await res.json();
+        
+        // Update stats
+        document.getElementById('statTotal').textContent = data.pagination?.total || 0;
+        
+        const tasks = data.tasks || [];
+        const completed = tasks.filter(t => t.status === 'completed').length;
+        document.getElementById('statCompleted').textContent = completed;
+        
+        const avgTime = tasks.length > 0 
+          ? Math.round(tasks.reduce((acc, t) => acc + (t.responseTime || 0), 0) / tasks.length / 1000)
+          : 0;
+        document.getElementById('statAvgTime').textContent = `${avgTime}s`;
+        
+        const successRate = tasks.length > 0 
+          ? Math.round((completed / tasks.length) * 100)
+          : 0;
+        document.getElementById('statSuccessRate').textContent = `${successRate}%`;
+        
+        renderTasks(tasks);
+        renderPagination(data.pagination?.total || 0);
+        
+      } catch (error) {
+        console.error('Failed to load tasks:', error);
+        document.getElementById('taskList').innerHTML = 
+          '<div style="text-align: center; padding: 40px; color: var(--red);">Failed to load tasks</div>';
+      }
+    }
+
+    function renderTasks(tasks) {
+      const list = document.getElementById('taskList');
+      
+      if (!tasks || tasks.length === 0) {
+        list.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--dark-green);">No tasks found</div>';
+        return;
+      }
+      
+      list.innerHTML = tasks.map(task => `
+        <div class="task-item" onclick="toggleDetail('${task._id}')">
+          <div class="task-header">
+            <span class="task-id">${task._id.slice(-8)}</span>
+            <span class="task-type type-${task.type}">${task.type}</span>
+            <span class="task-status status-${task.status}">${task.status}</span>
+          </div>
+          <div class="task-prompt">${task.prompt?.slice(0, 100) || 'No prompt'}...</div>
+          <div class="task-meta">
+            <span>Created: ${new Date(task.createdAt).toLocaleString()}</span>
+            <span>Response: ${task.responseTime ? Math.round(task.responseTime / 1000) + 's' : '--'}</span>
+            <span>Miners: ${task.responses?.length || 0}</span>
+          </div>
+          <div class="task-detail" id="detail-${task._id}">
+            <h4>PROMPT</h4>
+            <pre>${task.prompt || 'N/A'}</pre>
+            ${task.result ? `
+              <h4 style="margin-top: 15px;">RESULT</h4>
+              <pre>${typeof task.result === 'object' ? JSON.stringify(task.result, null, 2) : task.result}</pre>
+            ` : ''}
+            ${task.responses?.length > 0 ? `
+              <h4 style="margin-top: 15px;">RESPONSES (${task.responses.length})</h4>
+              ${task.responses.map(r => `
+                <div style="margin: 5px 0; padding: 10px; background: var(--terminal-bg); border-radius: 3px;">
+                  <div style="font-size: 10px; color: var(--dark-green); margin-bottom: 5px;">
+                    Miner: ${r.minerAddress?.slice(0, 10) || 'Unknown'}... | Score: ${r.score || '--'} | Time: ${r.processingTime ? Math.round(r.processingTime / 1000) + 's' : '--'}
+                  </div>
+                  <pre style="max-height: 100px;">${r.result?.slice(0, 500) || 'N/A'}${r.result?.length > 500 ? '...' : ''}</pre>
+                </div>
+              `).join('')}
+            ` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function toggleDetail(taskId) {
+      const detail = document.getElementById(`detail-${taskId}`);
+      detail.classList.toggle('expanded');
+    }
+
+    function renderPagination(total) {
+      const totalPages = Math.ceil(total / perPage);
+      const pagination = document.getElementById('pagination');
+      
+      if (totalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+      }
+      
+      let html = '';
+      html += `<button class="page-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>[<]</button>`;
+      
+      for (let i = 1; i <= Math.min(5, totalPages); i++) {
+        html += `<button class="page-btn ${currentPage === i ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+      }
+      
+      if (totalPages > 5) {
+        html += `<span style="color: var(--dark-green);">...</span>`;
+        html += `<button class="page-btn" onclick="goToPage(${totalPages})">${totalPages}</button>`;
+      }
+      
+      html += `<button class="page-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>[>]</button>`;
+      
+      pagination.innerHTML = html;
+    }
+
+    function goToPage(page) {
+      currentPage = page;
+      loadTasks();
+    }
+
+    // Initial load
+    loadTasks();
+    
+    // Auto-refresh every 30s
+    setInterval(loadTasks, 30000);
+  </script>
+</body>
+</html>

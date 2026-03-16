@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#00ff41">
+  <meta name="description" content="TaoNet - Decentralized AI Inference Network. Mine AI tasks and earn token rewards.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="/icon.svg">
+  <link rel="apple-touch-icon" href="/icon.svg">
+  <title>TaoNet - Decentralized AI Inference Network</title>
+  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --green: #00ff41;
+      --dark-green: #00cc33;
+      --bg: #0a0a0a;
+      --terminal-bg: #0d1117;
+      --border: #1a3a1a;
+      --gold: #ffd700;
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      background: var(--bg);
+      color: var(--green);
+      font-family: 'Share Tech Mono', monospace;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: repeating-linear-gradient(0deg, rgba(0,0,0,0.15), rgba(0,0,0,0.15) 1px, transparent 1px, transparent 2px);
+      pointer-events: none;
+      z-index: 1000;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 15px;
+    }
+    
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 15px 0;
+      margin-bottom: 20px;
+    }
+    
+    .logo {
+      font-family: 'VT323', monospace;
+      font-size: 11px;
+      line-height: 1.2;
+      white-space: pre;
+      color: var(--green);
+      text-shadow: 0 0 10px var(--green);
+      overflow-x: auto;
+    }
+    
+    @media (max-width: 600px) {
+      .logo { font-size: 8px; }
+    }
+    
+    nav {
+      display: flex;
+      gap: 8px;
+      margin-top: 15px;
+      flex-wrap: wrap;
+    }
+    
+    nav a {
+      color: var(--green);
+      text-decoration: none;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      transition: all 0.3s;
+      font-size: 11px;
+    }
+    
+    nav a:hover, nav a.active {
+      background: var(--green);
+      color: var(--bg);
+    }
+    
+    .terminal {
+      background: var(--terminal-bg);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 20px;
+      margin-bottom: 15px;
+    }
+    
+    @media (max-width: 600px) {
+      .terminal { padding: 15px; }
+    }
+    
+    .section-title {
+      font-family: 'VT323', monospace;
+      font-size: 22px;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .section-title::before {
+      content: "> ";
+      color: var(--dark-green);
+    }
+    
+    /* Hero */
+    .hero {
+      text-align: center;
+      padding: 40px 20px;
+    }
+    
+    @media (max-width: 600px) {
+      .hero { padding: 25px 10px; }
+    }
+    
+    .hero h1 {
+      font-family: 'VT323', monospace;
+      font-size: 42px;
+      margin-bottom: 15px;
+      text-shadow: 0 0 20px var(--green);
+    }
+    
+    @media (max-width: 600px) {
+      .hero h1 { font-size: 28px; }
+    }
+    
+    .hero p {
+      color: var(--dark-green);
+      font-size: 14px;
+      max-width: 600px;
+      margin: 0 auto 25px;
+      line-height: 1.6;
+    }
+    
+    @media (max-width: 600px) {
+      .hero p { font-size: 12px; }
+    }
+    
+    .btn {
+      display: inline-block;
+      padding: 12px 30px;
+      border: 2px solid var(--green);
+      color: var(--green);
+      text-decoration: none;
+      font-family: 'Share Tech Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      transition: all 0.3s;
+      font-size: 12px;
+      margin: 5px;
+    }
+    
+    .btn:hover {
+      background: var(--green);
+      color: var(--bg);
+    }
+    
+    .btn-gold {
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+    
+    .btn-gold:hover {
+      background: var(--gold);
+      color: var(--bg);
+    }
+    
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+    }
+    
+    @media (max-width: 800px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    
+    @media (max-width: 400px) {
+      .stats-grid { grid-template-columns: 1fr; }
+    }
+    
+    .stat-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 20px;
+      text-align: center;
+      border-radius: 5px;
+    }
+    
+    @media (max-width: 600px) {
+      .stat-box { padding: 15px; }
+    }
+    
+    .stat-value {
+      font-family: 'VT323', monospace;
+      font-size: 36px;
+      color: var(--green);
+      text-shadow: 0 0 10px var(--green);
+    }
+    
+    @media (max-width: 600px) {
+      .stat-value { font-size: 28px; }
+    }
+    
+    .stat-label {
+      font-size: 10px;
+      color: var(--dark-green);
+      text-transform: uppercase;
+      margin-top: 5px;
+    }
+    
+    /* Features */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    
+    @media (max-width: 800px) {
+      .features-grid { grid-template-columns: 1fr; }
+    }
+    
+    .feature-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 25px;
+      border-radius: 5px;
+      transition: all 0.3s;
+    }
+    
+    @media (max-width: 600px) {
+      .feature-card { padding: 20px; }
+    }
+    
+    .feature-card:hover {
+      border-color: var(--green);
+    }
+    
+    .feature-icon {
+      font-family: 'VT323', monospace;
+      font-size: 28px;
+      color: var(--gold);
+      margin-bottom: 15px;
+    }
+    
+    .feature-title {
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    
+    .feature-desc {
+      font-size: 11px;
+      color: var(--dark-green);
+      line-height: 1.5;
+    }
+    
+    /* Live Activity */
+    .activity-list {
+      max-height: 250px;
+      overflow-y: auto;
+    }
+    
+    .activity-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+    }
+    
+    @media (max-width: 600px) {
+      .activity-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+      }
+    }
+    
+    .activity-type {
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 10px;
+      background: rgba(0, 255, 65, 0.1);
+      border: 1px solid var(--border);
+    }
+    
+    /* Jackpot Preview */
+    .jackpot-preview {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+    }
+    
+    @media (max-width: 800px) {
+      .jackpot-preview { grid-template-columns: repeat(2, 1fr); }
+    }
+    
+    @media (max-width: 400px) {
+      .jackpot-preview { grid-template-columns: 1fr; }
+    }
+    
+    .jackpot-mini {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 15px;
+      text-align: center;
+      border-radius: 5px;
+    }
+    
+    .jackpot-mini.mini { border-color: var(--green); }
+    .jackpot-mini.regular { border-color: #0096ff; }
+    .jackpot-mini.mega { border-color: var(--gold); }
+    .jackpot-mini.ultra { border-color: #9966ff; }
+    
+    .jackpot-type {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 5px;
+    }
+    
+    .jackpot-mini.mini .jackpot-type { color: var(--green); }
+    .jackpot-mini.regular .jackpot-type { color: #0096ff; }
+    .jackpot-mini.mega .jackpot-type { color: var(--gold); }
+    .jackpot-mini.ultra .jackpot-type { color: #9966ff; }
+    
+    .jackpot-mult {
+      font-family: 'VT323', monospace;
+      font-size: 32px;
+    }
+    
+    .jackpot-mini.mini .jackpot-mult { color: var(--green); }
+    .jackpot-mini.regular .jackpot-mult { color: #0096ff; }
+    .jackpot-mini.mega .jackpot-mult { color: var(--gold); }
+    .jackpot-mini.ultra .jackpot-mult { color: #9966ff; }
+    
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 25px 0;
+      margin-top: 30px;
+      text-align: center;
+      color: var(--dark-green);
+      font-size: 11px;
+    }
+    
+    .blink {
+      animation: blink 1s infinite;
+    }
+    
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0; }
+    }
+    
+    .pulse {
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+████████╗ █████╗  ██████╗ ███╗   ██╗███████╗████████╗
+╚══██╔══╝██╔══██╗██╔═══██╗████╗  ██║██╔════╝╚══██╔══╝
+   ██║   ███████║██║   ██║██╔██╗ ██║█████╗     ██║   
+   ██║   ██╔══██║██║   ██║██║╚██╗██║██╔══╝     ██║   
+   ██║   ██║  ██║╚██████╔╝██║ ╚████║███████╗   ██║   
+   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝   ╚═╝   
+      </div>
+      <nav>
+        <a href="index.html" class="active">[HOME]</a>
+        <a href="mine.html">[MINE]</a>
+        <a href="leaderboard.html">[LEADERBOARD]</a>
+        <a href="rewards.html">[REWARDS]</a>
+        <a href="tournaments.html">[TOURNAMENTS]</a>
+        <a href="achievements.html">[ACHIEVEMENTS]</a>
+        <a href="docs.html">[DOCS]</a>
+      </nav>
+    </header>
+
+    <!-- Hero -->
+    <div class="terminal">
+      <div class="hero">
+        <h1>DECENTRALIZED AI INFERENCE</h1>
+        <p>Token holders run AI models. Users submit tasks. Miners earn rewards. A permissionless network for distributed machine learning inference.</p>
+        <a href="mine.html" class="btn">START MINING</a>
+        <a href="docs.html" class="btn btn-gold">DOCUMENTATION</a>
+      </div>
+    </div>
+
+    <!-- Live Stats -->
+    <div class="terminal">
+      <h2 class="section-title">NETWORK STATUS</h2>
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-value" id="totalMiners">--</div>
+          <div class="stat-label">Total Miners</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="onlineMiners">--</div>
+          <div class="stat-label">Online Now</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="totalTasks">--</div>
+          <div class="stat-label">Tasks Completed</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="avgResponse">--</div>
+          <div class="stat-label">Avg Response (ms)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Jackpots -->
+    <div class="terminal">
+      <h2 class="section-title">ACTIVE JACKPOTS</h2>
+      <div class="jackpot-preview" id="jackpotPreview">
+        <div class="jackpot-mini">
+          <div class="jackpot-type">Loading...</div>
+          <div class="jackpot-mult">--</div>
+        </div>
+      </div>
+      <div style="text-align: center; margin-top: 20px;">
+        <a href="rewards.html" class="btn">VIEW ALL REWARDS</a>
+      </div>
+    </div>
+
+    <!-- How it Works -->
+    <div class="terminal">
+      <h2 class="section-title">HOW IT WORKS</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">[1]</div>
+          <div class="feature-title">HOLD TOKENS</div>
+          <div class="feature-desc">Acquire tokens to become eligible for mining. Higher holdings unlock better staking tiers and reward multipliers.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">[2]</div>
+          <div class="feature-title">RUN MODELS</div>
+          <div class="feature-desc">Connect your local AI models or API endpoints to the network. Process text, code, images, and trading tasks.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">[3]</div>
+          <div class="feature-title">EARN REWARDS</div>
+          <div class="feature-desc">Get paid for every task completed. Build streaks, unlock achievements, and compete in tournaments for bonus rewards.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Activity -->
+    <div class="terminal">
+      <h2 class="section-title">LIVE ACTIVITY <span class="blink" style="color: var(--green);">●</span></h2>
+      <div class="activity-list" id="activityList">
+        <div style="text-align: center; padding: 30px; color: var(--dark-green);">Connecting to network...</div>
+      </div>
+    </div>
+
+    <!-- Staking Tiers Preview -->
+    <div class="terminal">
+      <h2 class="section-title">STAKING TIERS</h2>
+      <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--border);">
+              <th style="padding: 10px; text-align: left;">TIER</th>
+              <th style="padding: 10px; text-align: right;">REQUIREMENT</th>
+              <th style="padding: 10px; text-align: right;">MULTIPLIER</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom: 1px solid var(--border);">
+              <td style="padding: 10px; color: #cd7f32;">BRONZE</td>
+              <td style="padding: 10px; text-align: right;">0+</td>
+              <td style="padding: 10px; text-align: right;">1.0x</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border);">
+              <td style="padding: 10px; color: #c0c0c0;">SILVER</td>
+              <td style="padding: 10px; text-align: right;">10,000+</td>
+              <td style="padding: 10px; text-align: right;">1.25x</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border);">
+              <td style="padding: 10px; color: var(--gold);">GOLD</td>
+              <td style="padding: 10px; text-align: right;">100,000+</td>
+              <td style="padding: 10px; text-align: right;">1.5x</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border);">
+              <td style="padding: 10px; color: #e5e4e2;">PLATINUM</td>
+              <td style="padding: 10px; text-align: right;">1,000,000+</td>
+              <td style="padding: 10px; text-align: right;">2.0x</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; color: #b9f2ff;">DIAMOND</td>
+              <td style="padding: 10px; text-align: right;">10,000,000+</td>
+              <td style="padding: 10px; text-align: right;">3.0x</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <footer>
+      <p>TaoNet - Decentralized AI Inference Network</p>
+      <p style="margin-top: 10px;">
+        <a href="docs.html" style="color: var(--green);">Documentation</a> | 
+        <a href="playground.html" style="color: var(--green);">API Playground</a>
+      </p>
+    </footer>
+  </div>
+
+  <script>
+    const API_URL = 'http://204.168.139.31';
+    let ws;
+
+    async function loadStats() {
+      try {
+        const response = await fetch(`${API_URL}/api/stats`);
+        const data = await response.json();
+        
+        document.getElementById('totalMiners').textContent = data.network.totalMiners || 0;
+        document.getElementById('onlineMiners').textContent = data.network.onlineMiners || 0;
+        document.getElementById('totalTasks').textContent = data.tasks.completed || 0;
+        document.getElementById('avgResponse').textContent = Math.round(data.tasks.avgResponseTimeMs || 0);
+      } catch (error) {
+        console.error('Failed to load stats:', error);
+      }
+    }
+
+    async function loadJackpots() {
+      try {
+        const response = await fetch(`${API_URL}/api/game/jackpots/active`);
+        const data = await response.json();
+        
+        const container = document.getElementById('jackpotPreview');
+        
+        if (!data.jackpots || data.jackpots.length === 0) {
+          container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--dark-green); grid-column: 1/-1;">No active jackpots</div>';
+          return;
+        }
+        
+        const order = ['mini', 'regular', 'mega', 'ultra'];
+        data.jackpots.sort((a, b) => order.indexOf(a.type) - order.indexOf(b.type));
+        
+        container.innerHTML = data.jackpots.map(jp => `
+          <div class="jackpot-mini ${jp.type}">
+            <div class="jackpot-type">${jp.type}</div>
+            <div class="jackpot-mult">${jp.multiplier}x</div>
+            <div style="font-size: 10px; color: var(--dark-green); margin-top: 5px;">${jp.tasksUntilTrigger} tasks left</div>
+          </div>
+        `).join('');
+      } catch (error) {
+        console.error('Failed to load jackpots:', error);
+      }
+    }
+
+    function connectWebSocket() {
+      try {
+        ws = new WebSocket(`ws://${API_URL.replace('http://', '')}/ws`);
+        
+        ws.onopen = () => {
+          document.getElementById('activityList').innerHTML = 
+            '<div style="text-align: center; padding: 20px; color: var(--dark-green);">Connected. Waiting for activity...</div>';
+        };
+        
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'task_completed' || data.type === 'miner_registered' || data.type === 'task_assigned') {
+              addActivity(data);
+            }
+          } catch (e) {}
+        };
+        
+        ws.onerror = () => {
+          document.getElementById('activityList').innerHTML = 
+            '<div style="text-align: center; padding: 20px; color: var(--dark-green);">Connecting...</div>';
+        };
+        
+        ws.onclose = () => {
+          setTimeout(connectWebSocket, 3000);
+        };
+      } catch (error) {
+        console.error('WebSocket error:', error);
+      }
+    }
+
+    const activities = [];
+    function addActivity(data) {
+      const list = document.getElementById('activityList');
+      
+      let text = '';
+      let type = '';
+      
+      if (data.type === 'task_completed') {
+        text = `Task completed by ${(data.miner || '').slice(0, 10)}...`;
+        type = 'COMPLETED';
+      } else if (data.type === 'miner_registered') {
+        text = `New miner registered: ${(data.address || '').slice(0, 10)}...`;
+        type = 'JOINED';
+      } else if (data.type === 'task_assigned') {
+        text = `Task assigned: ${data.taskType || 'unknown'}`;
+        type = 'ASSIGNED';
+      }
+      
+      if (!text) return;
+      
+      activities.unshift({ text, type, time: new Date() });
+      if (activities.length > 20) activities.pop();
+      
+      list.innerHTML = activities.map(a => `
+        <div class="activity-item">
+          <span>${a.text}</span>
+          <span class="activity-type">${a.type}</span>
+        </div>
+      `).join('');
+    }
+
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('SW registered'))
+        .catch(err => console.log('SW error:', err));
+    }
+
+    // Initialize
+    loadStats();
+    loadJackpots();
+    connectWebSocket();
+    
+    // Refresh stats periodically
+    setInterval(loadStats, 15000);
+    setInterval(loadJackpots, 30000);
+  </script>
+</body>
+</html>

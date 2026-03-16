@@ -1,0 +1,19 @@
+[package]
+name = "taonet-consensus"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+taonet-runtime = { path = "../runtime" }
+solana-sdk = { workspace = true }
+tokio = { workspace = true }
+async-trait = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+borsh = { workspace = true }
+sha2 = { workspace = true }
+rand = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+chrono = { workspace = true }

@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Network Health - TaoNet</title>
+  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root { --green: #00ff41; --dark-green: #00cc33; --bg: #0a0a0a; --terminal-bg: #0d1117; --border: #1a3a1a; --gold: #ffd700; --red: #ff4444; --blue: #0096ff; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg); color: var(--green); font-family: 'Share Tech Mono', monospace; min-height: 100vh; }
+    body::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: repeating-linear-gradient(0deg, rgba(0,0,0,0.15), rgba(0,0,0,0.15) 1px, transparent 1px, transparent 2px); pointer-events: none; z-index: 1000; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 15px; }
+    header { border-bottom: 1px solid var(--border); padding: 15px 0; margin-bottom: 20px; }
+    .logo { font-family: 'VT323', monospace; font-size: 11px; line-height: 1.2; white-space: pre; text-shadow: 0 0 10px var(--green); overflow-x: auto; }
+    @media (max-width: 600px) { .logo { font-size: 8px; } }
+    nav { display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap; }
+    nav a { color: var(--green); text-decoration: none; padding: 8px 12px; border: 1px solid var(--border); transition: all 0.3s; font-size: 11px; }
+    nav a:hover, nav a.active { background: var(--green); color: var(--bg); }
+    
+    .card { background: var(--terminal-bg); border: 1px solid var(--border); border-radius: 5px; padding: 20px; margin-bottom: 15px; }
+    @media (max-width: 600px) { .card { padding: 15px; } }
+    .card-title { font-family: 'VT323', monospace; font-size: 20px; margin-bottom: 15px; color: var(--dark-green); }
+    .card-title::before { content: "> "; }
+    
+    .status-banner { padding: 20px; text-align: center; border-radius: 5px; margin-bottom: 20px; }
+    .status-banner.healthy { background: rgba(0, 255, 65, 0.1); border: 2px solid var(--green); }
+    .status-banner.warning { background: rgba(255, 215, 0, 0.1); border: 2px solid var(--gold); }
+    .status-banner.critical { background: rgba(255, 68, 68, 0.1); border: 2px solid var(--red); }
+    .status-icon { font-family: 'VT323', monospace; font-size: 48px; margin-bottom: 10px; }
+    .status-text { font-size: 14px; text-transform: uppercase; }
+    
+    .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+    @media (max-width: 800px) { .metrics-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 500px) { .metrics-grid { grid-template-columns: 1fr; } }
+    .metric { background: var(--bg); padding: 20px; border-radius: 5px; border: 1px solid var(--border); }
+    .metric-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .metric-name { font-size: 11px; color: var(--dark-green); text-transform: uppercase; }
+    .metric-status { width: 10px; height: 10px; border-radius: 50%; }
+    .metric-status.good { background: var(--green); box-shadow: 0 0 10px var(--green); }
+    .metric-status.warning { background: var(--gold); box-shadow: 0 0 10px var(--gold); }
+    .metric-status.bad { background: var(--red); box-shadow: 0 0 10px var(--red); }
+    .metric-value { font-family: 'VT323', monospace; font-size: 28px; }
+    .metric-change { font-size: 10px; margin-top: 5px; }
+    .metric-change.up { color: var(--green); }
+    .metric-change.down { color: var(--red); }
+    
+    .service-list { display: grid; gap: 10px; }
+    .service { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--bg); border-radius: 5px; }
+    .service-name { font-size: 12px; }
+    .service-status { display: flex; align-items: center; gap: 8px; font-size: 11px; }
+    .service-indicator { width: 8px; height: 8px; border-radius: 50%; }
+    .service-indicator.online { background: var(--green); }
+    .service-indicator.offline { background: var(--red); }
+    
+    .log-container { background: var(--bg); border-radius: 5px; padding: 15px; max-height: 300px; overflow-y: auto; font-size: 11px; }
+    .log-entry { padding: 5px 0; border-bottom: 1px solid var(--border); }
+    .log-time { color: var(--dark-green); }
+    .log-level { padding: 1px 5px; border-radius: 2px; font-size: 9px; margin: 0 5px; }
+    .log-level.info { background: rgba(0, 150, 255, 0.2); color: var(--blue); }
+    .log-level.warn { background: rgba(255, 215, 0, 0.2); color: var(--gold); }
+    .log-level.error { background: rgba(255, 68, 68, 0.2); color: var(--red); }
+    
+    .chart-container { height: 150px; background: var(--bg); border-radius: 5px; display: flex; align-items: flex-end; padding: 15px; gap: 2px; }
+    .chart-bar { flex: 1; background: var(--green); min-height: 5px; transition: height 0.3s; border-radius: 2px 2px 0 0; }
+    
+    footer { border-top: 1px solid var(--border); padding: 25px 0; margin-top: 30px; text-align: center; color: var(--dark-green); font-size: 11px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+████████╗ █████╗  ██████╗ ███╗   ██╗███████╗████████╗
+╚══██╔══╝██╔══██╗██╔═══██╗████╗  ██║██╔════╝╚══██╔══╝
+   ██║   ███████║██║   ██║██╔██╗ ██║█████╗     ██║   
+   ██║   ██╔══██║██║   ██║██║╚██╗██║██╔══╝     ██║   
+   ██║   ██║  ██║╚██████╔╝██║ ╚████║███████╗   ██║   
+   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝   ╚═╝   
+      </div>
+      <nav>
+        <a href="index.html">[HOME]</a>
+        <a href="health.html" class="active">[HEALTH]</a>
+        <a href="monitor.html">[MONITOR]</a>
+        <a href="admin.html">[ADMIN]</a>
+      </nav>
+    </header>
+
+    <!-- Status Banner -->
+    <div class="status-banner healthy" id="statusBanner">
+      <div class="status-icon" id="statusIcon">[OK]</div>
+      <div class="status-text" id="statusText">All Systems Operational</div>
+      <div style="font-size: 11px; color: var(--dark-green); margin-top: 5px;">Last updated: <span id="lastUpdate">--</span></div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="metrics-grid">
+      <div class="metric">
+        <div class="metric-header">
+          <span class="metric-name">Uptime</span>
+          <span class="metric-status good" id="uptimeStatus"></span>
+        </div>
+        <div class="metric-value" id="uptime">--</div>
+      </div>
+      <div class="metric">
+        <div class="metric-header">
+          <span class="metric-name">Response Time</span>
+          <span class="metric-status good" id="responseStatus"></span>
+        </div>
+        <div class="metric-value" id="responseTime">--</div>
+        <div class="metric-change" id="responseChange">--</div>
+      </div>
+      <div class="metric">
+        <div class="metric-header">
+          <span class="metric-name">Active Miners</span>
+          <span class="metric-status good" id="minerStatus"></span>
+        </div>
+        <div class="metric-value" id="activeMiners">--</div>
+      </div>
+      <div class="metric">
+        <div class="metric-header">
+          <span class="metric-name">Tasks/Hour</span>
+          <span class="metric-status good" id="taskStatus"></span>
+        </div>
+        <div class="metric-value" id="tasksPerHour">--</div>
+      </div>
+      <div class="metric">
+        <div class="metric-header">
+          <span class="metric-name">Success Rate</span>
+          <span class="metric-status good" id="successStatus"></span>
+        </div>
+        <div class="metric-value" id="successRate">--</div>
+      </div>
+      <div class="metric">
+        <div class="metric-header">
+          <span class="metric-name">WebSocket Conns</span>
+          <span class="metric-status good" id="wsStatus"></span>
+        </div>
+        <div class="metric-value" id="wsConnections">--</div>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+      <!-- Services -->
+      <div class="card">
+        <div class="card-title">SERVICES</div>
+        <div class="service-list" id="serviceList">
+          <div class="service">
+            <span class="service-name">API Server</span>
+            <span class="service-status"><span class="service-indicator online"></span>Loading...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Request Volume -->
+      <div class="card">
+        <div class="card-title">REQUEST VOLUME (24H)</div>
+        <div class="chart-container" id="requestChart"></div>
+      </div>
+    </div>
+
+    <!-- System Logs -->
+    <div class="card">
+      <div class="card-title">SYSTEM LOGS</div>
+      <div class="log-container" id="logContainer">
+        <div style="text-align: center; padding: 20px; color: var(--dark-green);">Loading logs...</div>
+      </div>
+    </div>
+
+    <footer>
+      <p>TaoNet - Decentralized AI Inference Network</p>
+    </footer>
+  </div>
+
+  <script>
+    const API_URL = 'http://204.168.139.31';
+    const logs = [];
+
+    async function loadHealth() {
+      try {
+        // Get health status
+        const healthRes = await fetch(`${API_URL}/api/monitoring/health`);
+        const health = await healthRes.json();
+        
+        // Update status banner
+        const banner = document.getElementById('statusBanner');
+        const icon = document.getElementById('statusIcon');
+        const text = document.getElementById('statusText');
+        
+        if (health.status === 'healthy') {
+          banner.className = 'status-banner healthy';
+          icon.textContent = '[OK]';
+          icon.style.color = 'var(--green)';
+          text.textContent = 'All Systems Operational';
+        } else {
+          banner.className = 'status-banner warning';
+          icon.textContent = '[!]';
+          icon.style.color = 'var(--gold)';
+          text.textContent = 'Degraded Performance';
+        }
+        
+        document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+        
+        // Update uptime
+        const uptimeSeconds = health.uptime || 0;
+        const hours = Math.floor(uptimeSeconds / 3600);
+        const mins = Math.floor((uptimeSeconds % 3600) / 60);
+        document.getElementById('uptime').textContent = `${hours}h ${mins}m`;
+        
+        // Update services
+        const services = [
+          { name: 'API Server', status: health.status === 'healthy' },
+          { name: 'MongoDB', status: health.services?.mongodb === 'connected' },
+          { name: 'WebSocket', status: health.services?.websocket === 'active' }
+        ];
+        
+        document.getElementById('serviceList').innerHTML = services.map(s => `
+          <div class="service">
+            <span class="service-name">${s.name}</span>
+            <span class="service-status">
+              <span class="service-indicator ${s.status ? 'online' : 'offline'}"></span>
+              ${s.status ? 'Online' : 'Offline'}
+            </span>
+          </div>
+        `).join('');
+        
+        // Add log
+        addLog('info', 'Health check completed');
+        
+        // Get stats
+        const statsRes = await fetch(`${API_URL}/api/stats`);
+        const stats = await statsRes.json();
+        
+        document.getElementById('activeMiners').textContent = stats.network?.onlineMiners || 0;
+        document.getElementById('wsConnections').textContent = health.services?.activeConnections || 0;
+        
+        // Get analytics
+        const analyticsRes = await fetch(`${API_URL}/api/analytics/snapshot`);
+        const analytics = await analyticsRes.json();
+        
+        const completed = analytics.tasks?.summary24h?.find(s => s._id === 'completed')?.count || 0;
+        const failed = analytics.tasks?.summary24h?.find(s => s._id === 'failed')?.count || 0;
+        const total = completed + failed;
+        
+        document.getElementById('tasksPerHour').textContent = Math.round(total / 24);
+        document.getElementById('successRate').textContent = total > 0 ? `${Math.round(completed / total * 100)}%` : '100%';
+        
+        // Update status indicators
+        updateStatusIndicator('minerStatus', stats.network?.onlineMiners > 0 ? 'good' : 'warning');
+        updateStatusIndicator('taskStatus', total > 0 ? 'good' : 'warning');
+        updateStatusIndicator('successStatus', (completed / total * 100) > 90 ? 'good' : (completed / total * 100) > 70 ? 'warning' : 'bad');
+        
+        // Render chart
+        renderChart();
+        
+      } catch (error) {
+        console.error('Health check failed:', error);
+        addLog('error', `Health check failed: ${error.message}`);
+      }
+    }
+
+    function updateStatusIndicator(id, status) {
+      const el = document.getElementById(id);
+      el.className = `metric-status ${status}`;
+    }
+
+    function addLog(level, message) {
+      const now = new Date();
+      logs.unshift({
+        time: now.toLocaleTimeString(),
+        level,
+        message
+      });
+      
+      // Keep only last 50 logs
+      if (logs.length > 50) logs.pop();
+      
+      renderLogs();
+    }
+
+    function renderLogs() {
+      const container = document.getElementById('logContainer');
+      container.innerHTML = logs.map(log => `
+        <div class="log-entry">
+          <span class="log-time">${log.time}</span>
+          <span class="log-level ${log.level}">${log.level.toUpperCase()}</span>
+          ${log.message}
+        </div>
+      `).join('');
+    }
+
+    function renderChart() {
+      const chart = document.getElementById('requestChart');
+      const bars = [];
+      
+      // Generate mock hourly data (would come from analytics in production)
+      for (let i = 0; i < 24; i++) {
+        const height = Math.random() * 80 + 20;
+        bars.push(`<div class="chart-bar" style="height: ${height}%"></div>`);
+      }
+      
+      chart.innerHTML = bars.join('');
+    }
+
+    // Measure response time
+    async function measureResponseTime() {
+      const start = Date.now();
+      try {
+        await fetch(`${API_URL}/api/stats`);
+        const time = Date.now() - start;
+        document.getElementById('responseTime').textContent = `${time}ms`;
+        updateStatusIndicator('responseStatus', time < 200 ? 'good' : time < 500 ? 'warning' : 'bad');
+      } catch (error) {
+        document.getElementById('responseTime').textContent = 'ERR';
+        updateStatusIndicator('responseStatus', 'bad');
+      }
+    }
+
+    // Initial load
+    loadHealth();
+    measureResponseTime();
+    
+    // Refresh every 10 seconds
+    setInterval(() => {
+      loadHealth();
+      measureResponseTime();
+    }, 10000);
+  </script>
+</body>
+</html>

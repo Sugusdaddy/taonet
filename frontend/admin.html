@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - TaoNet</title>
+  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root { --green: #00ff41; --dark-green: #00cc33; --bg: #0a0a0a; --terminal-bg: #0d1117; --border: #1a3a1a; --gold: #ffd700; --red: #ff4444; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg); color: var(--green); font-family: 'Share Tech Mono', monospace; min-height: 100vh; }
+    body::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: repeating-linear-gradient(0deg, rgba(0,0,0,0.15), rgba(0,0,0,0.15) 1px, transparent 1px, transparent 2px); pointer-events: none; z-index: 1000; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 15px; }
+    header { border-bottom: 1px solid var(--border); padding: 15px 0; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+    .logo { font-family: 'VT323', monospace; font-size: 24px; text-shadow: 0 0 10px var(--green); }
+    .status-badge { padding: 5px 15px; border-radius: 3px; font-size: 11px; }
+    .status-healthy { background: rgba(0, 255, 65, 0.2); color: var(--green); }
+    .status-warning { background: rgba(255, 215, 0, 0.2); color: var(--gold); }
+    .status-error { background: rgba(255, 68, 68, 0.2); color: var(--red); }
+    
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; }
+    .grid-wide { grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); }
+    
+    .card { background: var(--terminal-bg); border: 1px solid var(--border); border-radius: 5px; padding: 20px; }
+    .card-title { font-family: 'VT323', monospace; font-size: 18px; margin-bottom: 15px; color: var(--dark-green); }
+    .card-title::before { content: "> "; }
+    
+    .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 15px; }
+    @media (max-width: 900px) { .stats-row { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 500px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
+    .stat { background: var(--bg); padding: 15px; text-align: center; border-radius: 5px; border: 1px solid var(--border); }
+    .stat-value { font-family: 'VT323', monospace; font-size: 28px; text-shadow: 0 0 10px var(--green); }
+    .stat-label { font-size: 9px; color: var(--dark-green); text-transform: uppercase; margin-top: 5px; }
+    
+    .chart-container { height: 200px; position: relative; }
+    
+    .table-container { overflow-x: auto; max-height: 300px; overflow-y: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    th, td { padding: 8px; text-align: left; border-bottom: 1px solid var(--border); }
+    th { color: var(--dark-green); font-size: 10px; position: sticky; top: 0; background: var(--terminal-bg); }
+    tr:hover { background: rgba(0, 255, 65, 0.05); }
+    
+    .log-container { background: var(--bg); padding: 10px; border-radius: 5px; max-height: 250px; overflow-y: auto; font-size: 10px; }
+    .log-entry { padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .log-time { color: var(--dark-green); }
+    .log-info { color: var(--green); }
+    .log-warn { color: var(--gold); }
+    .log-error { color: var(--red); }
+    
+    .progress-bar { background: var(--bg); height: 8px; border-radius: 4px; overflow: hidden; margin-top: 5px; }
+    .progress-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+    .progress-green { background: var(--green); }
+    .progress-gold { background: var(--gold); }
+    .progress-red { background: var(--red); }
+    
+    .tier-dist { display: flex; gap: 10px; flex-wrap: wrap; }
+    .tier-item { flex: 1; min-width: 80px; text-align: center; padding: 10px; background: var(--bg); border-radius: 5px; }
+    .tier-bronze { border: 1px solid #cd7f32; }
+    .tier-silver { border: 1px solid #c0c0c0; }
+    .tier-gold { border: 1px solid var(--gold); }
+    .tier-platinum { border: 1px solid #e5e4e2; }
+    .tier-diamond { border: 1px solid #b9f2ff; }
+    
+    .refresh-btn { background: transparent; border: 1px solid var(--green); color: var(--green); padding: 8px 15px; cursor: pointer; font-family: 'Share Tech Mono', monospace; font-size: 11px; }
+    .refresh-btn:hover { background: var(--green); color: var(--bg); }
+    
+    .blink { animation: blink 1s infinite; }
+    @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">[ADMIN] TAONET DASHBOARD</div>
+      <div style="display: flex; gap: 15px; align-items: center;">
+        <span id="systemStatus" class="status-badge status-healthy">HEALTHY</span>
+        <span id="lastUpdate" style="font-size: 10px; color: var(--dark-green);">--</span>
+        <button class="refresh-btn" onclick="refreshAll()">REFRESH</button>
+      </div>
+    </header>
+
+    <!-- Top Stats -->
+    <div class="stats-row">
+      <div class="stat">
+        <div class="stat-value" id="totalMiners">--</div>
+        <div class="stat-label">Total Miners</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="onlineMiners">--</div>
+        <div class="stat-label">Online</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="totalTasks">--</div>
+        <div class="stat-label">Tasks (24h)</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="successRate">--%</div>
+        <div class="stat-label">Success Rate</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="avgResponse">--</div>
+        <div class="stat-label">Avg Response (ms)</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- Network Health -->
+      <div class="card">
+        <div class="card-title">NETWORK HEALTH</div>
+        <div style="margin-bottom: 15px;">
+          <div style="display: flex; justify-content: space-between; font-size: 11px;">
+            <span>MongoDB</span>
+            <span id="mongoStatus" style="color: var(--green);">Connected</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill progress-green" style="width: 100%"></div></div>
+        </div>
+        <div style="margin-bottom: 15px;">
+          <div style="display: flex; justify-content: space-between; font-size: 11px;">
+            <span>WebSocket</span>
+            <span id="wsConnections">-- connections</span>
+          </div>
+          <div class="progress-bar"><div id="wsBar" class="progress-fill progress-green" style="width: 50%"></div></div>
+        </div>
+        <div style="margin-bottom: 15px;">
+          <div style="display: flex; justify-content: space-between; font-size: 11px;">
+            <span>Memory Usage</span>
+            <span id="memoryUsage">--</span>
+          </div>
+          <div class="progress-bar"><div id="memBar" class="progress-fill progress-green" style="width: 30%"></div></div>
+        </div>
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 11px;">
+            <span>Uptime</span>
+            <span id="uptime">--</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tier Distribution -->
+      <div class="card">
+        <div class="card-title">STAKING TIER DISTRIBUTION</div>
+        <div class="tier-dist">
+          <div class="tier-item tier-bronze">
+            <div style="font-size: 10px; color: #cd7f32;">BRONZE</div>
+            <div style="font-family: 'VT323', monospace; font-size: 24px;" id="tierBronze">--</div>
+          </div>
+          <div class="tier-item tier-silver">
+            <div style="font-size: 10px; color: #c0c0c0;">SILVER</div>
+            <div style="font-family: 'VT323', monospace; font-size: 24px;" id="tierSilver">--</div>
+          </div>
+          <div class="tier-item tier-gold">
+            <div style="font-size: 10px; color: var(--gold);">GOLD</div>
+            <div style="font-family: 'VT323', monospace; font-size: 24px;" id="tierGold">--</div>
+          </div>
+          <div class="tier-item tier-platinum">
+            <div style="font-size: 10px; color: #e5e4e2;">PLAT</div>
+            <div style="font-family: 'VT323', monospace; font-size: 24px;" id="tierPlatinum">--</div>
+          </div>
+          <div class="tier-item tier-diamond">
+            <div style="font-size: 10px; color: #b9f2ff;">DIAMOND</div>
+            <div style="font-family: 'VT323', monospace; font-size: 24px;" id="tierDiamond">--</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-wide" style="margin-top: 15px;">
+      <!-- Task Analytics Chart -->
+      <div class="card">
+        <div class="card-title">TASKS (24H)</div>
+        <div class="chart-container">
+          <canvas id="taskChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Response Time Chart -->
+      <div class="card">
+        <div class="card-title">RESPONSE TIME DISTRIBUTION</div>
+        <div class="chart-container">
+          <canvas id="responseChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid" style="margin-top: 15px;">
+      <!-- Top Miners -->
+      <div class="card">
+        <div class="card-title">TOP MINERS (BY TASKS)</div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Address</th>
+                <th>Tasks</th>
+                <th>Rep</th>
+                <th>Tier</th>
+              </tr>
+            </thead>
+            <tbody id="topMinersTable">
+              <tr><td colspan="5" style="text-align: center; color: var(--dark-green);">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Recent Tasks -->
+      <div class="card">
+        <div class="card-title">RECENT TASKS</div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody id="recentTasksTable">
+              <tr><td colspan="4" style="text-align: center; color: var(--dark-green);">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Active Jackpots -->
+      <div class="card">
+        <div class="card-title">JACKPOT STATUS</div>
+        <div id="jackpotStatus">
+          <div style="text-align: center; color: var(--dark-green);">Loading...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- System Logs -->
+    <div class="card" style="margin-top: 15px;">
+      <div class="card-title">SYSTEM LOGS <span class="blink" style="color: var(--green);">●</span></div>
+      <div class="log-container" id="logContainer">
+        <div class="log-entry"><span class="log-time">[--:--:--]</span> <span class="log-info">Connecting to system...</span></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'http://204.168.139.31';
+    let taskChart, responseChart;
+    const logs = [];
+
+    function addLog(message, level = 'info') {
+      const time = new Date().toLocaleTimeString();
+      logs.unshift({ time, message, level });
+      if (logs.length > 100) logs.pop();
+      renderLogs();
+    }
+
+    function renderLogs() {
+      const container = document.getElementById('logContainer');
+      container.innerHTML = logs.map(log => 
+        `<div class="log-entry"><span class="log-time">[${log.time}]</span> <span class="log-${log.level}">${log.message}</span></div>`
+      ).join('');
+    }
+
+    async function loadHealth() {
+      try {
+        const res = await fetch(`${API_URL}/api/monitoring/health`);
+        const data = await res.json();
+        
+        document.getElementById('systemStatus').textContent = data.status.toUpperCase();
+        document.getElementById('systemStatus').className = `status-badge status-${data.status === 'healthy' ? 'healthy' : 'warning'}`;
+        document.getElementById('mongoStatus').textContent = data.services.mongodb;
+        document.getElementById('wsConnections').textContent = `${data.services.activeConnections} connections`;
+        document.getElementById('wsBar').style.width = `${Math.min(100, data.services.activeConnections * 10)}%`;
+        
+        const memPercent = Math.round((data.system.memory.total - data.system.memory.free) / data.system.memory.total * 100);
+        document.getElementById('memoryUsage').textContent = `${memPercent}%`;
+        document.getElementById('memBar').style.width = `${memPercent}%`;
+        document.getElementById('memBar').className = `progress-fill ${memPercent > 80 ? 'progress-red' : memPercent > 60 ? 'progress-gold' : 'progress-green'}`;
+        
+        const uptime = Math.floor(data.uptime / 3600);
+        document.getElementById('uptime').textContent = `${uptime}h ${Math.floor((data.uptime % 3600) / 60)}m`;
+        
+        addLog('Health check: ' + data.status, data.status === 'healthy' ? 'info' : 'warn');
+      } catch (error) {
+        addLog('Health check failed: ' + error.message, 'error');
+      }
+    }
+
+    async function loadStats() {
+      try {
+        const res = await fetch(`${API_URL}/api/stats`);
+        const data = await res.json();
+        
+        document.getElementById('totalMiners').textContent = data.network.totalMiners;
+        document.getElementById('onlineMiners').textContent = data.network.onlineMiners;
+        document.getElementById('totalTasks').textContent = data.tasks.completed;
+        document.getElementById('avgResponse').textContent = Math.round(data.tasks.avgResponseTimeMs);
+        
+        const successRate = data.tasks.total > 0 ? Math.round(data.tasks.completed / data.tasks.total * 100) : 0;
+        document.getElementById('successRate').textContent = successRate + '%';
+        
+        addLog(`Stats loaded: ${data.network.onlineMiners} miners online, ${data.tasks.completed} tasks`, 'info');
+      } catch (error) {
+        addLog('Failed to load stats: ' + error.message, 'error');
+      }
+    }
+
+    async function loadAnalytics() {
+      try {
+        const res = await fetch(`${API_URL}/api/analytics/snapshot`);
+        const data = await res.json();
+        
+        // Tier distribution
+        const tiers = data.network.tierDistribution || {};
+        document.getElementById('tierBronze').textContent = tiers.bronze || 0;
+        document.getElementById('tierSilver').textContent = tiers.silver || 0;
+        document.getElementById('tierGold').textContent = tiers.gold || 0;
+        document.getElementById('tierPlatinum').textContent = tiers.platinum || 0;
+        document.getElementById('tierDiamond').textContent = tiers.diamond || 0;
+        
+        addLog('Analytics snapshot loaded', 'info');
+      } catch (error) {
+        addLog('Failed to load analytics: ' + error.message, 'error');
+      }
+    }
+
+    async function loadTopMiners() {
+      try {
+        const res = await fetch(`${API_URL}/api/miners/leaderboard?limit=10`);
+        const data = await res.json();
+        
+        const tbody = document.getElementById('topMinersTable');
+        if (!data.miners || data.miners.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--dark-green);">No miners</td></tr>';
+          return;
+        }
+        
+        tbody.innerHTML = data.miners.map((m, i) => `
+          <tr>
+            <td>${i + 1}</td>
+            <td>${m.address.slice(0, 8)}...${m.address.slice(-4)}</td>
+            <td>${m.tasksCompleted}</td>
+            <td>${m.reputation}</td>
+            <td style="text-transform: capitalize;">${m.stakingTier}</td>
+          </tr>
+        `).join('');
+      } catch (error) {
+        addLog('Failed to load top miners: ' + error.message, 'error');
+      }
+    }
+
+    async function loadJackpots() {
+      try {
+        const res = await fetch(`${API_URL}/api/game/jackpots/active`);
+        const data = await res.json();
+        
+        const container = document.getElementById('jackpotStatus');
+        if (!data.jackpots || data.jackpots.length === 0) {
+          container.innerHTML = '<div style="text-align: center; color: var(--dark-green);">No active jackpots</div>';
+          return;
+        }
+        
+        container.innerHTML = data.jackpots.map(jp => `
+          <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border);">
+            <span style="text-transform: uppercase;">${jp.type}</span>
+            <span>${jp.multiplier}x</span>
+            <span>${jp.tasksUntilTrigger} left</span>
+          </div>
+        `).join('');
+      } catch (error) {
+        addLog('Failed to load jackpots: ' + error.message, 'error');
+      }
+    }
+
+    function initCharts() {
+      const ctx1 = document.getElementById('taskChart').getContext('2d');
+      taskChart = new Chart(ctx1, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{
+            label: 'Completed',
+            data: [],
+            borderColor: '#00ff41',
+            backgroundColor: 'rgba(0, 255, 65, 0.1)',
+            fill: true,
+            tension: 0.3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { color: '#1a3a1a' }, ticks: { color: '#00cc33', font: { size: 9 } } },
+            y: { grid: { color: '#1a3a1a' }, ticks: { color: '#00cc33', font: { size: 9 } } }
+          }
+        }
+      });
+      
+      const ctx2 = document.getElementById('responseChart').getContext('2d');
+      responseChart = new Chart(ctx2, {
+        type: 'bar',
+        data: {
+          labels: ['<1s', '1-2s', '2-5s', '5-10s', '10-30s', '>30s'],
+          datasets: [{
+            label: 'Tasks',
+            data: [0, 0, 0, 0, 0, 0],
+            backgroundColor: ['#00ff41', '#00cc33', '#ffd700', '#ff9900', '#ff4444', '#cc0000']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { color: '#1a3a1a' }, ticks: { color: '#00cc33', font: { size: 9 } } },
+            y: { grid: { color: '#1a3a1a' }, ticks: { color: '#00cc33', font: { size: 9 } } }
+          }
+        }
+      });
+    }
+
+    async function loadTaskAnalytics() {
+      try {
+        const res = await fetch(`${API_URL}/api/analytics/tasks?hours=24`);
+        const data = await res.json();
+        
+        if (data.hourlyBreakdown && data.hourlyBreakdown.length > 0) {
+          taskChart.data.labels = data.hourlyBreakdown.map(h => `${h._id.hour}:00`);
+          taskChart.data.datasets[0].data = data.hourlyBreakdown.map(h => h.completed);
+          taskChart.update();
+        }
+        
+        if (data.responseTimeDistribution) {
+          const dist = [0, 0, 0, 0, 0, 0];
+          data.responseTimeDistribution.forEach(d => {
+            if (d._id === 0) dist[0] = d.count;
+            else if (d._id === 1000) dist[1] = d.count;
+            else if (d._id === 2000) dist[2] = d.count;
+            else if (d._id === 5000) dist[3] = d.count;
+            else if (d._id === 10000) dist[4] = d.count;
+            else dist[5] += d.count;
+          });
+          responseChart.data.datasets[0].data = dist;
+          responseChart.update();
+        }
+      } catch (error) {
+        addLog('Failed to load task analytics: ' + error.message, 'error');
+      }
+    }
+
+    function refreshAll() {
+      document.getElementById('lastUpdate').textContent = 'Updating...';
+      addLog('Manual refresh triggered', 'info');
+      
+      Promise.all([
+        loadHealth(),
+        loadStats(),
+        loadAnalytics(),
+        loadTopMiners(),
+        loadJackpots(),
+        loadTaskAnalytics()
+      ]).then(() => {
+        document.getElementById('lastUpdate').textContent = 'Updated: ' + new Date().toLocaleTimeString();
+      });
+    }
+
+    // Initialize
+    initCharts();
+    refreshAll();
+    
+    // Auto refresh every 30 seconds
+    setInterval(refreshAll, 30000);
+  </script>
+</body>
+</html>

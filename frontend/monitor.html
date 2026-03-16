@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Monitor - TaoNet</title>
+  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root { --green: #00ff41; --dark-green: #00cc33; --bg: #0a0a0a; --terminal-bg: #0d1117; --border: #1a3a1a; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg); color: var(--green); font-family: 'Share Tech Mono', monospace; min-height: 100vh; }
+    body::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: repeating-linear-gradient(0deg, rgba(0,0,0,0.15), rgba(0,0,0,0.15) 1px, transparent 1px, transparent 2px); pointer-events: none; z-index: 1000; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+    header { border-bottom: 1px solid var(--border); padding: 20px 0; margin-bottom: 30px; }
+    .logo { font-family: 'VT323', monospace; font-size: 14px; line-height: 1.2; white-space: pre; text-shadow: 0 0 10px var(--green); }
+    nav { display: flex; gap: 30px; margin-top: 20px; flex-wrap: wrap; }
+    nav a { color: var(--green); text-decoration: none; padding: 5px 15px; border: 1px solid var(--border); transition: all 0.3s; }
+    nav a:hover, nav a.active { background: var(--green); color: var(--bg); }
+    
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    @media (max-width: 1000px) { .grid-3 { grid-template-columns: 1fr; } }
+    
+    .terminal { background: var(--terminal-bg); border: 1px solid var(--border); border-radius: 5px; padding: 15px; margin-bottom: 20px; }
+    .terminal-header { display: flex; gap: 8px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border); align-items: center; }
+    .terminal-btn { width: 12px; height: 12px; border-radius: 50%; }
+    .terminal-btn.red { background: #ff5f56; }
+    .terminal-btn.yellow { background: #ffbd2e; }
+    .terminal-btn.green { background: #27ca40; }
+    .terminal-title { margin-left: 10px; font-size: 12px; color: var(--dark-green); }
+    
+    .log-feed { height: 400px; overflow-y: auto; font-size: 12px; line-height: 1.6; }
+    .log-item { padding: 5px 0; border-bottom: 1px solid rgba(26, 58, 26, 0.5); }
+    .log-time { color: var(--dark-green); margin-right: 10px; }
+    .log-type { display: inline-block; padding: 2px 6px; font-size: 10px; border-radius: 3px; margin-right: 8px; }
+    .log-task { background: rgba(0, 150, 255, 0.2); color: #0096ff; }
+    .log-miner { background: rgba(0, 255, 65, 0.2); color: var(--green); }
+    .log-reward { background: rgba(255, 200, 0, 0.2); color: #ffcc00; }
+    .log-error { background: rgba(255, 0, 0, 0.2); color: #ff4444; }
+    .log-validation { background: rgba(150, 0, 255, 0.2); color: #9966ff; }
+    
+    .stat-big { text-align: center; padding: 20px; }
+    .stat-value { font-family: 'VT323', monospace; font-size: 64px; text-shadow: 0 0 30px var(--green); }
+    .stat-label { font-size: 12px; color: var(--dark-green); text-transform: uppercase; letter-spacing: 2px; }
+    
+    .miner-list { max-height: 300px; overflow-y: auto; }
+    .miner-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .miner-address { font-size: 12px; }
+    .miner-status { font-size: 10px; padding: 3px 8px; border-radius: 3px; }
+    .status-online { background: rgba(0, 255, 65, 0.2); color: var(--green); }
+    .status-busy { background: rgba(255, 200, 0, 0.2); color: #ffcc00; }
+    .status-offline { background: rgba(255, 0, 0, 0.2); color: #ff4444; }
+    
+    .task-item { padding: 10px; border-bottom: 1px solid var(--border); }
+    .task-id { font-size: 10px; color: var(--dark-green); }
+    .task-prompt { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 5px 0; }
+    .task-status { font-size: 10px; padding: 2px 6px; border-radius: 3px; }
+    .task-pending { background: rgba(255, 200, 0, 0.2); color: #ffcc00; }
+    .task-assigned { background: rgba(0, 150, 255, 0.2); color: #0096ff; }
+    .task-completed { background: rgba(0, 255, 65, 0.2); color: var(--green); }
+    
+    footer { border-top: 1px solid var(--border); padding: 20px 0; margin-top: 30px; text-align: center; color: var(--dark-green); font-size: 12px; }
+    footer a { color: var(--green); text-decoration: none; }
+    
+    .pulse { animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+████████╗ █████╗  ██████╗ ███╗   ██╗███████╗████████╗
+╚══██╔══╝██╔══██╗██╔═══██╗████╗  ██║██╔════╝╚══██╔══╝
+   ██║   ███████║██║   ██║██╔██╗ ██║█████╗     ██║   
+   ██║   ██╔══██║██║   ██║██║╚██╗██║██╔══╝     ██║   
+   ██║   ██║  ██║╚██████╔╝██║ ╚████║███████╗   ██║   
+   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝   ╚═╝   
+      </div>
+      <nav>
+        <a href="index.html">[HOME]</a>
+        <a href="mine.html">[MINE]</a>
+        <a href="leaderboard.html">[LEADERBOARD]</a>
+        <a href="rewards.html">[REWARDS]</a>
+        <a href="achievements.html">[ACHIEVEMENTS]</a>
+        <a href="docs.html">[DOCS]</a>
+        <a href="token.html">[TOKEN]</a>
+        <a href="playground.html">[PLAYGROUND]</a>
+        <a href="monitor.html" class="active">[MONITOR]</a>
+        
+      </nav>
+    </header>
+
+    <!-- Big Stats -->
+    <div class="grid-3">
+      <div class="terminal">
+        <div class="stat-big">
+          <div class="stat-value" id="onlineMiners">0</div>
+          <div class="stat-label">Miners Online</div>
+        </div>
+      </div>
+      <div class="terminal">
+        <div class="stat-big">
+          <div class="stat-value" id="tasksCompleted">0</div>
+          <div class="stat-label">Tasks Completed</div>
+        </div>
+      </div>
+      <div class="terminal">
+        <div class="stat-big">
+          <div class="stat-value" id="avgResponse">0<span style="font-size: 24px;">ms</span></div>
+          <div class="stat-label">Avg Response Time</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-3">
+      <!-- Live Log -->
+      <div class="terminal" style="grid-column: span 2;">
+        <div class="terminal-header">
+          <div class="terminal-btn red"></div>
+          <div class="terminal-btn yellow"></div>
+          <div class="terminal-btn green pulse"></div>
+          <span class="terminal-title">LIVE NETWORK LOG</span>
+        </div>
+        <div class="log-feed" id="logFeed"></div>
+      </div>
+
+      <!-- Active Miners -->
+      <div class="terminal">
+        <div class="terminal-header">
+          <div class="terminal-btn red"></div>
+          <div class="terminal-btn yellow"></div>
+          <div class="terminal-btn green"></div>
+          <span class="terminal-title">ACTIVE MINERS</span>
+        </div>
+        <div class="miner-list" id="minerList"></div>
+      </div>
+    </div>
+
+    <!-- Recent Tasks -->
+    <div class="terminal">
+      <div class="terminal-header">
+        <div class="terminal-btn red"></div>
+        <div class="terminal-btn yellow"></div>
+        <div class="terminal-btn green"></div>
+        <span class="terminal-title">RECENT TASKS</span>
+      </div>
+      <div class="grid-3" id="recentTasks"></div>
+    </div>
+
+    <footer>
+      <p>TaoNet Live Monitor - Auto-refreshing every 5 seconds</p>
+    </footer>
+  </div>
+
+  <script>
+    const API_URL = 'http://204.168.139.31';
+    const logs = [];
+    let lastTaskCount = 0;
+    let lastMinerCount = 0;
+
+    function addLog(type, message) {
+      const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+      logs.unshift({ time, type, message });
+      if (logs.length > 100) logs.pop();
+      renderLogs();
+    }
+
+    function renderLogs() {
+      const feed = document.getElementById('logFeed');
+      feed.innerHTML = logs.map(log => `
+        <div class="log-item">
+          <span class="log-time">[${log.time}]</span>
+          <span class="log-type log-${log.type}">${log.type.toUpperCase()}</span>
+          <span>${log.message}</span>
+        </div>
+      `).join('');
+    }
+
+    async function fetchStats() {
+      try {
+        const response = await fetch(`${API_URL}/api/stats`);
+        const data = await response.json();
+
+        // Update stats
+        document.getElementById('onlineMiners').textContent = data.network.onlineMiners;
+        document.getElementById('tasksCompleted').textContent = data.tasks.completed;
+        document.getElementById('avgResponse').innerHTML = 
+          Math.round(data.tasks.avgResponseTimeMs / 1000) + '<span style="font-size: 24px;">s</span>';
+
+        // Log changes
+        if (data.tasks.completed > lastTaskCount) {
+          addLog('task', `${data.tasks.completed - lastTaskCount} new task(s) completed`);
+        }
+        if (data.network.onlineMiners !== lastMinerCount) {
+          const diff = data.network.onlineMiners - lastMinerCount;
+          if (diff > 0) {
+            addLog('miner', `${diff} miner(s) came online`);
+          } else {
+            addLog('miner', `${Math.abs(diff)} miner(s) went offline`);
+          }
+        }
+
+        lastTaskCount = data.tasks.completed;
+        lastMinerCount = data.network.onlineMiners;
+      } catch (error) {
+        addLog('error', 'Failed to fetch stats');
+      }
+    }
+
+    async function fetchMiners() {
+      try {
+        const response = await fetch(`${API_URL}/api/stats/leaderboard?limit=20`);
+        const data = await response.json();
+
+        const list = document.getElementById('minerList');
+        if (!data.leaderboard || data.leaderboard.length === 0) {
+          list.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--dark-green);">No miners yet</div>';
+          return;
+        }
+
+        list.innerHTML = data.leaderboard.map(miner => `
+          <div class="miner-item">
+            <div>
+              <div class="miner-address">${miner.address.slice(0, 10)}...${miner.address.slice(-6)}</div>
+              <div style="font-size: 10px; color: var(--dark-green);">Tasks: ${miner.completedTasks}</div>
+            </div>
+            <span class="miner-status status-${miner.status}">${miner.status.toUpperCase()}</span>
+          </div>
+        `).join('');
+      } catch (error) {
+        console.error('Failed to fetch miners:', error);
+      }
+    }
+
+    async function fetchTasks() {
+      try {
+        const response = await fetch(`${API_URL}/api/tasks?limit=6`);
+        const data = await response.json();
+
+        const container = document.getElementById('recentTasks');
+        if (!data.tasks || data.tasks.length === 0) {
+          container.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--dark-green); grid-column: span 3;">No tasks yet</div>';
+          return;
+        }
+
+        container.innerHTML = data.tasks.map(task => `
+          <div class="task-item">
+            <div class="task-id">${task._id}</div>
+            <div class="task-prompt">${task.prompt}</div>
+            <div>
+              <span class="task-status task-${task.status}">${task.status.toUpperCase()}</span>
+              <span style="font-size: 10px; color: var(--dark-green); margin-left: 10px;">${task.type}</span>
+            </div>
+          </div>
+        `).join('');
+      } catch (error) {
+        console.error('Failed to fetch tasks:', error);
+      }
+    }
+
+    // Initial logs
+    addLog('miner', 'Monitor started');
+    addLog('task', 'Connecting to network...');
+
+    // Initial fetch
+    fetchStats();
+    fetchMiners();
+    fetchTasks();
+
+    // Auto refresh
+    setInterval(fetchStats, 5000);
+    setInterval(fetchMiners, 10000);
+    setInterval(fetchTasks, 5000);
+  </script>
+</body>
+</html>

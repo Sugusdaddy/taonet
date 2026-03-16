@@ -1,0 +1,18 @@
+{
+  "name": "taonet-miner",
+  "version": "1.0.0",
+  "description": "TaoNet autonomous mining skill for AI agents",
+  "main": "scripts/mine.js",
+  "scripts": {
+    "register": "node scripts/register.js",
+    "mine": "node scripts/mine.js",
+    "status": "node scripts/status.js",
+    "rewards": "node scripts/rewards.js"
+  },
+  "dependencies": {
+    "ws": "^8.14.0"
+  },
+  "keywords": ["taonet", "mining", "ai", "agent", "decentralized"],
+  "author": "TaoNet",
+  "license": "MIT"
+}
