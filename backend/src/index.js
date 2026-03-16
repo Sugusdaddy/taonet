@@ -23,7 +23,7 @@ app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false
 }));
-app.use(cors());
+app.use(cors({ origin: true, credentials: true }));
 app.use(morgan('combined'));
 app.use(express.json());
 app.use(requestLogger);
@@ -45,6 +45,7 @@ const validationRoutes = require('./routes/validations');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/miners', minerRoutes);
+app.use('/api/proofs', require('./routes/proofs'));
 app.use('/api/tasks', taskRoutes);
 app.use('/api/rewards', rewardRoutes);
 app.use('/api/stats', statsRoutes);
@@ -80,7 +81,9 @@ app.use('/api/tokens', tokenRoutes);
 
 // Monitoring routes
 const monitoringRoutes = require('./routes/monitoring');
+const activityRoutes = require('./routes/activity');
 app.use('/api/monitoring', monitoringRoutes);
+app.use('/api/activity', activityRoutes);
 
 // Skill.md endpoint
 app.get('/skill.md', (req, res) => {
@@ -116,7 +119,7 @@ app.get('/api', (req, res) => {
 });
 
 // WebSocket setup
-const wss = new WebSocketServer({ noServer: true });
+global.wss = new WebSocketServer({ noServer: true });
 
 // Handle HTTP upgrade
 server.on('upgrade', (request, socket, head) => {
@@ -134,7 +137,7 @@ server.on('upgrade', (request, socket, head) => {
 // WebSocket connection handler
 const { MinerController } = require('./controllers/minerController');
 
-wss.on('connection', (ws, request) => {
+global.wss.on('connection', (ws, request) => {
   console.log('New WebSocket connection');
   
   ws.isAlive = true;
@@ -195,7 +198,7 @@ const heartbeatInterval = setInterval(() => {
   });
 }, 30000);
 
-wss.on('close', () => {
+global.wss.on('close', () => {
   clearInterval(heartbeatInterval);
 });
 
@@ -277,6 +280,15 @@ mongoose.connect(MONGO_URI)
     console.log('Connected to MongoDB');
     // Initialize cron jobs after DB connection
     initCronJobs();
+    // Start automatic task generation
+    const taskGenerator = require("./taskGenerator");
+    taskGenerator.start(15000);
+    console.log("Task generator started");
+
+// Initialize Solana anchor
+const solanaAnchor = require('./services/solanaAnchor');
+solanaAnchor.init(process.env.SOLANA_PRIVATE_KEY);
+console.log('[Anchor] Service initialized');
   })
   .catch(err => console.error('MongoDB connection error:', err));
 
@@ -291,7 +303,7 @@ server.listen(PORT, () => {
 process.on('SIGTERM', () => {
   console.log('SIGTERM received, shutting down...');
   
-  wss.close(() => {
+  global.wss.close(() => {
     server.close(() => {
       mongoose.connection.close(false, () => {
         process.exit(0);

@@ -19,7 +19,7 @@ class SolanaAnchor {
   // Initialize with private key
   init(privateKeyBase58) {
     if (privateKeyBase58) {
-      const bs58 = require('bs58');
+      const bs58 = require('bs58').default;
       this.keypair = Keypair.fromSecretKey(bs58.decode(privateKeyBase58));
       console.log(`[Anchor] Initialized with wallet: ${this.keypair.publicKey.toBase58()}`);
     } else {
