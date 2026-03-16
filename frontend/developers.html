@@ -115,11 +115,11 @@
       <p style="font-size: 11px; color: var(--dark-green); margin-bottom: 15px;">Generate an API key above using your wallet address.</p>
       
       <h4 style="font-size: 14px; margin-bottom: 10px;">2. Make Authenticated Requests</h4>
-      <pre>curl -X GET "http://204.168.139.31/api/stats" \
+      <pre>curl -X GET "https://api.taonet.fun/api/stats" \
   -H "Authorization: Bearer YOUR_API_KEY"</pre>
       
       <h4 style="font-size: 14px; margin: 15px 0 10px;">3. Submit Tasks</h4>
-      <pre>curl -X POST "http://204.168.139.31/api/tasks/submit" \
+      <pre>curl -X POST "https://api.taonet.fun/api/tasks/submit" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -261,7 +261,7 @@
   </div>
 
   <script>
-    const API_URL = 'http://204.168.139.31';
+    const API_URL = 'https://api.taonet.fun';
     let currentOwner = null;
 
     // Tab switching
