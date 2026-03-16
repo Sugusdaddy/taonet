@@ -90,6 +90,17 @@ const api = {
   shortAddress(addr) {
     if (!addr) return '';
     return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+  },
+  
+  formatNumber(n) {
+    if (!n) return '0';
+    const num = typeof n === 'string' ? parseFloat(n) : n;
+    if (isNaN(num)) return '0';
+    if (num >= 1e18) return (num / 1e18).toFixed(2) + ' TAO';
+    if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
+    if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
+    if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
+    return num.toLocaleString();
   }
 };
 
