@@ -8,7 +8,7 @@ export function MiningProvider({ children }) {
   
   // Mining state
   const [isMining, setIsMining] = useState(false);
-  const [modelStatus, setModelStatus] = useState('idle'); // idle, checking, loading, ready, error
+  const [modelStatus, setModelStatus] = useState('idle');
   const [modelProgress, setModelProgress] = useState(0);
   const [currentTask, setCurrentTask] = useState(null);
   const [taskOutput, setTaskOutput] = useState('');
@@ -76,7 +76,6 @@ export function MiningProvider({ children }) {
   const loadModel = useCallback(async () => {
     if (engineRef.current) return true;
     if (!gpuInfo?.supported) {
-      // Use backend processing mode
       backendModeRef.current = true;
       addLog('Using server-side AI processing', 'info');
       return true;
@@ -106,11 +105,10 @@ export function MiningProvider({ children }) {
       return true;
     } catch (err) {
       console.error('Model load error:', err);
-      // Fallback to backend mode
       backendModeRef.current = true;
       setModelLoading(false);
       addLog('Using server-side AI (GPU model failed)', 'warning');
-      return true; // Still allow mining with backend
+      return true;
     }
   }, [gpuInfo, addLog]);
 
@@ -162,21 +160,44 @@ export function MiningProvider({ children }) {
         case 'task':
           setCurrentTask(data.task);
           setTaskOutput('');
-          addLog(`Task received: ${data.task?.prompt?.slice(0, 40)}...`, 'task');
+          const diffLabel = data.task?.difficultyName ? ` [${data.task.difficultyName}]` : '';
+          addLog(`Task received${diffLabel}: ${data.task?.prompt?.slice(0, 50)}...`, 'task');
           await processTask(data.task);
+          break;
+        
+        case 'task_stream':
+          // Streaming response from server
+          setTaskOutput(prev => prev + data.chunk);
           break;
           
         case 'task_accepted':
-        case 'task_received':
           const reward = data.reward ? parseFloat(data.reward) / 1e18 : 0.001;
+          const xp = data.xp || 0;
           setSessionStats(prev => ({
             ...prev,
             tasks: prev.tasks + 1,
             earned: prev.earned + reward
           }));
-          addLog(`Task completed! +${reward.toFixed(4)} TAO`, 'success');
-          setCurrentTask(null);
-          setTaskOutput('');
+          
+          // Show final response if provided
+          if (data.response) {
+            setTaskOutput(data.response);
+          }
+          
+          let msg = `Task completed! +${reward.toFixed(4)} TAO`;
+          if (xp > 0) msg += ` +${xp} XP`;
+          if (data.leveledUp) msg += ` LEVEL UP!`;
+          addLog(msg, 'success');
+          
+          // Small delay to let user see the result
+          setTimeout(() => {
+            setCurrentTask(null);
+            setTaskOutput('');
+            // Request next task
+            if (wsRef.current?.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify({ type: 'ready' }));
+            }
+          }, 1500);
           break;
           
         case 'heartbeat_ack':
@@ -184,6 +205,12 @@ export function MiningProvider({ children }) {
           
         case 'error':
           addLog(`Error: ${data.message}`, 'error');
+          // Request next task after error
+          setTimeout(() => {
+            if (wsRef.current?.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify({ type: 'ready' }));
+            }
+          }, 2000);
           break;
       }
     };
@@ -209,10 +236,8 @@ export function MiningProvider({ children }) {
     
     // Backend mode - server processes the task
     if (backendModeRef.current || !engineRef.current) {
-      setTaskOutput('Processing on server...');
-      addLog('Server processing task...', 'info');
+      setTaskOutput('Generating response...');
       
-      // Send acknowledgment - backend will process
       if (wsRef.current?.readyState === WebSocket.OPEN) {
         wsRef.current.send(JSON.stringify({
           type: 'task_response',
@@ -222,13 +247,6 @@ export function MiningProvider({ children }) {
           backend: true
         }));
       }
-      
-      // Ready for next
-      setTimeout(() => {
-        if (wsRef.current?.readyState === WebSocket.OPEN) {
-          wsRef.current.send(JSON.stringify({ type: 'ready' }));
-        }
-      }, 500);
       return;
     }
     
@@ -270,14 +288,8 @@ export function MiningProvider({ children }) {
           processingTime,
           tokensGenerated: tokenCount
         }));
-        addLog(`Sent ${tokenCount} tokens in ${(processingTime/1000).toFixed(1)}s`, 'success');
+        addLog(`Generated ${tokenCount} tokens in ${(processingTime/1000).toFixed(1)}s`, 'info');
       }
-      
-      setTimeout(() => {
-        if (wsRef.current?.readyState === WebSocket.OPEN) {
-          wsRef.current.send(JSON.stringify({ type: 'ready' }));
-        }
-      }, 500);
       
     } catch (err) {
       addLog(`Processing error: ${err.message}`, 'error');
