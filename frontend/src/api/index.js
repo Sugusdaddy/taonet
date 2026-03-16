@@ -35,6 +35,11 @@ class TaoNetAPI {
   async getStats() {
     return this.get('/api/stats');
   }
+  
+  // Alias
+  async getNetworkStats() {
+    return this.getStats();
+  }
 
   async getHealth() {
     return this.get('/health');
@@ -42,6 +47,12 @@ class TaoNetAPI {
 
   async getActivity(limit = 20) {
     return this.get(`/api/activity?limit=${limit}`);
+  }
+  
+  // Proofs
+  async getProofs(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.get(`/api/proofs?${query}`) || { proofs: [] };
   }
 
   // Miners
@@ -67,15 +78,24 @@ class TaoNetAPI {
 
   // Gamification
   async getJackpots() {
-    return this.get('/api/game/jackpots/active');
+    return this.get('/api/game/jackpots/active') || { jackpots: [] };
   }
 
   async getAchievements() {
-    return this.get('/api/game/achievements');
+    return this.get('/api/game/achievements') || { achievements: [] };
   }
 
   async getTournaments() {
-    return this.get('/api/tournaments/active');
+    return this.get('/api/tournaments/active') || { tournaments: [] };
+  }
+  
+  // Playground
+  async queryPlayground(prompt, address) {
+    return this.post('/api/playground/query', { prompt, address });
+  }
+  
+  async getPlaygroundStats() {
+    return this.get('/api/playground/stats');
   }
 
   // Wallet Management
@@ -90,13 +110,11 @@ class TaoNetAPI {
     this.wallet = address;
     localStorage.setItem('taonet_wallet', address);
     
-    // Try to get existing miner data (may not exist if not registered)
     const minerData = await this.getMiner(address);
     if (minerData?.miner) {
       this.miner = minerData.miner;
       localStorage.setItem('taonet_miner', JSON.stringify(this.miner));
     } else {
-      // Not registered yet - clear any stale miner data
       this.miner = null;
       localStorage.removeItem('taonet_miner');
     }
@@ -146,20 +164,30 @@ class TaoNetAPI {
 
   formatNumber(num) {
     if (!num) return '0';
-    // Convert from wei (1e18) to tokens
-    const tokens = Number(BigInt(num) / BigInt(1e18));
-    if (tokens >= 1e9) return (tokens / 1e9).toFixed(1) + 'B';
-    if (tokens >= 1e6) return (tokens / 1e6).toFixed(1) + 'M';
-    if (tokens >= 1e3) return (tokens / 1e3).toFixed(1) + 'K';
-    if (tokens >= 1) return tokens.toLocaleString();
-    // For small amounts, show decimals
-    const precise = Number(num) / 1e18;
-    if (precise >= 0.01) return precise.toFixed(2);
-    if (precise >= 0.001) return precise.toFixed(3);
-    return precise.toFixed(4);
+    try {
+      const n = typeof num === 'string' ? parseFloat(num) : num;
+      if (isNaN(n)) return '0';
+      // If it looks like wei (very large number), convert
+      if (n >= 1e15) {
+        const tokens = n / 1e18;
+        if (tokens >= 1e9) return (tokens / 1e9).toFixed(1) + 'B';
+        if (tokens >= 1e6) return (tokens / 1e6).toFixed(1) + 'M';
+        if (tokens >= 1e3) return (tokens / 1e3).toFixed(1) + 'K';
+        if (tokens >= 1) return tokens.toFixed(2);
+        return tokens.toFixed(4);
+      }
+      // Regular number
+      if (n >= 1e9) return (n / 1e9).toFixed(1) + 'B';
+      if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+      if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+      return n.toLocaleString();
+    } catch {
+      return '0';
+    }
   }
 
   timeAgo(date) {
+    if (!date) return '';
     const now = Date.now();
     const then = new Date(date).getTime();
     const diff = Math.floor((now - then) / 1000);
