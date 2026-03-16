@@ -21,20 +21,10 @@
   text-decoration: none;
 }
 
-.logo-icon {
+.logo-img {
   width: 36px;
   height: 36px;
-  background: var(--gradient-primary);
   border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.logo-icon svg {
-  width: 20px;
-  height: 20px;
-  color: white;
 }
 
 .logo-text {
