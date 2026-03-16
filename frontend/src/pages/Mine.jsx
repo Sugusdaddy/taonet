@@ -41,8 +41,21 @@ export default function Mine() {
     try {
       const adapter = await navigator.gpu.requestAdapter();
       if (!adapter) return { supported: false, reason: 'No GPU adapter found' };
-      const info = await adapter.requestAdapterInfo();
-      return { supported: true, gpu: info.description || info.vendor || 'Unknown GPU' };
+      
+      // Get GPU info - handle different browser implementations
+      let gpuName = 'WebGPU Compatible GPU';
+      try {
+        if (adapter.requestAdapterInfo) {
+          const info = await adapter.requestAdapterInfo();
+          gpuName = info.description || info.device || info.vendor || gpuName;
+        } else if (adapter.info) {
+          gpuName = adapter.info.description || adapter.info.device || adapter.info.vendor || gpuName;
+        }
+      } catch (e) {
+        // Info not available, use default
+      }
+      
+      return { supported: true, gpu: gpuName };
     } catch (e) {
       return { supported: false, reason: e.message };
     }
