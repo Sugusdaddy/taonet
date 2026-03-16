@@ -1,0 +1,280 @@
+/* Hero */
+.hero {
+  padding: var(--space-3xl) 0;
+  text-align: center;
+  background: radial-gradient(ellipse at center top, rgba(0, 214, 50, 0.08), transparent 60%);
+}
+
+.hero-badge {
+  display: inline-block;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-full);
+  margin-bottom: var(--space-lg);
+}
+
+.hero-title {
+  font-size: 64px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  margin-bottom: var(--space-lg);
+}
+
+.hero-title .accent {
+  color: var(--accent);
+}
+
+.hero-text {
+  font-size: 18px;
+  color: var(--text-secondary);
+  max-width: 500px;
+  margin: 0 auto var(--space-xl);
+}
+
+.hero-buttons {
+  display: flex;
+  gap: var(--space-md);
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .hero-title { font-size: 40px; }
+  .hero-text { font-size: 16px; }
+  .hero-buttons { flex-direction: column; align-items: center; }
+}
+
+/* Activity */
+.activity-container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.activity-feed {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  min-height: 200px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.activity-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  text-align: center;
+  color: var(--text-tertiary);
+}
+
+.activity-empty .small {
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.activity-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 1px solid var(--border);
+  animation: slideIn 0.3s ease;
+}
+
+.activity-item:last-child {
+  border-bottom: none;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.activity-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.activity-icon.join { background: var(--accent-bg); color: var(--accent); }
+.activity-icon.task { background: rgba(10, 132, 255, 0.12); color: var(--blue); }
+.activity-icon.reward { background: rgba(255, 214, 10, 0.12); color: var(--gold); }
+.activity-icon.jackpot { background: rgba(191, 90, 242, 0.12); color: var(--purple); }
+.activity-icon.level { background: rgba(48, 209, 88, 0.12); color: var(--green); }
+
+.activity-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.activity-text {
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.activity-text strong {
+  color: var(--accent);
+}
+
+.activity-time {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+/* Steps */
+.step-card {
+  text-align: center;
+}
+
+.step-card h3 {
+  margin: var(--space-md) 0 var(--space-sm);
+}
+
+.step-card p {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.step-number {
+  width: 48px;
+  height: 48px;
+  background: var(--accent);
+  color: #000;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 auto;
+}
+
+/* Tiers */
+.tiers-grid {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.tier-card {
+  background: var(--bg-secondary);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg) var(--space-xl);
+  text-align: center;
+  min-width: 140px;
+  transition: transform 0.2s;
+}
+
+.tier-card:hover { transform: translateY(-4px); }
+
+.tier-bronze { border-color: var(--bronze); }
+.tier-silver { border-color: var(--silver); }
+.tier-gold { border-color: var(--gold); }
+.tier-platinum { border-color: var(--platinum); }
+.tier-diamond { border-color: var(--diamond); }
+
+.tier-name {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-sm);
+}
+
+.tier-bronze .tier-name { color: var(--bronze); }
+.tier-silver .tier-name { color: var(--silver); }
+.tier-gold .tier-name { color: var(--gold); }
+.tier-platinum .tier-name { color: var(--platinum); }
+.tier-diamond .tier-name { color: var(--diamond); }
+
+.tier-mult {
+  display: block;
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: var(--space-xs);
+}
+
+.tier-bronze .tier-mult { color: var(--bronze); }
+.tier-silver .tier-mult { color: var(--silver); }
+.tier-gold .tier-mult { color: var(--gold); }
+.tier-platinum .tier-mult { color: var(--platinum); }
+.tier-diamond .tier-mult { color: var(--diamond); }
+
+.tier-req {
+  display: block;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+/* Jackpots */
+.jackpot-card {
+  background: var(--bg-secondary);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  text-align: center;
+  transition: transform 0.2s;
+}
+
+.jackpot-card:hover { transform: translateY(-4px); }
+
+.jackpot-mini { border-color: var(--accent); }
+.jackpot-regular { border-color: var(--blue); }
+.jackpot-mega { border-color: var(--gold); }
+.jackpot-ultra { border-color: var(--purple); }
+
+.jackpot-type {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: var(--space-sm);
+}
+
+.jackpot-mini .jackpot-type { color: var(--accent); }
+.jackpot-regular .jackpot-type { color: var(--blue); }
+.jackpot-mega .jackpot-type { color: var(--gold); }
+.jackpot-ultra .jackpot-type { color: var(--purple); }
+
+.jackpot-mult {
+  display: block;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.jackpot-mini .jackpot-mult { color: var(--accent); }
+.jackpot-regular .jackpot-mult { color: var(--blue); }
+.jackpot-mega .jackpot-mult { color: var(--gold); }
+.jackpot-ultra .jackpot-mult { color: var(--purple); }
+
+.jackpot-info {
+  display: block;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: var(--space-sm);
+}
+
+/* CTA */
+.cta-box {
+  text-align: center;
+  padding: var(--space-3xl);
+  background: linear-gradient(135deg, var(--accent-bg), rgba(10, 132, 255, 0.08));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+}

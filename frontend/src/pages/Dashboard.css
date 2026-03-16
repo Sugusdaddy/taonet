@@ -1,0 +1,165 @@
+.dashboard-page {
+  padding: var(--space-2xl) 0;
+}
+
+.loading, .empty-state {
+  text-align: center;
+  padding: var(--space-3xl);
+}
+
+.empty-state h2 {
+  margin-bottom: var(--space-sm);
+}
+
+.empty-state p {
+  color: var(--text-secondary);
+}
+
+/* Header */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-xl);
+}
+
+.miner-name {
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.miner-address {
+  font-family: var(--font-mono);
+  color: var(--text-tertiary);
+  font-size: 14px;
+}
+
+/* Grid */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-lg);
+  margin-top: var(--space-xl);
+}
+
+@media (max-width: 768px) {
+  .dashboard-grid { grid-template-columns: 1fr; }
+  .span-2 { grid-column: span 1; }
+}
+
+.span-2 {
+  grid-column: span 2;
+}
+
+/* Level */
+.level-badge {
+  background: var(--accent-bg);
+  color: var(--accent);
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.progress-section {
+  margin-top: var(--space-md);
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--space-sm);
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+
+/* Tier */
+.tier-info {
+  margin-top: var(--space-md);
+}
+
+.tier-current {
+  text-align: center;
+  padding: var(--space-lg);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+}
+
+.tier-mult-large {
+  display: block;
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.tier-label {
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+
+.tier-next {
+  margin-top: var(--space-md);
+  padding: var(--space-md);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  text-align: center;
+  font-size: 14px;
+}
+
+/* Activity */
+.activity-list {
+  margin-top: var(--space-md);
+}
+
+.activity-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-md) 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.activity-row:last-child {
+  border-bottom: none;
+}
+
+.activity-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.activity-type {
+  padding: 4px 10px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.activity-id {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+
+.activity-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.activity-status {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-completed { color: var(--accent); }
+.status-pending { color: var(--orange); }
+.status-failed { color: var(--red); }
+
+.activity-time {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
