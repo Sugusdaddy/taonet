@@ -146,11 +146,17 @@ class TaoNetAPI {
 
   formatNumber(num) {
     if (!num) return '0';
-    const n = Number(num);
-    if (n >= 1e9) return (n / 1e9).toFixed(1) + 'B';
-    if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
-    if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
-    return n.toLocaleString();
+    // Convert from wei (1e18) to tokens
+    const tokens = Number(BigInt(num) / BigInt(1e18));
+    if (tokens >= 1e9) return (tokens / 1e9).toFixed(1) + 'B';
+    if (tokens >= 1e6) return (tokens / 1e6).toFixed(1) + 'M';
+    if (tokens >= 1e3) return (tokens / 1e3).toFixed(1) + 'K';
+    if (tokens >= 1) return tokens.toLocaleString();
+    // For small amounts, show decimals
+    const precise = Number(num) / 1e18;
+    if (precise >= 0.01) return precise.toFixed(2);
+    if (precise >= 0.001) return precise.toFixed(3);
+    return precise.toFixed(4);
   }
 
   timeAgo(date) {
