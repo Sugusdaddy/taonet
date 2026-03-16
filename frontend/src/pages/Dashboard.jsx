@@ -1,281 +1,212 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useWallet } from '../context/WalletContext';
 import api from '../api';
 import './Dashboard.css';
 
 export default function Dashboard() {
+  const { wallet, miner, isConnected } = useWallet();
   const [stats, setStats] = useState(null);
+  const [networkStats, setNetworkStats] = useState(null);
   const [recentProofs, setRecentProofs] = useState([]);
-  const [topMiners, setTopMiners] = useState([]);
-  const [networkHistory, setNetworkHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const fetchData = async () => {
-    try {
-      const [statsRes, proofsRes, leaderboardRes] = await Promise.all([
-        api.getNetworkStats(),
-        api.getProofs({ limit: 10 }),
-        api.getLeaderboard()
-      ]);
-      
-      setStats(statsRes);
-      setRecentProofs(proofsRes.proofs || []);
-      setTopMiners(leaderboardRes.leaderboard?.slice(0, 5) || []);
-      
-      // Generate mock history for chart (would be real API in production)
-      const history = [];
-      for (let i = 23; i >= 0; i--) {
-        history.push({
-          hour: i,
-          proofs: Math.floor(Math.random() * 50) + 10,
-          miners: Math.floor(Math.random() * 5) + 1
-        });
-      }
-      setNetworkHistory(history.reverse());
-      
-    } catch (err) {
-      console.error('Failed to fetch dashboard data:', err);
-    } finally {
-      setLoading(false);
+    if (wallet) {
+      loadData();
+      const interval = setInterval(loadData, 15000);
+      return () => clearInterval(interval);
     }
-  };
+  }, [wallet]);
 
-  const formatNumber = (n) => {
-    if (!n) return '0';
-    if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
-    if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
-    if (n >= 1e3) return (n / 1e3).toFixed(2) + 'K';
-    return n.toString();
-  };
-
-  if (loading) {
-    return (
-      <main className="dashboard-page">
-        <div className="container">
-          <div className="loading-state">Loading dashboard...</div>
-        </div>
-      </main>
-    );
+  async function loadData() {
+    const [minerData, network, proofs] = await Promise.all([
+      api.getMinerDashboard(wallet),
+      api.getStats(),
+      api.getProofs({ miner: wallet, limit: 5 })
+    ]);
+    if (minerData) setStats(minerData);
+    if (network) setNetworkStats(network);
+    if (proofs?.proofs) setRecentProofs(proofs.proofs);
+    setLoading(false);
   }
 
-  const maxProofs = Math.max(...networkHistory.map(h => h.proofs), 1);
-
-  return (
-    <main className="dashboard-page">
-      <div className="container">
-        <div className="dashboard-header">
-          <div>
-            <h1>Network Dashboard</h1>
-            <p>Real-time TaoNet statistics and activity</p>
-          </div>
-          <div className="header-actions">
-            <Link to="/mine" className="btn-primary">Start Mining</Link>
-          </div>
-        </div>
-
-        {/* Key Metrics */}
-        <div className="metrics-grid">
-          <div className="metric-card">
-            <div className="metric-icon blue">
+  if (!isConnected) {
+    return (
+      <div className="page dashboard-page">
+        <div className="container">
+          <div className="connect-prompt">
+            <div className="prompt-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="2" y="3" width="20" height="14" rx="2" />
-                <path d="M8 21h8M12 17v4" />
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <path d="M21 15l-5-5L5 21"/>
               </svg>
             </div>
-            <div className="metric-content">
-              <span className="metric-value">{stats?.minersOnline || 0}</span>
-              <span className="metric-label">Miners Online</span>
-            </div>
-            <div className="metric-change positive">
-              <span>+{Math.floor(Math.random() * 10)}%</span>
-            </div>
-          </div>
-
-          <div className="metric-card">
-            <div className="metric-icon purple">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                <path d="M2 17l10 5 10-5M2 12l10 5 10-5" />
-              </svg>
-            </div>
-            <div className="metric-content">
-              <span className="metric-value">{formatNumber(stats?.totalProofs || 0)}</span>
-              <span className="metric-label">Total Proofs</span>
-            </div>
-            <div className="metric-trend">
-              <span>{stats?.proofsToday || 0} today</span>
-            </div>
-          </div>
-
-          <div className="metric-card">
-            <div className="metric-icon green">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 6v6l4 2" />
-              </svg>
-            </div>
-            <div className="metric-content">
-              <span className="metric-value">{stats?.avgResponseTime || 0}ms</span>
-              <span className="metric-label">Avg Response</span>
-            </div>
-          </div>
-
-          <div className="metric-card">
-            <div className="metric-icon orange">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-              </svg>
-            </div>
-            <div className="metric-content">
-              <span className="metric-value">{formatNumber(parseFloat(stats?.totalRewards || 0) / 1e18)}</span>
-              <span className="metric-label">TAO Distributed</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="dashboard-grid">
-          {/* Activity Chart */}
-          <div className="chart-card">
-            <div className="card-header">
-              <h3>Network Activity (24h)</h3>
-              <div className="chart-legend">
-                <span className="legend-item"><span className="dot blue"></span> Proofs</span>
-              </div>
-            </div>
-            <div className="chart-container">
-              <div className="bar-chart">
-                {networkHistory.map((h, i) => (
-                  <div key={i} className="bar-wrapper">
-                    <div 
-                      className="bar" 
-                      style={{ height: `${(h.proofs / maxProofs) * 100}%` }}
-                      title={`${h.proofs} proofs`}
-                    />
-                    <span className="bar-label">{h.hour}h</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Recent Proofs */}
-          <div className="proofs-card">
-            <div className="card-header">
-              <h3>Recent Proofs</h3>
-              <Link to="/explorer" className="view-all">View All</Link>
-            </div>
-            <div className="proofs-list">
-              {recentProofs.map((proof, i) => (
-                <div key={i} className="proof-item">
-                  <div className="proof-block">#{proof.blockHeight}</div>
-                  <div className="proof-info">
-                    <span className="proof-hash">{proof.combinedHash?.slice(0, 16)}...</span>
-                    <span className="proof-miner">{proof.miner?.slice(0, 8)}...</span>
-                  </div>
-                  <div className="proof-time">
-                    {new Date(proof.timestamp).toLocaleTimeString()}
-                  </div>
-                </div>
-              ))}
-              {recentProofs.length === 0 && (
-                <div className="empty-state">No proofs yet</div>
-              )}
-            </div>
-          </div>
-
-          {/* Top Miners */}
-          <div className="miners-card">
-            <div className="card-header">
-              <h3>Top Miners</h3>
-              <Link to="/leaderboard" className="view-all">Leaderboard</Link>
-            </div>
-            <div className="miners-list">
-              {topMiners.map((miner, i) => (
-                <div key={i} className="miner-row">
-                  <div className="miner-rank">#{i + 1}</div>
-                  <div className="miner-details">
-                    <span className="miner-name">{miner.name}</span>
-                    <span className="miner-address">{miner.address?.slice(0, 8)}...</span>
-                  </div>
-                  <div className="miner-score">
-                    <span className="score-value">{miner.stats?.completedTasks || 0}</span>
-                    <span className="score-label">tasks</span>
-                  </div>
-                </div>
-              ))}
-              {topMiners.length === 0 && (
-                <div className="empty-state">No miners yet</div>
-              )}
-            </div>
-          </div>
-
-          {/* Knowledge Stats */}
-          <div className="knowledge-card">
-            <div className="card-header">
-              <h3>Knowledge Base</h3>
-              <Link to="/playground" className="view-all">Try SolanaGPT</Link>
-            </div>
-            <div className="knowledge-stats">
-              <div className="knowledge-stat">
-                <span className="stat-number">{stats?.knowledgeCount || 155}</span>
-                <span className="stat-text">Questions Learned</span>
-              </div>
-              <div className="knowledge-stat">
-                <span className="stat-number">10</span>
-                <span className="stat-text">Categories</span>
-              </div>
-              <div className="knowledge-progress">
-                <div className="progress-header">
-                  <span>Learning Progress</span>
-                  <span>{Math.min(100, Math.round((stats?.knowledgeCount || 0) / 155 * 100))}%</span>
-                </div>
-                <div className="progress-bar">
-                  <div 
-                    className="progress-fill" 
-                    style={{ width: `${Math.min(100, (stats?.knowledgeCount || 0) / 155 * 100)}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Solana Anchor Status */}
-        <div className="anchor-status">
-          <div className="anchor-header">
-            <div className="anchor-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-              </svg>
-            </div>
-            <div>
-              <h3>Solana Anchoring</h3>
-              <p>Proofs verified on-chain every 10 blocks</p>
-            </div>
-          </div>
-          <div className="anchor-stats">
-            <div className="anchor-stat">
-              <span className="value">{stats?.lastAnchorBlock || '-'}</span>
-              <span className="label">Last Anchor Block</span>
-            </div>
-            <div className="anchor-stat">
-              <span className="value">{stats?.totalAnchors || 0}</span>
-              <span className="label">Total Anchors</span>
-            </div>
-            <div className="anchor-stat">
-              <span className="value">Devnet</span>
-              <span className="label">Network</span>
-            </div>
+            <h2>Connect your wallet</h2>
+            <p>View your mining stats and history</p>
+            <Link to="/mine" className="btn btn-primary">Go to Mine</Link>
           </div>
         </div>
       </div>
-    </main>
+    );
+  }
+
+  const tierColors = {
+    bronze: '#cd7f32',
+    silver: '#9ca3af',
+    gold: '#fbbf24',
+    platinum: '#e5e7eb',
+    diamond: '#60a5fa'
+  };
+
+  const tierInfo = api.getTierInfo(miner?.balance || 0);
+
+  return (
+    <div className="page dashboard-page">
+      <div className="container">
+        <div className="page-header">
+          <div>
+            <h1>Dashboard</h1>
+            <p>Your mining performance overview</p>
+          </div>
+          <Link to="/mine" className="btn btn-primary">
+            Start Mining
+          </Link>
+        </div>
+
+        {loading ? (
+          <div className="loading-state">
+            <div className="spinner"></div>
+            <p>Loading dashboard...</p>
+          </div>
+        ) : (
+          <>
+            {/* Miner Info */}
+            <div className="miner-card">
+              <div className="miner-header">
+                <div className="miner-avatar" style={{ borderColor: tierColors[tierInfo.tier] }}>
+                  {(miner?.name || wallet)?.[0]?.toUpperCase() || '?'}
+                </div>
+                <div className="miner-details">
+                  <h2>{miner?.name || 'Anonymous'}</h2>
+                  <span className="wallet-addr">{api.shortAddress(wallet)}</span>
+                </div>
+                <div className="miner-badges">
+                  <span className="level-badge">Level {miner?.level || 1}</span>
+                  <span className="tier-badge" style={{ color: tierColors[tierInfo.tier] }}>
+                    {tierInfo.tier.charAt(0).toUpperCase() + tierInfo.tier.slice(1)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="xp-progress">
+                <div className="xp-bar">
+                  <div className="xp-fill" style={{ width: `${((miner?.xp || 0) % 1000) / 10}%` }}></div>
+                </div>
+                <span className="xp-text">{miner?.xp || 0} XP</span>
+              </div>
+            </div>
+
+            {/* Stats Grid */}
+            <div className="stats-grid">
+              <div className="stat-card">
+                <div className="stat-icon purple">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+                    <path d="M22 4L12 14.01l-3-3"/>
+                  </svg>
+                </div>
+                <div className="stat-content">
+                  <span className="stat-value">{miner?.stats?.completedTasks || 0}</span>
+                  <span className="stat-label">Tasks Completed</span>
+                </div>
+              </div>
+
+              <div className="stat-card">
+                <div className="stat-icon green">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+                  </svg>
+                </div>
+                <div className="stat-content">
+                  <span className="stat-value">{api.formatNumber(miner?.stats?.totalRewards || 0)}</span>
+                  <span className="stat-label">TAO Earned</span>
+                </div>
+              </div>
+
+              <div className="stat-card">
+                <div className="stat-icon blue">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                  </svg>
+                </div>
+                <div className="stat-content">
+                  <span className="stat-value">{miner?.stats?.currentStreak || 0}</span>
+                  <span className="stat-label">Day Streak</span>
+                </div>
+              </div>
+
+              <div className="stat-card">
+                <div className="stat-icon orange">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 20V10M18 20V4M6 20v-4"/>
+                  </svg>
+                </div>
+                <div className="stat-content">
+                  <span className="stat-value">{tierInfo.mult}x</span>
+                  <span className="stat-label">Multiplier</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Activity */}
+            <div className="dashboard-grid">
+              <div className="card">
+                <div className="card-header">
+                  <h3>Recent Proofs</h3>
+                  <Link to="/explorer" className="view-all">View all</Link>
+                </div>
+                {recentProofs.length > 0 ? (
+                  <div className="proofs-list">
+                    {recentProofs.map((proof) => (
+                      <div key={proof._id} className="proof-row">
+                        <span className="proof-num">#{proof.blockNumber}</span>
+                        <span className="proof-hash">{proof.blockHash?.slice(0, 12)}...</span>
+                        <span className="proof-time">{api.timeAgo(proof.createdAt)}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="empty-state small">
+                    <p>No proofs yet. Start mining to generate proofs.</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="card">
+                <div className="card-header">
+                  <h3>Network Status</h3>
+                </div>
+                <div className="network-stats">
+                  <div className="network-stat">
+                    <span className="label">Miners Online</span>
+                    <span className="value online">{networkStats?.network?.onlineMiners || 0}</span>
+                  </div>
+                  <div className="network-stat">
+                    <span className="label">Total Tasks</span>
+                    <span className="value">{networkStats?.tasks?.completed || 0}</span>
+                  </div>
+                  <div className="network-stat">
+                    <span className="label">Chain Height</span>
+                    <span className="value">{networkStats?.chain?.height || 0}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
   );
 }

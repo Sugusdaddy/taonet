@@ -20,28 +20,27 @@ export default function Home() {
   }
 
   return (
-    <main className="home">
+    <div className="home-page">
       {/* Hero */}
       <section className="hero">
         <div className="hero-bg">
           <div className="hero-gradient"></div>
           <div className="hero-grid"></div>
-          <div className="hero-glow"></div>
         </div>
         
         <div className="container">
           <div className="hero-content">
-            <div className="hero-eyebrow">
-              <span className="eyebrow-dot"></span>
+            <div className="hero-badge">
+              <span className="pulse-dot"></span>
               Decentralized AI Network
             </div>
             
-            <h1 className="hero-title">
+            <h1>
               Earn crypto by running
               <span className="gradient-text"> AI inference</span>
             </h1>
             
-            <p className="hero-description">
+            <p className="hero-desc">
               TaoNet is the first Proof of Inference network. Your browser runs real AI 
               tasks using WebGPU, earning rewards for every computation verified on-chain.
             </p>
@@ -50,38 +49,37 @@ export default function Home() {
               {isConnected ? (
                 <Link to="/mine" className="btn btn-primary btn-lg">
                   Start Mining
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M5 12h14M12 5l7 7-7 7"/>
                   </svg>
                 </Link>
               ) : (
                 <button onClick={connect} className="btn btn-primary btn-lg">
                   Connect Wallet
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M5 12h14M12 5l7 7-7 7"/>
                   </svg>
                 </button>
               )}
-              <Link to="/docs" className="btn btn-secondary btn-lg">
-                Documentation
+              <Link to="/explorer" className="btn btn-secondary btn-lg">
+                View Explorer
               </Link>
             </div>
 
-            {/* Live Stats */}
             <div className="hero-stats">
-              <div className="stat">
-                <span className="stat-value">{stats?.network?.onlineMiners || 0}</span>
-                <span className="stat-label">Miners Online</span>
+              <div className="hero-stat">
+                <span className="value">{stats?.network?.onlineMiners || 0}</span>
+                <span className="label">Miners Online</span>
               </div>
-              <div className="stat-divider"></div>
-              <div className="stat">
-                <span className="stat-value">{stats?.tasks?.completed || 0}</span>
-                <span className="stat-label">Tasks Done</span>
+              <div className="divider"></div>
+              <div className="hero-stat">
+                <span className="value">{stats?.tasks?.completed || 0}</span>
+                <span className="label">Tasks Completed</span>
               </div>
-              <div className="stat-divider"></div>
-              <div className="stat">
-                <span className="stat-value">{api.formatNumber(stats?.rewards?.totalDistributed || 0)}</span>
-                <span className="stat-label">TAO Distributed</span>
+              <div className="divider"></div>
+              <div className="hero-stat">
+                <span className="value">{api.formatNumber(stats?.rewards?.totalDistributed || 0)}</span>
+                <span className="label">TAO Distributed</span>
               </div>
             </div>
           </div>
@@ -93,45 +91,46 @@ export default function Home() {
         <div className="container">
           <div className="section-header">
             <h2>How it works</h2>
-            <p>Three steps to start earning</p>
+            <p>Three simple steps to start earning</p>
           </div>
           
-          <div className="steps">
-            <div className="step">
-              <div className="step-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="2" y="6" width="20" height="12" rx="2"/>
-                  <path d="M6 12h4M14 12h4"/>
-                </svg>
-              </div>
+          <div className="steps-grid">
+            <div className="step-card">
               <div className="step-number">01</div>
-              <h3>Connect</h3>
-              <p>Link your Phantom wallet. This becomes your miner identity on the network.</p>
-            </div>
-            
-            <div className="step">
               <div className="step-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                  <path d="M2 17l10 5 10-5"/>
-                  <path d="M2 12l10 5 10-5"/>
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <path d="M21 15l-5-5L5 21"/>
                 </svg>
               </div>
-              <div className="step-number">02</div>
-              <h3>Load Model</h3>
-              <p>Download Llama 3.2 to your browser. Uses WebGPU for fast local inference.</p>
+              <h3>Connect Wallet</h3>
+              <p>Connect your Phantom wallet to get started. No sign-up required.</p>
             </div>
             
-            <div className="step">
+            <div className="step-card">
+              <div className="step-number">02</div>
+              <div className="step-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="4" y="4" width="16" height="16" rx="2"/>
+                  <rect x="9" y="9" width="6" height="6"/>
+                  <path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/>
+                </svg>
+              </div>
+              <h3>Run AI Tasks</h3>
+              <p>Your GPU processes real AI inference using WebGPU technology.</p>
+            </div>
+            
+            <div className="step-card">
+              <div className="step-number">03</div>
               <div className="step-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="10"/>
                   <path d="M12 6v6l4 2"/>
                 </svg>
               </div>
-              <div className="step-number">03</div>
-              <h3>Earn</h3>
-              <p>Process AI tasks automatically. Every completion is verified and rewarded.</p>
+              <h3>Earn Rewards</h3>
+              <p>Get TAO tokens for every verified proof. More power = more earnings.</p>
             </div>
           </div>
         </div>
@@ -141,70 +140,71 @@ export default function Home() {
       <section className="section section-dark">
         <div className="container">
           <div className="section-header">
-            <h2>Why TaoNet</h2>
-            <p>Real AI work, real rewards</p>
+            <h2>Why TaoNet?</h2>
+            <p>The future of decentralized AI computation</p>
           </div>
           
-          <div className="features">
-            <div className="feature">
-              <div className="feature-icon">
+          <div className="features-grid">
+            <div className="feature-card">
+              <div className="feature-icon green">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/>
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                 </svg>
               </div>
               <h3>Proof of Inference</h3>
-              <p>Every task creates a cryptographic proof. Input and output hashes form an immutable chain.</p>
+              <p>Every AI computation is cryptographically verified and anchored to Solana blockchain.</p>
             </div>
             
-            <div className="feature">
-              <div className="feature-icon">
+            <div className="feature-card">
+              <div className="feature-icon purple">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="4" y="4" width="16" height="16" rx="2"/>
-                  <path d="M9 9h6v6H9z"/>
+                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
                 </svg>
               </div>
-              <h3>Browser Mining</h3>
-              <p>No downloads or setup. Your browser's GPU runs real Llama inference via WebGPU.</p>
+              <h3>WebGPU Powered</h3>
+              <p>Run Llama 3.2 directly in your browser using cutting-edge WebGPU technology.</p>
             </div>
             
-            <div className="feature">
-              <div className="feature-icon">
+            <div className="feature-card">
+              <div className="feature-icon blue">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
                 </svg>
               </div>
-              <h3>Tier Multipliers</h3>
-              <p>Stake TAO to boost earnings. Diamond tier earns 3x on every task completed.</p>
+              <h3>Instant Rewards</h3>
+              <p>Earn TAO tokens immediately after task completion. No waiting periods.</p>
             </div>
             
-            <div className="feature">
-              <div className="feature-icon">
+            <div className="feature-card">
+              <div className="feature-icon orange">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
                 </svg>
               </div>
-              <h3>Verifiable</h3>
-              <p>Check any proof in the explorer. Recompute hashes yourself to verify work.</p>
+              <h3>Community Driven</h3>
+              <p>Join thousands of miners powering the decentralized AI revolution.</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* CTA */}
-      <section className="section cta">
+      <section className="section cta-section">
         <div className="container">
           <div className="cta-content">
-            <h2>Ready to mine?</h2>
-            <p>Join the decentralized AI revolution</p>
+            <h2>Ready to start mining?</h2>
+            <p>Join the network and start earning today</p>
             <Link to="/mine" className="btn btn-primary btn-lg">
-              Start Mining
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              Launch Miner
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M5 12h14M12 5l7 7-7 7"/>
               </svg>
             </Link>
           </div>
         </div>
       </section>
-    </main>
+    </div>
   );
 }
