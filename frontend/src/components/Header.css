@@ -4,56 +4,59 @@
   z-index: 100;
   background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-1);
 }
 
-.header-content {
+.header-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 64px;
+  height: 72px;
 }
 
 /* Logo */
 .logo {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
-  font-weight: 700;
-  font-size: 20px;
-  color: var(--text-primary);
+  gap: var(--space-3);
+  color: var(--text-1);
 }
 
-.logo-icon {
-  width: 32px;
-  height: 32px;
-  background: var(--accent);
-  color: #000;
-  border-radius: var(--radius-sm);
+.logo-mark {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  color: #000;
+}
+
+.logo-mark svg {
+  width: 20px;
+  height: 20px;
 }
 
 .logo-text {
-  background: linear-gradient(135deg, var(--text-primary), var(--accent));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
-.mining-indicator {
+.mining-pill {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-left: var(--space-sm);
-  padding: 4px 10px;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
   background: var(--accent-glow);
-  border: 1px solid var(--accent-border);
+  border: 1px solid var(--border-accent);
   border-radius: var(--radius-full);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--accent);
+  margin-left: var(--space-2);
 }
 
 .mining-dot {
@@ -67,53 +70,63 @@
 /* Nav */
 .nav {
   display: flex;
-  gap: var(--space-xs);
+  align-items: center;
+  gap: var(--space-1);
 }
 
 .nav-link {
-  padding: 8px 16px;
+  padding: var(--space-2) var(--space-4);
   font-size: 14px;
   font-weight: 500;
-  color: var(--text-secondary);
+  color: var(--text-3);
   border-radius: var(--radius-md);
-  transition: var(--transition-fast);
+  transition: all 0.15s;
 }
 
 .nav-link:hover {
-  color: var(--text-primary);
-  background: var(--bg-tertiary);
+  color: var(--text-1);
 }
 
 .nav-link.active {
-  color: var(--accent);
-  background: var(--accent-glow);
+  color: var(--text-1);
+  background: var(--bg-3);
 }
 
 /* Actions */
 .header-actions {
   display: flex;
   align-items: center;
-  gap: var(--space-md);
+  gap: var(--space-3);
 }
 
-.wallet-info {
+.wallet-connected {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
+  gap: var(--space-3);
 }
 
 .wallet-address {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background: var(--bg-3);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-full);
   font-family: var(--font-mono);
   font-size: 13px;
-  color: var(--text-secondary);
-  padding: 6px 12px;
-  background: var(--bg-tertiary);
-  border-radius: var(--radius-md);
+  color: var(--text-2);
+}
+
+.wallet-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--green);
+  border-radius: 50%;
 }
 
 /* Mobile */
 @media (max-width: 900px) {
-  .nav {
-    display: none;
-  }
+  .nav { display: none; }
+  .header-inner { height: 64px; }
 }

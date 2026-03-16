@@ -29,7 +29,7 @@ export default function Mine() {
     try {
       await register(minerName);
     } catch (err) {
-      console.error('Register error:', err);
+      console.error(err);
     }
     setRegistering(false);
   };
@@ -45,158 +45,182 @@ export default function Mine() {
 
   const elapsedTime = sessionStats.startTime ? Date.now() - sessionStats.startTime : 0;
 
+  // Determine current step
+  const step = !isConnected ? 1 : !miner ? 2 : 3;
+
   return (
     <main className="mine-page">
       <div className="container">
-        {/* Header */}
-        <div className="mine-header">
-          <div>
-            <h1>AI Mining</h1>
-            <p className="text-secondary">Run inference tasks and earn TAO</p>
-          </div>
-          {isMining && (
-            <div className="live-badge">
-              <span className="live-dot"></span>
-              MINING
+        <div className="mine-grid">
+          {/* Left - Setup Panel */}
+          <div className="setup-panel">
+            <div className="panel-header">
+              <h2>Mine TAO</h2>
+              <p>Contribute GPU compute, earn rewards</p>
             </div>
-          )}
-        </div>
 
-        <div className="mine-layout">
-          {/* Sidebar - Setup */}
-          <aside className="mine-sidebar">
-            <div className="card">
-              <h3 className="card-title mb-lg">Setup</h3>
+            {/* Progress Steps */}
+            <div className="setup-progress">
+              <div className={`progress-step ${step >= 1 ? 'active' : ''} ${step > 1 ? 'done' : ''}`}>
+                <div className="step-marker">
+                  {step > 1 ? (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  ) : '1'}
+                </div>
+                <div className="step-info">
+                  <span className="step-title">Connect Wallet</span>
+                  {step === 1 && <span className="step-status">Required</span>}
+                  {step > 1 && <span className="step-status done">{api.shortAddress(wallet)}</span>}
+                </div>
+              </div>
               
-              {/* Step 1: Connect */}
-              <div className={`setup-step ${isConnected ? 'done' : ''}`}>
-                <div className="step-indicator">{isConnected ? '1' : '1'}</div>
-                <div className="step-content">
-                  <strong>Connect Wallet</strong>
-                  {!isConnected ? (
-                    <button onClick={connect} className="btn btn-primary btn-sm mt-sm">
-                      Connect Phantom
+              <div className={`progress-step ${step >= 2 ? 'active' : ''} ${step > 2 ? 'done' : ''}`}>
+                <div className="step-marker">
+                  {step > 2 ? (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  ) : '2'}
+                </div>
+                <div className="step-info">
+                  <span className="step-title">Register Miner</span>
+                  {step === 2 && <span className="step-status">Required</span>}
+                  {step > 2 && <span className="step-status done">{miner?.name}</span>}
+                </div>
+              </div>
+              
+              <div className={`progress-step ${step >= 3 ? 'active' : ''} ${isMining ? 'done' : ''}`}>
+                <div className="step-marker">
+                  {isMining ? (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  ) : '3'}
+                </div>
+                <div className="step-info">
+                  <span className="step-title">Start Mining</span>
+                  {step === 3 && !isMining && <span className="step-status">Ready</span>}
+                  {isMining && <span className="step-status done">Active</span>}
+                </div>
+              </div>
+            </div>
+
+            {/* Action Area */}
+            <div className="setup-action">
+              {step === 1 && (
+                <button onClick={connect} className="btn btn-primary w-full">
+                  Connect Phantom Wallet
+                </button>
+              )}
+              
+              {step === 2 && (
+                <div className="register-form">
+                  <input
+                    type="text"
+                    placeholder="Enter miner name"
+                    value={minerName}
+                    onChange={(e) => setMinerName(e.target.value)}
+                  />
+                  <button 
+                    onClick={handleRegister}
+                    disabled={!minerName.trim() || registering}
+                    className="btn btn-primary w-full"
+                  >
+                    {registering ? 'Registering...' : 'Register Miner'}
+                  </button>
+                </div>
+              )}
+              
+              {step === 3 && (
+                <>
+                  {!isMining ? (
+                    <button 
+                      onClick={startMining}
+                      disabled={modelStatus === 'loading'}
+                      className="btn btn-primary w-full"
+                    >
+                      {modelStatus === 'loading' ? `Loading Model ${modelProgress}%` : 'Start Mining'}
                     </button>
                   ) : (
-                    <p className="text-sm text-secondary">{api.shortAddress(wallet)}</p>
+                    <button onClick={stopMining} className="btn btn-danger w-full">
+                      Stop Mining
+                    </button>
                   )}
-                </div>
-              </div>
-
-              {/* Step 2: Register */}
-              <div className={`setup-step ${miner ? 'done' : ''} ${!isConnected ? 'disabled' : ''}`}>
-                <div className="step-indicator">2</div>
-                <div className="step-content">
-                  <strong>Register Miner</strong>
-                  {!miner && isConnected ? (
-                    <div className="mt-sm">
-                      <input
-                        type="text"
-                        placeholder="Miner name"
-                        value={minerName}
-                        onChange={(e) => setMinerName(e.target.value)}
-                        className="input-sm"
-                      />
-                      <button 
-                        onClick={handleRegister} 
-                        disabled={!minerName.trim() || registering}
-                        className="btn btn-primary btn-sm mt-sm"
-                      >
-                        {registering ? 'Registering...' : 'Register'}
-                      </button>
-                    </div>
-                  ) : miner ? (
-                    <p className="text-sm text-secondary">{miner.name}</p>
-                  ) : null}
-                </div>
-              </div>
-
-              {/* Step 3: Start */}
-              <div className={`setup-step ${isMining ? 'done' : ''} ${!miner ? 'disabled' : ''}`}>
-                <div className="step-indicator">3</div>
-                <div className="step-content">
-                  <strong>Start Mining</strong>
-                  {miner && (
-                    <div className="mt-sm">
-                      {!isMining ? (
-                        <button onClick={startMining} className="btn btn-primary btn-sm">
-                          {modelStatus === 'loading' ? `Loading ${modelProgress}%` : 'Start Mining'}
-                        </button>
-                      ) : (
-                        <button onClick={stopMining} className="btn btn-danger btn-sm">
-                          Stop Mining
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
+                </>
+              )}
             </div>
 
             {/* Session Stats */}
             {isMining && (
-              <div className="card mt-lg">
-                <h3 className="card-title mb-md">Session Stats</h3>
-                <div className="stats-mini">
-                  <div className="stat-mini">
-                    <span className="stat-mini-value">{formatTime(elapsedTime)}</span>
-                    <span className="stat-mini-label">Time</span>
-                  </div>
-                  <div className="stat-mini">
-                    <span className="stat-mini-value">{sessionStats.tasksCompleted}</span>
-                    <span className="stat-mini-label">Tasks</span>
-                  </div>
-                  <div className="stat-mini">
-                    <span className="stat-mini-value">{sessionStats.tokensGenerated}</span>
-                    <span className="stat-mini-label">Tokens</span>
-                  </div>
-                  <div className="stat-mini highlight">
-                    <span className="stat-mini-value">{sessionStats.taoEarned}</span>
-                    <span className="stat-mini-label">TAO</span>
-                  </div>
+              <div className="session-stats">
+                <div className="session-stat">
+                  <span className="stat-label">Time</span>
+                  <span className="stat-value">{formatTime(elapsedTime)}</span>
+                </div>
+                <div className="session-stat">
+                  <span className="stat-label">Tasks</span>
+                  <span className="stat-value">{sessionStats.tasksCompleted}</span>
+                </div>
+                <div className="session-stat">
+                  <span className="stat-label">Tokens</span>
+                  <span className="stat-value">{sessionStats.tokensGenerated}</span>
+                </div>
+                <div className="session-stat highlight">
+                  <span className="stat-label">TAO</span>
+                  <span className="stat-value">{sessionStats.taoEarned}</span>
                 </div>
               </div>
             )}
-          </aside>
+          </div>
 
-          {/* Main - Activity */}
-          <div className="mine-main">
+          {/* Right - Activity Panel */}
+          <div className="activity-panel">
             {/* Model Loading */}
             {modelStatus === 'loading' && (
-              <div className="card model-loading">
+              <div className="loading-card">
                 <div className="loading-header">
-                  <div className="spinner"></div>
-                  <span>Loading AI Model</span>
+                  <div className="loading-spinner"></div>
+                  <div>
+                    <h3>Downloading AI Model</h3>
+                    <p>Llama 3.2 1B - {modelProgress}% complete</p>
+                  </div>
                 </div>
-                <div className="progress mt-md">
+                <div className="progress">
                   <div className="progress-bar" style={{ width: `${modelProgress}%` }}></div>
                 </div>
-                <p className="text-sm text-secondary mt-sm">
-                  Downloading Llama 3.2 1B (~500MB). Cached after first load.
+                <p className="loading-note">
+                  ~500MB download. Cached in browser after first load.
                 </p>
               </div>
             )}
 
             {/* Current Task */}
             {currentTask && (
-              <div className="card glow-card task-card">
+              <div className="task-card">
                 <div className="task-header">
-                  <span className="task-badge">Processing</span>
+                  <div className="task-badge">
+                    <span className="badge-dot"></span>
+                    Processing
+                  </div>
                   <span className="task-metrics">
-                    {taskMetrics.tokens} tokens | {taskMetrics.tokensPerSec} tok/s
+                    {taskMetrics.tokens} tokens / {taskMetrics.tokensPerSec} tok/s
                   </span>
                 </div>
                 
-                <div className="task-section">
-                  <label>INPUT</label>
-                  <p className="task-prompt">{currentTask.prompt}</p>
-                </div>
-                
-                <div className="task-section">
-                  <label>OUTPUT</label>
-                  <div className="task-response">
-                    {streamingResponse}
-                    <span className="cursor">|</span>
+                <div className="task-content">
+                  <div className="task-section">
+                    <label>Input</label>
+                    <p>{currentTask.prompt}</p>
+                  </div>
+                  
+                  <div className="task-section">
+                    <label>Output</label>
+                    <div className="task-output">
+                      {streamingResponse}
+                      <span className="cursor">|</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -204,10 +228,10 @@ export default function Mine() {
 
             {/* Last Proof */}
             {lastProof && !currentTask && (
-              <div className="card proof-card">
+              <div className="proof-card">
                 <div className="proof-header">
-                  <span className="proof-badge">Proof #{lastProof.blockNumber}</span>
-                  <span className="text-accent">Verified</span>
+                  <span className="proof-number">Proof #{lastProof.blockNumber}</span>
+                  <span className="proof-verified">Verified</span>
                 </div>
                 <div className="proof-hash">
                   <label>Block Hash</label>
@@ -218,38 +242,36 @@ export default function Mine() {
 
             {/* Waiting State */}
             {isMining && !currentTask && modelStatus === 'ready' && (
-              <div className="card waiting-card">
-                <div className="waiting-content">
-                  <div className="waiting-pulse"></div>
-                  <h3>Waiting for Tasks</h3>
-                  <p className="text-secondary">Connected and ready. Tasks will appear automatically.</p>
-                </div>
+              <div className="waiting-card">
+                <div className="waiting-pulse"></div>
+                <h3>Waiting for tasks</h3>
+                <p>Connected and ready. Tasks arrive automatically.</p>
               </div>
             )}
 
             {/* Not Mining */}
             {!isMining && modelStatus !== 'loading' && (
-              <div className="card intro-card">
-                <h3>How Mining Works</h3>
-                <ol>
-                  <li>Your browser downloads a 500MB AI model (Llama 3.2 1B)</li>
-                  <li>Tasks are sent from the network via WebSocket</li>
-                  <li>Your GPU processes inference locally using WebGPU</li>
+              <div className="info-card">
+                <h3>How it works</h3>
+                <ul>
+                  <li>Your browser downloads a 500MB AI model (Llama 3.2)</li>
+                  <li>Tasks are sent via WebSocket from the network</li>
+                  <li>Your GPU runs inference locally using WebGPU</li>
                   <li>Responses are verified and you earn TAO rewards</li>
                   <li>A cryptographic proof is created for each task</li>
-                </ol>
-                <p className="mt-md text-secondary">
-                  Mining continues even when you navigate to other pages.
+                </ul>
+                <p className="info-note">
+                  Mining continues even when navigating to other pages.
                 </p>
               </div>
             )}
 
             {/* Logs */}
             {logs.length > 0 && (
-              <div className="card mt-lg">
-                <h3 className="card-title mb-md">Activity Log</h3>
-                <div className="logs-container">
-                  {logs.slice().reverse().map((log, i) => (
+              <div className="logs-card">
+                <h4>Activity Log</h4>
+                <div className="logs-list">
+                  {logs.slice().reverse().slice(0, 10).map((log, i) => (
                     <div key={i} className={`log-entry log-${log.type}`}>
                       <span className="log-time">{log.time}</span>
                       <span className="log-msg">{log.msg}</span>
