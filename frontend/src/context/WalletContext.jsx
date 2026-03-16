@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import api from '../api';
 
 const WalletContext = createContext(null);
@@ -6,68 +6,82 @@ const WalletContext = createContext(null);
 export function WalletProvider({ children }) {
   const [wallet, setWallet] = useState(null);
   const [miner, setMiner] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Try to reconnect on mount
-    api.tryReconnect().then(addr => {
-      if (addr) {
-        setWallet(addr);
-        setMiner(api.miner);
+    const init = async () => {
+      const address = await api.tryReconnect();
+      if (address) {
+        setWallet(address);
+        setIsConnected(true);
+        const minerData = await api.getMiner(address);
+        if (minerData?.miner) {
+          setMiner(minerData.miner);
+        }
       }
       setLoading(false);
-    });
+    };
+    init();
   }, []);
 
-  const connect = useCallback(async () => {
+  const connect = async () => {
     try {
-      const addr = await api.connectWallet();
-      setWallet(addr);
-      setMiner(api.miner);
-      return addr;
+      const address = await api.connectWallet();
+      setWallet(address);
+      setIsConnected(true);
+      
+      const minerData = await api.getMiner(address);
+      if (minerData?.miner) {
+        setMiner(minerData.miner);
+      }
+      return address;
     } catch (err) {
+      console.error('Connect error:', err);
       throw err;
     }
-  }, []);
+  };
 
-  const disconnect = useCallback(async () => {
+  const disconnect = async () => {
     await api.disconnectWallet();
     setWallet(null);
     setMiner(null);
-  }, []);
+    setIsConnected(false);
+  };
 
-  const refreshMiner = useCallback(async () => {
-    if (!wallet) return;
-    const data = await api.getMiner(wallet);
-    if (data?.miner) {
-      setMiner(data.miner);
-      api.miner = data.miner;
-      localStorage.setItem('taonet_miner', JSON.stringify(data.miner));
-    }
-  }, [wallet]);
-
-  const registerMiner = useCallback(async (name) => {
+  const register = async (name) => {
     if (!wallet) throw new Error('Wallet not connected');
+    
     const result = await api.registerMiner(wallet, name);
     if (result?.miner) {
       setMiner(result.miner);
-      api.miner = result.miner;
-      localStorage.setItem('taonet_miner', JSON.stringify(result.miner));
+      return result.miner;
     }
-    return result;
-  }, [wallet]);
+    throw new Error(result?.error || 'Registration failed');
+  };
+
+  const refreshMiner = async () => {
+    if (!wallet) return;
+    const minerData = await api.getMiner(wallet);
+    if (minerData?.miner) {
+      setMiner(minerData.miner);
+    }
+  };
+
+  const value = {
+    wallet,
+    miner,
+    isConnected,
+    loading,
+    connect,
+    disconnect,
+    register,
+    refreshMiner
+  };
 
   return (
-    <WalletContext.Provider value={{
-      wallet,
-      miner,
-      loading,
-      connect,
-      disconnect,
-      refreshMiner,
-      registerMiner,
-      isConnected: !!wallet
-    }}>
+    <WalletContext.Provider value={value}>
       {children}
     </WalletContext.Provider>
   );

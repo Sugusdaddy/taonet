@@ -1,40 +1,37 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { WalletProvider } from './context/WalletContext';
+import { MiningProvider } from './context/MiningContext';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Home from './pages/Home';
 import Mine from './pages/Mine';
 import Dashboard from './pages/Dashboard';
 import Leaderboard from './pages/Leaderboard';
+import Explorer from './pages/Explorer';
 import Rewards from './pages/Rewards';
 import Docs from './pages/Docs';
-import Tournaments from './pages/Tournaments';
-import Achievements from './pages/Achievements';
-import Referrals from './pages/Referrals';
-import Developers from './pages/Developers';
-import Explorer from './pages/Explorer';
 import './styles/index.css';
 
 export default function App() {
   return (
-    <WalletProvider>
-      <BrowserRouter>
-        <Header />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/mine" element={<Mine />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/leaderboard" element={<Leaderboard />} />
-          <Route path="/rewards" element={<Rewards />} />
-          <Route path="/docs" element={<Docs />} />
-          <Route path="/tournaments" element={<Tournaments />} />
-          <Route path="/achievements" element={<Achievements />} />
-          <Route path="/referrals" element={<Referrals />} />
-          <Route path="/developers" element={<Developers />} />
-          <Route path="/explorer" element={<Explorer />} />
-        </Routes>
-        <Footer />
-      </BrowserRouter>
-    </WalletProvider>
+    <BrowserRouter>
+      <WalletProvider>
+        <MiningProvider>
+          <div className="app">
+            <Header />
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/mine" element={<Mine />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/leaderboard" element={<Leaderboard />} />
+              <Route path="/explorer" element={<Explorer />} />
+              <Route path="/rewards" element={<Rewards />} />
+              <Route path="/docs" element={<Docs />} />
+            </Routes>
+            <Footer />
+          </div>
+        </MiningProvider>
+      </WalletProvider>
+    </BrowserRouter>
   );
 }

@@ -1,55 +1,62 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useWallet } from '../context/WalletContext';
+import { useMining } from '../context/MiningContext';
 import api from '../api';
 import './Header.css';
 
 export default function Header() {
   const location = useLocation();
-  const { wallet, connect, disconnect, isConnected } = useWallet();
+  const { wallet, isConnected, connect, disconnect } = useWallet();
+  const { isMining } = useMining();
 
-  const handleWalletClick = async () => {
-    if (isConnected) {
-      await disconnect();
-    } else {
-      try {
-        await connect();
-      } catch (err) {
-        alert(err.message);
-      }
-    }
-  };
-
-  const navItems = [
+  const navLinks = [
+    { path: '/', label: 'Home' },
     { path: '/mine', label: 'Mine' },
     { path: '/explorer', label: 'Explorer' },
-    { path: '/dashboard', label: 'Dashboard' },
     { path: '/leaderboard', label: 'Leaderboard' },
+    { path: '/rewards', label: 'Rewards' },
     { path: '/docs', label: 'Docs' },
   ];
 
   return (
     <header className="header">
-      <div className="container header-inner">
+      <div className="container header-content">
         <Link to="/" className="logo">
-          Tao<span>Net</span>
+          <span className="logo-icon">T</span>
+          <span className="logo-text">TaoNet</span>
+          {isMining && (
+            <span className="mining-indicator">
+              <span className="mining-dot"></span>
+              Mining
+            </span>
+          )}
         </Link>
 
         <nav className="nav">
-          {navItems.map(item => (
+          {navLinks.map(link => (
             <Link
-              key={item.path}
-              to={item.path}
-              className={location.pathname === item.path ? 'active' : ''}
+              key={link.path}
+              to={link.path}
+              className={`nav-link ${location.pathname === link.path ? 'active' : ''}`}
             >
-              {item.label}
+              {link.label}
             </Link>
           ))}
         </nav>
 
         <div className="header-actions">
-          <button className="wallet-btn" onClick={handleWalletClick}>
-            {isConnected ? api.shortAddress(wallet) : 'Connect'}
-          </button>
+          {isConnected ? (
+            <div className="wallet-info">
+              <span className="wallet-address">{api.shortAddress(wallet)}</span>
+              <button onClick={disconnect} className="btn btn-ghost btn-sm">
+                Disconnect
+              </button>
+            </div>
+          ) : (
+            <button onClick={connect} className="btn btn-primary btn-sm">
+              Connect Wallet
+            </button>
+          )}
         </div>
       </div>
     </header>

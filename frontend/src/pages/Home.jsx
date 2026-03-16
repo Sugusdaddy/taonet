@@ -5,215 +5,131 @@ import './Home.css';
 
 export default function Home() {
   const [stats, setStats] = useState(null);
-  const [jackpots, setJackpots] = useState([]);
-  const [activity, setActivity] = useState([]);
 
   useEffect(() => {
-    loadData();
-    const interval = setInterval(loadData, 30000);
+    loadStats();
+    const interval = setInterval(loadStats, 10000);
     return () => clearInterval(interval);
   }, []);
 
-  async function loadData() {
-    const [statsData, jackpotsData, activityData] = await Promise.all([
-      api.getStats(),
-      api.getJackpots(),
-      api.getActivity(15)
-    ]);
-    
-    if (statsData) setStats(statsData);
-    if (jackpotsData?.jackpots) setJackpots(jackpotsData.jackpots);
-    if (activityData?.activities) setActivity(activityData.activities);
+  async function loadStats() {
+    const data = await api.getStats();
+    if (data) setStats(data);
   }
 
-  const activityIcons = {
-    miner_joined: { icon: '+', cls: 'join' },
-    task_completed: { icon: '>', cls: 'task' },
-    reward_earned: { icon: '$', cls: 'reward' },
-    jackpot_won: { icon: '*', cls: 'jackpot' },
-    level_up: { icon: '^', cls: 'level' }
-  };
-
-  const renderActivity = (a, i) => {
-    const iconData = activityIcons[a.type] || { icon: '?', cls: 'task' };
-    let message = '';
-    switch (a.type) {
-      case 'miner_joined': message = <><strong>{a.miner}</strong> joined the network</>; break;
-      case 'task_completed': message = <><strong>{a.miner}</strong> completed a task</>; break;
-      case 'reward_earned': message = <><strong>{a.miner}</strong> earned <strong>{a.data?.amount || 0}</strong> tokens</>; break;
-      case 'jackpot_won': message = <><strong>{a.miner}</strong> hit a <strong>{a.data?.jackpotType}</strong> jackpot!</>; break;
-      case 'level_up': message = <><strong>{a.miner}</strong> reached level <strong>{a.data?.level}</strong></>; break;
-      default: message = `${a.miner} did something`;
-    }
-    
-    return (
-      <div key={i} className="activity-item">
-        <div className={`activity-icon ${iconData.cls}`}>{iconData.icon}</div>
-        <div className="activity-content">
-          <div className="activity-text">{message}</div>
-          <div className="activity-time">{api.timeAgo(a.time)}</div>
-        </div>
-      </div>
-    );
-  };
-
-  const tiers = [
-    { name: 'Bronze', mult: '1x', req: 'Any amount', cls: 'bronze' },
-    { name: 'Silver', mult: '1.25x', req: '10K tokens', cls: 'silver' },
-    { name: 'Gold', mult: '1.5x', req: '100K tokens', cls: 'gold' },
-    { name: 'Platinum', mult: '2x', req: '1M tokens', cls: 'platinum' },
-    { name: 'Diamond', mult: '3x', req: '10M tokens', cls: 'diamond' }
-  ];
-
   return (
-    <main>
+    <main className="home-page">
       {/* Hero */}
       <section className="hero">
         <div className="container">
-          <span className="hero-badge">Built on Solana</span>
-          <h1 className="hero-title">
-            Earn Crypto<br /><span className="accent">Running AI</span>
-          </h1>
-          <p className="hero-text">
-            Your computer processes AI tasks. You get paid instantly.
-            No complex setup. No minimum requirements.
-          </p>
-          <div className="hero-buttons">
-            <Link to="/mine" className="btn btn-primary btn-lg">Start Mining</Link>
-            <a href="#how" className="btn btn-secondary btn-lg">How It Works</a>
-          </div>
-        </div>
-      </section>
-
-      {/* Live Stats */}
-      <section className="section section-alt">
-        <div className="container">
-          <div className="stats-grid">
-            <div className="stat-card">
-              <div className="stat-value">{stats?.network?.totalMiners || 0}</div>
-              <div className="stat-label">Total Miners</div>
+          <div className="hero-content">
+            <div className="hero-badge">Decentralized AI Network</div>
+            <h1 className="hero-title">
+              Mine Crypto with
+              <span className="gradient-text"> Your GPU</span>
+            </h1>
+            <p className="hero-subtitle">
+              Run AI inference tasks on your browser. Earn rewards for contributing 
+              compute power to the world's first Proof of Inference network.
+            </p>
+            <div className="hero-actions">
+              <Link to="/mine" className="btn btn-primary btn-lg">
+                Start Mining
+              </Link>
+              <Link to="/docs" className="btn btn-secondary btn-lg">
+                Learn More
+              </Link>
             </div>
-            <div className="stat-card">
-              <div className="stat-value">{stats?.network?.onlineMiners || 0}</div>
-              <div className="stat-label">Online Now</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-value">{stats?.tasks?.completed || 0}</div>
-              <div className="stat-label">Tasks Completed</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-value">{api.formatNumber(stats?.rewards?.totalDistributed || 0)}</div>
-              <div className="stat-label">Tokens Paid</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Live Activity */}
-      <section className="section">
-        <div className="container">
-          <div className="section-header">
-            <h2 className="section-title">Live Activity</h2>
-            <p className="section-subtitle">Real-time network activity</p>
           </div>
           
-          <div className="activity-container">
-            <div className="activity-feed">
-              {activity.length > 0 ? (
-                activity.map(renderActivity)
-              ) : (
-                <div className="activity-empty">
-                  <p>Waiting for network activity...</p>
-                  <p className="small">Be the first to join!</p>
-                </div>
-              )}
+          {/* Live Stats */}
+          {stats && (
+            <div className="hero-stats">
+              <div className="stat-item">
+                <span className="stat-value">{stats.network?.onlineMiners || 0}</span>
+                <span className="stat-label">Miners Online</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-value">{stats.tasks?.total || 0}</span>
+                <span className="stat-label">Tasks Completed</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-value">{api.formatNumber(stats.rewards?.totalDistributed || 0)}</span>
+                <span className="stat-label">TAO Distributed</span>
+              </div>
             </div>
-          </div>
+          )}
         </div>
+        
+        {/* Background Effects */}
+        <div className="hero-glow"></div>
+        <div className="hero-grid"></div>
       </section>
 
       {/* How It Works */}
-      <section className="section section-alt" id="how">
-        <div className="container">
-          <div className="section-header">
-            <h2 className="section-title">How It Works</h2>
-            <p className="section-subtitle">Start earning in 3 simple steps</p>
-          </div>
-          
-          <div className="grid-3">
-            <div className="card step-card">
-              <div className="step-number">1</div>
-              <h3>Connect Wallet</h3>
-              <p>Connect your Phantom wallet to get started. Takes 10 seconds.</p>
-            </div>
-            <div className="card step-card">
-              <div className="step-number">2</div>
-              <h3>Start Mining</h3>
-              <p>Click "Start Mining" and your browser will begin processing AI tasks.</p>
-            </div>
-            <div className="card step-card">
-              <div className="step-number">3</div>
-              <h3>Earn Tokens</h3>
-              <p>Get paid instantly for each completed task. Watch your balance grow.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Tiers */}
       <section className="section">
         <div className="container">
-          <div className="section-header">
-            <h2 className="section-title">Earning Tiers</h2>
-            <p className="section-subtitle">Hold tokens to boost your earnings</p>
-          </div>
+          <h2 className="section-title text-center">How It Works</h2>
+          <p className="section-subtitle text-center">Three simple steps to start earning</p>
           
-          <div className="tiers-grid">
-            {tiers.map(tier => (
-              <div key={tier.cls} className={`tier-card tier-${tier.cls}`}>
-                <span className="tier-name">{tier.name}</span>
-                <span className="tier-mult">{tier.mult}</span>
-                <span className="tier-req">{tier.req}</span>
-              </div>
-            ))}
+          <div className="steps-grid">
+            <div className="step-card">
+              <div className="step-number">1</div>
+              <h3>Connect Wallet</h3>
+              <p>Connect your Solana wallet (Phantom) to get started. Your wallet is your miner identity.</p>
+            </div>
+            <div className="step-card">
+              <div className="step-number">2</div>
+              <h3>Load AI Model</h3>
+              <p>Download the AI model to your browser. Uses WebGPU for fast local inference.</p>
+            </div>
+            <div className="step-card">
+              <div className="step-number">3</div>
+              <h3>Earn Rewards</h3>
+              <p>Complete AI tasks automatically and earn TAO tokens. More compute = more rewards.</p>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Jackpots */}
-      <section className="section section-alt">
+      {/* Features */}
+      <section className="section bg-dark">
         <div className="container">
-          <div className="section-header">
-            <h2 className="section-title">Jackpots</h2>
-            <p className="section-subtitle">Random tasks trigger bonus payouts</p>
-          </div>
+          <h2 className="section-title text-center">Why TaoNet?</h2>
           
-          <div className="grid-4">
-            {['mini', 'regular', 'mega', 'ultra'].map(type => {
-              const jp = jackpots.find(j => j.type === type) || {};
-              const mults = { mini: 32, regular: 144, mega: 699, ultra: 5163 };
-              return (
-                <div key={type} className={`jackpot-card jackpot-${type}`}>
-                  <span className="jackpot-type">{type}</span>
-                  <span className="jackpot-mult">{jp.multiplier || mults[type]}x</span>
-                  <span className="jackpot-info">
-                    {jp.tasksUntilTrigger ? `${jp.tasksUntilTrigger} tasks left` : '-'}
-                  </span>
-                </div>
-              );
-            })}
+          <div className="features-grid">
+            <div className="feature-card">
+              <div className="feature-icon">AI</div>
+              <h3>Real AI Work</h3>
+              <p>Not fake mining. Your GPU runs real Llama 3.2 inference tasks locally in your browser.</p>
+            </div>
+            <div className="feature-card">
+              <div className="feature-icon">#</div>
+              <h3>Proof of Inference</h3>
+              <p>Every task is cryptographically verified. Input/output hashes create an immutable proof chain.</p>
+            </div>
+            <div className="feature-card">
+              <div className="feature-icon">$</div>
+              <h3>Earn While Idle</h3>
+              <p>Let your browser mine while you work. Automatic task processing with minimal resource usage.</p>
+            </div>
+            <div className="feature-card">
+              <div className="feature-icon">*</div>
+              <h3>Tier Multipliers</h3>
+              <p>Stake TAO to increase your earnings. Diamond tier earns 3x rewards on every task.</p>
+            </div>
           </div>
         </div>
       </section>
 
       {/* CTA */}
-      <section className="section">
-        <div className="container">
-          <div className="cta-box">
-            <h2 className="section-title">Ready to Start?</h2>
-            <p className="text-secondary mt-sm mb-lg">Join the network and start earning today</p>
-            <Link to="/mine" className="btn btn-primary btn-lg">Start Mining</Link>
-          </div>
+      <section className="section cta-section">
+        <div className="container text-center">
+          <h2 className="section-title">Ready to Mine?</h2>
+          <p className="section-subtitle">Join the decentralized AI revolution</p>
+          <Link to="/mine" className="btn btn-primary btn-lg">
+            Start Mining Now
+          </Link>
         </div>
       </section>
     </main>
