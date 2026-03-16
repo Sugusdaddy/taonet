@@ -2,8 +2,8 @@
   padding: var(--space-xl) 0;
 }
 
-/* Chain Stats */
-.chain-stats {
+/* Chain Stats - scoped to explorer */
+.explorer-page .chain-stats {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: var(--space-md);
@@ -11,14 +11,14 @@
 }
 
 @media (max-width: 1000px) {
-  .chain-stats { grid-template-columns: repeat(3, 1fr); }
+  .explorer-page .chain-stats { grid-template-columns: repeat(3, 1fr); }
 }
 
 @media (max-width: 600px) {
-  .chain-stats { grid-template-columns: repeat(2, 1fr); }
+  .explorer-page .chain-stats { grid-template-columns: repeat(2, 1fr); }
 }
 
-.stat-card {
+.explorer-page .chain-stats .stat-card {
   background: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -26,14 +26,15 @@
   text-align: center;
 }
 
-.stat-card .stat-value {
+.explorer-page .chain-stats .stat-card .stat-value {
   display: block;
   font-size: 24px;
   font-weight: 700;
   color: var(--accent);
 }
 
-.stat-card .stat-label {
+.explorer-page .chain-stats .stat-card .stat-label {
+  display: block;
   font-size: 12px;
   color: var(--text-tertiary);
   margin-top: var(--space-xs);

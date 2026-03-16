@@ -126,36 +126,36 @@
   margin-top: 2px;
 }
 
-/* Stats Grid */
-.stats-grid {
+/* Stats Grid - scoped to mine page */
+.mine-page .mine-sidebar .stats-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: var(--space-sm);
 }
 
-.stat-item {
+.mine-page .stat-item {
   background: var(--bg-tertiary);
   border-radius: var(--radius-md);
   padding: var(--space-md);
   text-align: center;
 }
 
-.stat-item.highlight {
+.mine-page .stat-item.highlight {
   background: var(--accent-bg);
   border: 1px solid var(--accent-border);
 }
 
-.stat-value {
+.mine-page .stat-item .stat-value {
   display: block;
   font-size: 20px;
   font-weight: 700;
 }
 
-.stat-item.highlight .stat-value {
+.mine-page .stat-item.highlight .stat-value {
   color: var(--accent);
 }
 
-.stat-label {
+.mine-page .stat-item .stat-label {
   font-size: 11px;
   color: var(--text-tertiary);
   text-transform: uppercase;
