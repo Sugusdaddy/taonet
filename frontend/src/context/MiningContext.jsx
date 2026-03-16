@@ -212,6 +212,16 @@ export function MiningProvider({ children }) {
             }
           }, 2000);
           break;
+          
+        case 'cooldown':
+          const waitSec = Math.ceil((data.waitMs || 5000) / 1000);
+          addLog(`Cooldown: ${waitSec}s until next task`, 'info');
+          setTimeout(() => {
+            if (wsRef.current?.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify({ type: 'ready' }));
+            }
+          }, data.waitMs || 5000);
+          break;
       }
     };
     

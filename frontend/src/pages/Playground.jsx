@@ -1,67 +1,33 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import api from '../api';
 import './Playground.css';
 
+const REQUIRED_TASKS = 50000;
+
 export default function Playground() {
-  const [messages, setMessages] = useState([
-    { role: 'assistant', content: 'Hi! I\'m SolanaGPT, trained on TaoNet\'s decentralized network. Ask me anything about Solana, Anchor, Rust, or Web3 development.' }
-  ]);
-  const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState(null);
-  const messagesRef = useRef(null);
+  const [tasksCompleted, setTasksCompleted] = useState(0);
 
   useEffect(() => {
     loadStats();
+    const interval = setInterval(loadStats, 10000);
+    return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    if (messagesRef.current) {
-      messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
-    }
-  }, [messages]);
-
   async function loadStats() {
-    const data = await api.getPlaygroundStats();
-    if (data) setStats(data);
+    try {
+      const data = await api.getStats();
+      if (data) {
+        setStats(data);
+        setTasksCompleted(data.tasks?.completed || 0);
+      }
+    } catch (e) {
+      console.error('Failed to load stats');
+    }
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!input.trim() || loading) return;
-
-    const userMessage = input.trim();
-    setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
-    setLoading(true);
-
-    try {
-      const response = await api.queryPlayground(userMessage);
-      if (response?.answer) {
-        setMessages(prev => [...prev, { 
-          role: 'assistant', 
-          content: response.answer,
-          source: response.source,
-          miner: response.miner
-        }]);
-      } else {
-        setMessages(prev => [...prev, { 
-          role: 'assistant', 
-          content: 'Sorry, no miners are available right now. Please try again later.',
-          error: true
-        }]);
-      }
-    } catch (err) {
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: 'An error occurred. Please try again.',
-        error: true
-      }]);
-    }
-
-    setLoading(false);
-    loadStats();
-  };
+  const progress = Math.min((tasksCompleted / REQUIRED_TASKS) * 100, 100);
+  const isActive = tasksCompleted >= REQUIRED_TASKS;
 
   const examples = [
     'How do I create a Solana program with Anchor?',
@@ -77,11 +43,35 @@ export default function Playground() {
         <div className="playground-sidebar">
           <div className="sidebar-header">
             <div className="model-badge">
-              <div className="model-icon">T</div>
+              <div className={`model-icon ${isActive ? 'active' : 'inactive'}`}>T</div>
               <div>
                 <span className="model-name">SolanaGPT</span>
-                <span className="model-version">Powered by TaoNet</span>
+                <span className="model-version">{isActive ? 'Online' : 'Training...'}</span>
               </div>
+            </div>
+          </div>
+
+          <div className="sidebar-section training-section">
+            <h4>Neural Training Progress</h4>
+            <div className="training-progress">
+              <div className="progress-bar-container">
+                <div 
+                  className="progress-bar-fill" 
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <div className="progress-stats">
+                <span className="progress-current">{tasksCompleted.toLocaleString()}</span>
+                <span className="progress-separator">/</span>
+                <span className="progress-target">{REQUIRED_TASKS.toLocaleString()}</span>
+                <span className="progress-label">tasks</span>
+              </div>
+              <p className="progress-description">
+                {isActive 
+                  ? 'SolanaGPT is fully trained and ready to answer your questions!'
+                  : `SolanaGPT needs ${(REQUIRED_TASKS - tasksCompleted).toLocaleString()} more tasks to develop enough knowledge to answer questions.`
+                }
+              </p>
             </div>
           </div>
 
@@ -97,31 +87,16 @@ export default function Playground() {
             </div>
           </div>
 
-          <div className="sidebar-section">
-            <h4>Example Queries</h4>
-            <div className="examples">
-              {examples.map((ex, i) => (
-                <button 
-                  key={i} 
-                  className="example-btn"
-                  onClick={() => setInput(ex)}
-                >
-                  {ex}
-                </button>
-              ))}
-            </div>
-          </div>
-
           {stats && (
             <div className="sidebar-section">
               <h4>Network Stats</h4>
               <div className="sidebar-stats">
                 <div className="sidebar-stat">
-                  <span className="stat-value">{stats.knowledgeCount || 0}</span>
+                  <span className="stat-value">{stats.knowledge?.count || 0}</span>
                   <span className="stat-label">Knowledge</span>
                 </div>
                 <div className="sidebar-stat">
-                  <span className="stat-value">{stats.minersOnline || 0}</span>
+                  <span className="stat-value">{stats.network?.onlineMiners || 0}</span>
                   <span className="stat-label">Miners</span>
                 </div>
               </div>
@@ -129,57 +104,92 @@ export default function Playground() {
           )}
 
           <div className="sidebar-footer">
-            <p>Responses are generated by decentralized miners on TaoNet network.</p>
+            <p>Help train SolanaGPT by mining at /mine</p>
           </div>
         </div>
 
         {/* Chat Area */}
         <div className="chat-area">
-          <div className="chat-messages" ref={messagesRef}>
-            {messages.map((msg, i) => (
-              <div key={i} className={`message ${msg.role} ${msg.error ? 'error' : ''}`}>
-                <div className="message-avatar">
-                  {msg.role === 'assistant' ? 'T' : 'U'}
+          {!isActive ? (
+            <div className="chat-inactive">
+              <div className="inactive-content">
+                <div className="brain-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z"/>
+                    <path d="M9 21h6M10 17v4M14 17v4"/>
+                    <path d="M12 6v4M10 8h4"/>
+                  </svg>
                 </div>
-                <div className="message-content">
-                  <div className="message-text">{msg.content}</div>
-                  {msg.source && (
-                    <div className="message-meta">
-                      <span>Source: {msg.source}</span>
-                      {msg.miner && <span>Miner: {api.shortAddress(msg.miner)}</span>}
-                    </div>
-                  )}
+                <h2>SolanaGPT is Learning</h2>
+                <p className="inactive-description">
+                  Our decentralized AI is being trained by miners processing tasks on the TaoNet network. 
+                  Once we reach {REQUIRED_TASKS.toLocaleString()} completed tasks, SolanaGPT will have enough 
+                  collective knowledge to start answering your Solana development questions.
+                </p>
+                
+                <div className="big-progress">
+                  <div className="big-progress-bar">
+                    <div 
+                      className="big-progress-fill" 
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                  <div className="big-progress-text">
+                    <span className="percentage">{progress.toFixed(1)}%</span>
+                    <span className="tasks">{tasksCompleted.toLocaleString()} / {REQUIRED_TASKS.toLocaleString()} tasks</span>
+                  </div>
+                </div>
+
+                <div className="help-train">
+                  <h3>Help Train SolanaGPT</h3>
+                  <p>Start mining to contribute to the AI's knowledge base and earn rewards!</p>
+                  <a href="/mine" className="btn-start-mining">
+                    Start Mining
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                  </a>
+                </div>
+
+                <div className="coming-features">
+                  <h4>Coming Soon</h4>
+                  <ul>
+                    {examples.map((ex, i) => (
+                      <li key={i}>{ex}</li>
+                    ))}
+                  </ul>
                 </div>
               </div>
-            ))}
-            {loading && (
+            </div>
+          ) : (
+            <div className="chat-messages">
               <div className="message assistant">
                 <div className="message-avatar">T</div>
                 <div className="message-content">
-                  <div className="typing-indicator">
-                    <span></span><span></span><span></span>
+                  <div className="message-text">
+                    Hi! I'm SolanaGPT, trained on TaoNet's decentralized network. 
+                    Ask me anything about Solana, Anchor, Rust, or Web3 development.
                   </div>
                 </div>
               </div>
-            )}
-          </div>
-
-          <form className="chat-input-form" onSubmit={handleSubmit}>
-            <div className="chat-input-wrapper">
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask about Solana development..."
-                disabled={loading}
-              />
-              <button type="submit" disabled={!input.trim() || loading}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
-                </svg>
-              </button>
             </div>
-          </form>
+          )}
+
+          {isActive && (
+            <form className="chat-input-form">
+              <div className="chat-input-wrapper">
+                <input
+                  type="text"
+                  placeholder="Ask about Solana development..."
+                />
+                <button type="submit">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                  </svg>
+                </button>
+              </div>
+            </form>
+          )}
         </div>
       </div>
     </div>

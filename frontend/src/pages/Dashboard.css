@@ -6,33 +6,16 @@
 
 .connect-prompt {
   text-align: center;
-  padding: var(--space-3xl);
-  background: var(--bg-2);
+  padding: var(--space-2xl);
+  background: var(--bg-1);
   border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  max-width: 400px;
-  margin: var(--space-3xl) auto;
-}
-
-.prompt-icon {
-  width: 64px;
-  height: 64px;
-  background: var(--bg-3);
   border-radius: var(--radius-lg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto var(--space-lg);
-}
-
-.prompt-icon svg {
-  width: 32px;
-  height: 32px;
-  color: var(--text-3);
+  max-width: 400px;
+  margin: var(--space-2xl) auto;
 }
 
 .connect-prompt h2 {
-  font-size: 24px;
+  font-size: 1.5rem;
   margin-bottom: 8px;
 }
 
@@ -43,9 +26,9 @@
 
 /* Miner Card */
 .miner-card {
-  background: var(--bg-2);
+  background: var(--bg-1);
   border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-lg);
   padding: var(--space-lg);
   margin-bottom: var(--space-xl);
 }
@@ -60,14 +43,15 @@
 .miner-avatar {
   width: 56px;
   height: 56px;
-  border-radius: var(--radius-lg);
-  background: var(--bg-3);
-  border: 3px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-2);
+  border: 2px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: 1.5rem;
   font-weight: 700;
+  color: var(--text-2);
 }
 
 .miner-details {
@@ -75,13 +59,13 @@
 }
 
 .miner-details h2 {
-  font-size: 20px;
+  font-size: 1.25rem;
   margin-bottom: 2px;
 }
 
 .wallet-addr {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--text-3);
 }
 
@@ -92,20 +76,21 @@
 
 .level-badge {
   padding: 6px 12px;
-  background: rgba(139,92,246,0.15);
-  border-radius: var(--radius-full);
-  font-size: 13px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--primary);
+  color: var(--green-400);
 }
 
 .tier-badge {
   padding: 6px 12px;
-  background: var(--bg-3);
-  border-radius: var(--radius-full);
-  font-size: 13px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
   font-weight: 600;
-  text-transform: capitalize;
 }
 
 .xp-progress {
@@ -117,20 +102,20 @@
 .xp-bar {
   flex: 1;
   height: 8px;
-  background: var(--bg-4);
+  background: var(--bg-3);
   border-radius: 4px;
   overflow: hidden;
 }
 
 .xp-fill {
   height: 100%;
-  background: var(--gradient-primary);
+  background: var(--green-500);
   border-radius: 4px;
   transition: width 0.3s;
 }
 
 .xp-text {
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--text-3);
   min-width: 80px;
   text-align: right;
@@ -144,8 +129,13 @@
 }
 
 .view-all {
-  font-size: 13px;
-  color: var(--secondary);
+  font-size: 0.8125rem;
+  color: var(--green-400);
+  text-decoration: none;
+}
+
+.view-all:hover {
+  text-decoration: underline;
 }
 
 .proofs-list {
@@ -167,19 +157,19 @@
 
 .proof-num {
   font-weight: 600;
-  color: var(--primary);
+  color: var(--green-400);
   min-width: 60px;
 }
 
 .proof-hash {
   flex: 1;
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--text-2);
 }
 
 .proof-time {
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--text-4);
 }
 
@@ -196,25 +186,26 @@
 }
 
 .network-stat .label {
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--text-3);
 }
 
 .network-stat .value {
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 600;
+  color: var(--text-1);
 }
 
 .network-stat .value.online {
-  color: var(--success);
+  color: var(--green-400);
 }
 
 .empty-state.small {
-  padding: var(--space-xl);
+  padding: var(--space-lg);
 }
 
 .empty-state.small p {
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 @media (max-width: 900px) {

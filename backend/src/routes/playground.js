@@ -9,7 +9,7 @@ async function searchKnowledge(query) {
   const words = queryLower.split(/\s+/).filter(w => w.length > 3);
   
   // Try exact match first
-  let match = await Knowledge.findOne({ questionLower: queryLower });
+  let match = await Knowledge.findOne({ questionLower: queryLower, answer: { $exists: true, $ne: '' } });
   if (match) {
     match.usageCount++;
     await match.save();
@@ -20,7 +20,7 @@ async function searchKnowledge(query) {
   if (words.length > 0) {
     const searchQuery = words.join(' ');
     const results = await Knowledge.find(
-      { $text: { $search: searchQuery } },
+      { $text: { $search: searchQuery }, answer: { $exists: true, $ne: '' } },
       { score: { $meta: 'textScore' } }
     ).sort({ score: { $meta: 'textScore' } }).limit(5);
     
@@ -59,7 +59,7 @@ router.post('/query', async (req, res) => {
     // First, search knowledge base
     const knowledge = await searchKnowledge(prompt);
     if (knowledge && knowledge.answer) {
-      console.log(`[Playground] Knowledge hit: "${prompt.slice(0,40)}..."`);
+      console.log('[Playground] Knowledge hit: "' + prompt.slice(0,40) + '..."');
       return res.json({
         response: knowledge.answer,
         miner: knowledge.minedBy || 'knowledge_base',
@@ -81,19 +81,23 @@ router.post('/query', async (req, res) => {
     }
     
     if (availableMiners.length === 0) {
-      // Save question to knowledge for miners to answer later
-      const newQuestion = new Knowledge({
-        question: prompt,
-        questionLower: prompt.toLowerCase(),
-        category: detectCategory(prompt)
+      // Queue the question as a pending task instead of Knowledge (which requires answer)
+      const task = new Task({
+        type: 'text',
+        prompt,
+        difficulty: 'expert',
+        requester: address || 'playground',
+        priority: 2,
+        status: 'pending',
+        options: { isPlayground: true, maxTokens: 500, category: detectCategory(prompt) }
       });
-      await newQuestion.save();
+      await task.save();
       
       return res.json({
-        response: "Your question has been queued for miners to answer. Currently no miners are online. Please try again later or start mining at /mine to help build our knowledge base!",
+        response: "Your question has been queued for miners. Currently no miners are online. Try again later or start mining at /mine to help build our knowledge base!",
         miner: null,
         processingTime: 0,
-        proofId: null,
+        proofId: task._id,
         queued: true
       });
     }
@@ -133,7 +137,7 @@ router.post('/query', async (req, res) => {
       }
     }));
     
-    console.log(`[Playground] Query to miner: "${prompt.slice(0,40)}..."`);
+    console.log('[Playground] Query to miner: "' + prompt.slice(0,40) + '..."');
     
     try {
       const result = await responsePromise;
@@ -179,7 +183,7 @@ function detectCategory(prompt) {
 router.get('/stats', async (req, res) => {
   try {
     const totalKnowledge = await Knowledge.countDocuments({ answer: { $exists: true, $ne: '' } });
-    const pendingQuestions = await Knowledge.countDocuments({ answer: { $exists: false } });
+    const pendingQuestions = await Task.countDocuments({ status: 'pending', 'options.isPlayground': true });
     
     res.json({
       knowledge: totalKnowledge,
@@ -206,7 +210,7 @@ router.get('/knowledge', async (req, res) => {
     
     const total = await Knowledge.countDocuments(query);
     
-    res.json({ items, total, categories: Object.keys(require('../taskGenerator').SOLANA_PROMPTS || {}) });
+    res.json({ items, total });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

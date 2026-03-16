@@ -20,21 +20,32 @@ export default function Navbar() {
           </Link>
           
           <div className="nav-links">
-            <Link to="/" className={isActive('/') ? 'active' : ''}>Home</Link>
-            <Link to="/mine" className={isActive('/mine') ? 'active' : ''}>Mine</Link>
-            <Link to="/explorer" className={isActive('/explorer') ? 'active' : ''}>Explorer</Link>
-            <Link to="/leaderboard" className={isActive('/leaderboard') ? 'active' : ''}>Leaderboard</Link>
-            <Link to="/playground" className={isActive('/playground') ? 'active' : ''}>Playground</Link>
+            <Link to="/" className={`nav-link ${isActive('/') ? 'active' : ''}`}>
+              Home
+            </Link>
+            <Link to="/dashboard" className={`nav-link ${isActive('/dashboard') ? 'active' : ''}`}>
+              Dashboard
+            </Link>
+            <Link to="/mine" className={`nav-link ${isActive('/mine') ? 'active' : ''}`}>
+              Mine
+            </Link>
+            <Link to="/leaderboard" className={`nav-link ${isActive('/leaderboard') ? 'active' : ''}`}>
+              Leaderboard
+            </Link>
+            <Link to="/explorer" className={`nav-link ${isActive('/explorer') ? 'active' : ''}`}>
+              Explorer
+            </Link>
+            <Link to="/playground" className={`nav-link ${isActive('/playground') ? 'active' : ''}`}>
+              AI Chat
+            </Link>
           </div>
           
           <div className="nav-actions">
             {isConnected ? (
               <div className="wallet-connected">
                 <span className="wallet-address">{shortAddress(wallet)}</span>
-                <button onClick={disconnect} className="btn-disconnect" title="Disconnect">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
-                  </svg>
+                <button onClick={disconnect} className="btn btn-secondary btn-sm">
+                  Disconnect
                 </button>
               </div>
             ) : (

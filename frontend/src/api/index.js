@@ -56,8 +56,8 @@ class TaoNetAPI {
   }
 
   // Miners
-  async getLeaderboard(sort = 'totalRewards', limit = 20) {
-    return this.get(`/api/miners/leaderboard?sort=${sort}&limit=${limit}`);
+  async getLeaderboard(sort = 'composite', limit = 50, timeframe = 'all') {
+    return this.get(`/api/miners/leaderboard?sortBy=${sort}&limit=${limit}&timeframe=${timeframe}`);
   }
 
   async getMiner(address) {

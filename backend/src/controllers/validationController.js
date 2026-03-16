@@ -311,9 +311,9 @@ class ValidationController {
           miner: response.miner,
           validator: `auto-validator-${j}`,
           scores: {
-            accuracy: accuracy + Math.floor(Math.random() * 10 - 5),
-            relevance: relevance + Math.floor(Math.random() * 10 - 5),
-            completeness: completeness + Math.floor(Math.random() * 10 - 5),
+            accuracy: Math.min(100, Math.max(0, accuracy + Math.floor(Math.random() * 10 - 5))),
+            relevance: Math.min(100, Math.max(0, relevance + Math.floor(Math.random() * 10 - 5))),
+            completeness: Math.min(100, Math.max(0, completeness + Math.floor(Math.random() * 10 - 5))),
             speed: speed
           }
         });

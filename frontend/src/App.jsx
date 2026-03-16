@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { WalletProvider } from './context/WalletContext';
 import { MiningProvider } from './context/MiningContext';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import SupportChat from './components/SupportChat';
 import Home from './pages/Home';
 import Mine from './pages/Mine';
@@ -26,6 +27,7 @@ export default function App() {
               <Route path="/leaderboard" element={<Leaderboard />} />
               <Route path="/playground" element={<Playground />} />
             </Routes>
+            <Footer />
             <SupportChat />
           </div>
         </MiningProvider>

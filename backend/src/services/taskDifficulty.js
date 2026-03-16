@@ -239,3 +239,18 @@ class TaskDifficulty {
 }
 
 module.exports = TaskDifficulty;
+
+// Get difficulty tier for a given miner level
+TaskDifficulty.getDifficultyForLevel = function(level) {
+  const tiers = Object.entries(DIFFICULTY_TIERS)
+    .map(([id, tier]) => ({ id, ...tier }))
+    .sort((a, b) => b.level - a.level);
+  
+  for (const tier of tiers) {
+    if (level >= tier.level) {
+      return tier;
+    }
+  }
+  
+  return { id: 'novice', ...DIFFICULTY_TIERS.novice };
+};
