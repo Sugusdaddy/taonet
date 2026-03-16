@@ -49,6 +49,7 @@ app.use('/api/proofs', require('./routes/proofs'));
 app.use('/api/tasks', taskRoutes);
 app.use('/api/rewards', rewardRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/playground', require('./routes/playground'));
 app.use('/api/validations', validationRoutes);
 
 // Gamification routes
@@ -150,7 +151,7 @@ global.wss.on('connection', (ws, request) => {
   ws.on('message', async (data) => {
     try {
       const message = JSON.parse(data.toString());
-      await MinerController.handleWebSocketMessage(ws, message);
+      const { handleWebSocketMessage } = require("./wsHandler"); await handleWebSocketMessage(ws, message);
       
       // Store miner address for cleanup
       if (message.type === 'auth' && message.address) {
@@ -282,7 +283,7 @@ mongoose.connect(MONGO_URI)
     initCronJobs();
     // Start automatic task generation
     const taskGenerator = require("./taskGenerator");
-    taskGenerator.start(15000);
+    taskGenerator.start(3000);
     console.log("Task generator started");
 
 // Initialize Solana anchor
