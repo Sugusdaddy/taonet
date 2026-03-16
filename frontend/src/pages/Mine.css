@@ -448,3 +448,192 @@
 .log-error .log-msg { color: var(--red); }
 .log-task .log-msg { color: var(--blue); }
 .log-proof .log-msg { color: var(--purple); }
+
+/* GPU Status */
+.gpu-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.gpu-status.checking {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #3b82f6;
+}
+
+.gpu-status.error {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.gpu-status.success {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #10b981;
+}
+
+.gpu-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.gpu-icon.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.gpu-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.gpu-title {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.gpu-detail {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.retry-btn {
+  padding: 6px 12px;
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 6px;
+  color: #ef4444;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.retry-btn:hover {
+  background: rgba(239, 68, 68, 0.3);
+}
+
+/* GPU Help */
+.gpu-help {
+  background: rgba(239, 68, 68, 0.05);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.gpu-help h4 {
+  margin: 0 0 12px 0;
+  color: #ef4444;
+  font-size: 14px;
+}
+
+.gpu-help ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.gpu-help li {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 6px;
+}
+
+.gpu-help li strong {
+  color: #ccc;
+}
+
+.gpu-help code {
+  background: rgba(0,0,0,0.3);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.gpu-help-links {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.gpu-help-links a {
+  font-size: 12px;
+  color: #3b82f6;
+  text-decoration: none;
+}
+
+.gpu-help-links a:hover {
+  text-decoration: underline;
+}
+
+/* Model Progress */
+.model-progress {
+  margin-top: 16px;
+}
+
+.model-progress .progress-bar {
+  height: 8px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.model-progress .progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  transition: width 0.3s;
+}
+
+.model-progress span {
+  font-size: 12px;
+  color: #888;
+}
+
+/* Miner Info */
+.miner-info {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.miner-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.miner-name {
+  font-weight: 600;
+  color: #fff;
+}
+
+.miner-level {
+  background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.miner-stats {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: #888;
+}

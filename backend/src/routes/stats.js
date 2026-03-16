@@ -2,72 +2,65 @@ const express = require('express');
 const router = express.Router();
 const Miner = require('../models/Miner');
 const Task = require('../models/Task');
-const Reward = require('../models/Reward');
+const InferenceProof = require('../models/InferenceProof');
+const Knowledge = require('../models/Knowledge');
 
 router.get('/', async (req, res) => {
   try {
-    // Get real counts from database
-    const totalMiners = await Miner.countDocuments();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     
-    // Online miners: prefer websocket count, fallback to DB status
-    let onlineMiners = global.activeMiners ? global.activeMiners.size : 0;
-    if (onlineMiners === 0) {
-      // Check DB for recently active miners (last 5 minutes)
-      const recentlyActive = await Miner.countDocuments({
-        status: 'online',
-        lastSeen: { $gte: new Date(Date.now() - 5 * 60 * 1000) }
-      });
-      onlineMiners = recentlyActive;
-    }
-    
-    // Task counts
-    const totalTasks = await Task.countDocuments();
-    const completedTasks = await Task.countDocuments({ status: 'completed' });
-    
-    // Calculate average response time
-    const tasksWithResponse = await Task.find({ 
-      status: 'completed',
-      'responses.responseTime': { $exists: true }
-    }).sort({ completedAt: -1 }).limit(100);
-    
-    let avgResponseTime = 0;
-    let responseCount = 0;
-    for (const task of tasksWithResponse) {
-      for (const resp of task.responses || []) {
-        if (resp.responseTime) {
-          avgResponseTime += resp.responseTime;
-          responseCount++;
-        }
-      }
-    }
-    avgResponseTime = responseCount > 0 ? avgResponseTime / responseCount : 0;
-    
-    // Sum all rewards distributed
-    const rewardAgg = await Reward.aggregate([
-      { $group: { _id: null, total: { $sum: { $toLong: '$amount' } } } }
+    const [
+      totalMiners,
+      minersOnline,
+      totalProofs,
+      proofsToday,
+      totalTasks,
+      tasksToday,
+      knowledgeCount,
+      avgResponseTime
+    ] = await Promise.all([
+      Miner.countDocuments(),
+      Miner.countDocuments({ status: 'online' }),
+      InferenceProof.countDocuments(),
+      InferenceProof.countDocuments({ timestamp: { $gte: today } }),
+      Task.countDocuments({ status: 'completed' }),
+      Task.countDocuments({ status: 'completed', completedAt: { $gte: today } }),
+      Knowledge.countDocuments({ answer: { $exists: true, $ne: '' } }),
+      InferenceProof.aggregate([
+        { $match: { processingTime: { $gt: 0 } } },
+        { $group: { _id: null, avg: { $avg: '$processingTime' } } }
+      ])
     ]);
-    const totalRewards = rewardAgg[0]?.total || 0;
+    
+    // Calculate total rewards distributed
+    const rewardsAgg = await Miner.aggregate([
+      { $group: { _id: null, total: { $sum: { $toLong: '$stats.totalRewards' } } } }
+    ]);
+    
+    // Get last anchor info
+    const lastAnchor = await InferenceProof.findOne({ anchoredToSolana: true }).sort({ blockHeight: -1 });
+    
+    // Count WebSocket connections
+    const wsOnline = global.activeMiners?.size || 0;
     
     res.json({
-      network: {
-        totalMiners,
-        activeMiners: totalMiners,
-        onlineMiners
-      },
-      tasks: {
-        total: totalTasks,
-        completed: completedTasks,
-        pending: totalTasks - completedTasks,
-        avgResponseTimeMs: Math.round(avgResponseTime)
-      },
-      rewards: {
-        totalDistributed: totalRewards.toString()
-      },
-      timestamp: new Date().toISOString()
+      totalMiners,
+      minersOnline: Math.max(minersOnline, wsOnline),
+      totalProofs,
+      proofsToday,
+      totalTasks,
+      tasksToday,
+      knowledgeCount,
+      avgResponseTime: Math.round(avgResponseTime[0]?.avg || 0),
+      totalRewards: rewardsAgg[0]?.total?.toString() || '0',
+      lastAnchorBlock: lastAnchor?.blockHeight || null,
+      totalAnchors: await InferenceProof.countDocuments({ anchoredToSolana: true }),
+      network: 'devnet'
     });
   } catch (error) {
     console.error('Stats error:', error);
-    res.status(500).json({ error: 'Failed to get stats' });
+    res.status(500).json({ error: error.message });
   }
 });
 

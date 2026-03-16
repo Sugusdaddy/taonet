@@ -58,7 +58,12 @@ async function handleAuth(ws, message) {
   
   ws.send(JSON.stringify({
     type: 'auth_success',
-    miner: { address: miner.address, level: miner.level, xp: miner.xp }
+    miner: { 
+      address: miner.address, 
+      level: miner.level || 1, 
+      xp: miner.xp || 0,
+      completedTasks: miner.stats?.completedTasks || 0
+    }
   }));
 }
 
@@ -95,7 +100,10 @@ async function handleTaskResponse(ws, message) {
     }
     
     const miner = await Miner.findOne({ address: ws.minerAddress });
-    if (!miner) return;
+    if (!miner) {
+      ws.send(JSON.stringify({ type: 'error', message: 'Miner not found' }));
+      return;
+    }
     
     // Create hashes
     const inputHash = crypto.createHash('sha256').update(task.prompt).digest('hex');
@@ -115,31 +123,35 @@ async function handleTaskResponse(ws, message) {
     await task.save();
     
     // Save to Knowledge base
-    const existingKnowledge = await Knowledge.findOne({ 
-      questionLower: task.prompt.toLowerCase() 
-    });
-    
-    if (!existingKnowledge) {
-      const knowledge = new Knowledge({
-        question: task.prompt,
-        questionLower: task.prompt.toLowerCase(),
-        answer: response,
-        category: task.options?.category || 'general',
-        minedBy: ws.minerAddress,
-        taskId: task._id
+    try {
+      const existingKnowledge = await Knowledge.findOne({ 
+        questionLower: task.prompt.toLowerCase() 
       });
-      await knowledge.save();
-      console.log(`[Knowledge] Saved: "${task.prompt.slice(0,40)}..."`);
-    } else {
-      // Update if response is longer (potentially better)
-      if (response.length > existingKnowledge.answer.length) {
+      
+      if (!existingKnowledge) {
+        const knowledge = new Knowledge({
+          question: task.prompt,
+          questionLower: task.prompt.toLowerCase(),
+          answer: response,
+          category: task.options?.category || 'general',
+          minedBy: ws.minerAddress,
+          taskId: task._id
+        });
+        await knowledge.save();
+        console.log(`[Knowledge] Saved: "${task.prompt.slice(0,40)}..."`);
+      } else if (response.length > (existingKnowledge.answer?.length || 0)) {
         existingKnowledge.answer = response;
         existingKnowledge.updatedAt = new Date();
+        existingKnowledge.usageCount = (existingKnowledge.usageCount || 0) + 1;
         await existingKnowledge.save();
       }
-      existingKnowledge.usageCount++;
-      await existingKnowledge.save();
+    } catch (kErr) {
+      console.error('[Knowledge] Save error:', kErr.message);
     }
+    
+    // Get block height
+    const blockHeight = await InferenceProof.countDocuments() + 1;
+    const prevProof = await InferenceProof.findOne().sort({ blockHeight: -1 });
     
     // Create proof
     const proof = new InferenceProof({
@@ -150,8 +162,8 @@ async function handleTaskResponse(ws, message) {
       combinedHash,
       nonce: Math.floor(Math.random() * 1000000),
       timestamp: new Date(),
-      blockHeight: await InferenceProof.countDocuments() + 1,
-      previousHash: (await InferenceProof.findOne().sort({ blockHeight: -1 }))?.combinedHash || '0'.repeat(64),
+      blockHeight,
+      previousHash: prevProof?.combinedHash || '0'.repeat(64),
       modelInfo: modelInfo || { name: 'llama-3.2-1b', parameters: '1B' },
       processingTime: processingTime || 0,
       verified: true
@@ -167,34 +179,43 @@ async function handleTaskResponse(ws, message) {
       taskType: task.type || 'text'
     });
     
-    // Update miner
+    // Update miner stats
+    if (!miner.stats) miner.stats = {};
     miner.stats.completedTasks = (miner.stats.completedTasks || 0) + 1;
-    miner.stats.totalRewards = (BigInt(miner.stats.totalRewards || 0) + rewardResult.finalReward).toString();
+    miner.stats.totalRewards = (BigInt(miner.stats.totalRewards || '0') + rewardResult.finalReward).toString();
     miner.xp = (miner.xp || 0) + rewardResult.xpEarned;
     miner.lastSeen = new Date();
     
-    const xpNeeded = RewardEngine.getXpForLevel(miner.level + 1);
+    // Level up check
+    const xpNeeded = RewardEngine.getXpForLevel((miner.level || 1) + 1);
+    let leveledUp = false;
     if (miner.xp >= xpNeeded) {
-      miner.level++;
+      miner.level = (miner.level || 1) + 1;
       miner.xp -= xpNeeded;
       ws.minerLevel = miner.level;
+      leveledUp = true;
       console.log(`[WS] ${ws.minerAddress.slice(0,8)} leveled up to ${miner.level}!`);
     }
     
     await miner.save();
     
-    console.log(`[WS] Task completed: ${taskId.slice(-6)} by ${ws.minerAddress.slice(0,8)} (+${rewardResult.xpEarned}XP)`);
+    console.log(`[WS] Task completed: ${taskId.toString().slice(-6)} by ${ws.minerAddress.slice(0,8)} (+${rewardResult.xpEarned}XP)`);
     
+    // Send confirmation - all values as strings/numbers
     ws.send(JSON.stringify({
       type: 'task_accepted',
-      taskId,
+      taskId: taskId.toString(),
       reward: rewardResult.finalReward.toString(),
       xp: rewardResult.xpEarned,
-      proofId: proof._id
+      proofId: proof._id.toString(),
+      level: miner.level || 1,
+      totalXp: miner.xp || 0,
+      leveledUp
     }));
     
   } catch (error) {
     console.error('[WS] Task response error:', error.message);
+    ws.send(JSON.stringify({ type: 'error', message: 'Processing failed: ' + error.message }));
   }
 }
 

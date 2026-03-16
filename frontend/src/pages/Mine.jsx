@@ -16,8 +16,11 @@ export default function Mine() {
     sessionStats, 
     logs,
     lastProof,
+    gpuInfo,
+    loadModel,
     startMining, 
-    stopMining 
+    stopMining,
+    checkGPUSupport
   } = useMining();
   
   const [minerName, setMinerName] = useState('');
@@ -48,6 +51,79 @@ export default function Mine() {
   // Determine current step
   const step = !isConnected ? 1 : !miner ? 2 : 3;
 
+  // GPU status component
+  const GPUStatus = () => {
+    if (modelStatus === 'checking') {
+      return (
+        <div className="gpu-status checking">
+          <div className="gpu-icon spinning">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
+            </svg>
+          </div>
+          <span>Checking GPU compatibility...</span>
+        </div>
+      );
+    }
+    
+    if (modelStatus === 'no-gpu' || !gpuInfo?.supported) {
+      return (
+        <div className="gpu-status error">
+          <div className="gpu-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="15" y1="9" x2="9" y2="15"/>
+              <line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+          </div>
+          <div className="gpu-info">
+            <span className="gpu-title">No Compatible GPU Detected</span>
+            <span className="gpu-detail">{gpuInfo?.reason || 'WebGPU not available'}</span>
+          </div>
+          <button className="retry-btn" onClick={checkGPUSupport}>
+            Retry
+          </button>
+        </div>
+      );
+    }
+    
+    if (gpuInfo?.supported) {
+      return (
+        <div className="gpu-status success">
+          <div className="gpu-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          </div>
+          <div className="gpu-info">
+            <span className="gpu-title">GPU Ready</span>
+            <span className="gpu-detail">{gpuInfo.vendor} {gpuInfo.device || gpuInfo.architecture}</span>
+          </div>
+        </div>
+      );
+    }
+    
+    return null;
+  };
+
+  // GPU requirements help
+  const GPUHelp = () => (
+    <div className="gpu-help">
+      <h4>WebGPU Requirements</h4>
+      <ul>
+        <li><strong>Chrome 113+</strong> or <strong>Edge 113+</strong> (recommended)</li>
+        <li>Firefox Nightly with <code>dom.webgpu.enabled</code></li>
+        <li>Dedicated GPU (NVIDIA, AMD, Intel Arc)</li>
+        <li>Updated graphics drivers</li>
+      </ul>
+      <div className="gpu-help-links">
+        <a href="https://webgpureport.org" target="_blank" rel="noopener">Check WebGPU Support</a>
+        <a href="https://developer.chrome.com/docs/web-platform/webgpu" target="_blank" rel="noopener">WebGPU Docs</a>
+      </div>
+    </div>
+  );
+
   return (
     <main className="mine-page">
       <div className="container">
@@ -58,6 +134,11 @@ export default function Mine() {
               <h2>Mine TAO</h2>
               <p>Contribute GPU compute, earn rewards</p>
             </div>
+
+            {/* GPU Status */}
+            <GPUStatus />
+            
+            {modelStatus === 'no-gpu' && <GPUHelp />}
 
             {/* Progress Steps */}
             <div className="setup-progress">
@@ -102,16 +183,16 @@ export default function Mine() {
                 <div className="step-info">
                   <span className="step-title">Start Mining</span>
                   {step === 3 && !isMining && <span className="step-status">Ready</span>}
-                  {isMining && <span className="step-status done">Active</span>}
+                  {isMining && <span className="step-status done">Mining...</span>}
                 </div>
               </div>
             </div>
 
-            {/* Action Area */}
-            <div className="setup-action">
+            {/* Actions */}
+            <div className="setup-actions">
               {step === 1 && (
-                <button onClick={connect} className="btn btn-primary w-full">
-                  Connect Phantom Wallet
+                <button className="btn-primary" onClick={connect}>
+                  Connect Wallet
                 </button>
               )}
               
@@ -119,16 +200,17 @@ export default function Mine() {
                 <div className="register-form">
                   <input
                     type="text"
-                    placeholder="Enter miner name"
+                    placeholder="Miner name"
                     value={minerName}
-                    onChange={(e) => setMinerName(e.target.value)}
+                    onChange={e => setMinerName(e.target.value)}
+                    maxLength={20}
                   />
                   <button 
+                    className="btn-primary" 
                     onClick={handleRegister}
                     disabled={!minerName.trim() || registering}
-                    className="btn btn-primary w-full"
                   >
-                    {registering ? 'Registering...' : 'Register Miner'}
+                    {registering ? 'Registering...' : 'Register'}
                   </button>
                 </div>
               )}
@@ -137,14 +219,22 @@ export default function Mine() {
                 <>
                   {!isMining ? (
                     <button 
+                      className="btn-primary btn-start"
                       onClick={startMining}
-                      disabled={modelStatus === 'loading'}
-                      className="btn btn-primary w-full"
+                      disabled={modelStatus === 'loading' || modelStatus === 'no-gpu'}
                     >
-                      {modelStatus === 'loading' ? `Loading Model ${modelProgress}%` : 'Start Mining'}
+                      {modelStatus === 'loading' ? (
+                        <>Loading Model ({modelProgress}%)...</>
+                      ) : modelStatus === 'no-gpu' ? (
+                        <>GPU Required</>
+                      ) : modelStatus === 'ready' ? (
+                        <>Start Mining</>
+                      ) : (
+                        <>Load Model & Start</>
+                      )}
                     </button>
                   ) : (
-                    <button onClick={stopMining} className="btn btn-danger w-full">
+                    <button className="btn-danger" onClick={stopMining}>
                       Stop Mining
                     </button>
                   )}
@@ -152,132 +242,95 @@ export default function Mine() {
               )}
             </div>
 
-            {/* Session Stats */}
-            {isMining && (
-              <div className="session-stats">
-                <div className="session-stat">
-                  <span className="stat-label">Time</span>
-                  <span className="stat-value">{formatTime(elapsedTime)}</span>
+            {/* Model Loading Progress */}
+            {modelStatus === 'loading' && (
+              <div className="model-progress">
+                <div className="progress-bar">
+                  <div className="progress-fill" style={{ width: `${modelProgress}%` }} />
                 </div>
-                <div className="session-stat">
-                  <span className="stat-label">Tasks</span>
-                  <span className="stat-value">{sessionStats.tasksCompleted}</span>
-                </div>
-                <div className="session-stat">
-                  <span className="stat-label">Tokens</span>
-                  <span className="stat-value">{sessionStats.tokensGenerated}</span>
-                </div>
-                <div className="session-stat highlight">
-                  <span className="stat-label">TAO</span>
-                  <span className="stat-value">{sessionStats.taoEarned}</span>
-                </div>
+                <span>{modelProgress}% - Downloading model weights...</span>
               </div>
             )}
           </div>
 
-          {/* Right - Activity Panel */}
-          <div className="activity-panel">
-            {/* Model Loading */}
-            {modelStatus === 'loading' && (
-              <div className="loading-card">
-                <div className="loading-header">
-                  <div className="loading-spinner"></div>
-                  <div>
-                    <h3>Downloading AI Model</h3>
-                    <p>Llama 3.2 1B - {modelProgress}% complete</p>
-                  </div>
-                </div>
-                <div className="progress">
-                  <div className="progress-bar" style={{ width: `${modelProgress}%` }}></div>
-                </div>
-                <p className="loading-note">
-                  ~500MB download. Cached in browser after first load.
-                </p>
+          {/* Right - Mining Dashboard */}
+          <div className="mining-dashboard">
+            {/* Session Stats */}
+            <div className="stats-grid">
+              <div className="stat-card">
+                <span className="stat-label">Session Time</span>
+                <span className="stat-value">{formatTime(elapsedTime)}</span>
               </div>
-            )}
+              <div className="stat-card">
+                <span className="stat-label">Tasks Completed</span>
+                <span className="stat-value">{sessionStats.tasksCompleted}</span>
+              </div>
+              <div className="stat-card">
+                <span className="stat-label">Tokens Generated</span>
+                <span className="stat-value">{sessionStats.tokensGenerated.toLocaleString()}</span>
+              </div>
+              <div className="stat-card highlight">
+                <span className="stat-label">TAO Earned</span>
+                <span className="stat-value">{sessionStats.taoEarned.toFixed(4)}</span>
+              </div>
+            </div>
 
             {/* Current Task */}
             {currentTask && (
-              <div className="task-card">
+              <div className="current-task">
                 <div className="task-header">
-                  <div className="task-badge">
-                    <span className="badge-dot"></span>
-                    Processing
-                  </div>
+                  <span className="task-badge">Processing Task</span>
                   <span className="task-metrics">
-                    {taskMetrics.tokens} tokens / {taskMetrics.tokensPerSec} tok/s
+                    {taskMetrics.tokens} tokens | {taskMetrics.tokensPerSec.toFixed(1)} t/s
                   </span>
                 </div>
-                
-                <div className="task-content">
-                  <div className="task-section">
-                    <label>Input</label>
-                    <p>{currentTask.prompt}</p>
+                <div className="task-prompt">{currentTask.prompt}</div>
+                {streamingResponse && (
+                  <div className="task-response">
+                    <pre>{streamingResponse}</pre>
                   </div>
-                  
-                  <div className="task-section">
-                    <label>Output</label>
-                    <div className="task-output">
-                      {streamingResponse}
-                      <span className="cursor">|</span>
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
             )}
 
-            {/* Last Proof */}
-            {lastProof && !currentTask && (
-              <div className="proof-card">
-                <div className="proof-header">
-                  <span className="proof-number">Proof #{lastProof.blockNumber}</span>
-                  <span className="proof-verified">Verified</span>
+            {/* Miner Info */}
+            {miner && (
+              <div className="miner-info">
+                <div className="miner-header">
+                  <span className="miner-name">{miner.name}</span>
+                  <span className="miner-level">Lv.{miner.level || 1}</span>
                 </div>
-                <div className="proof-hash">
-                  <label>Block Hash</label>
-                  <code>{lastProof.blockHash}</code>
+                <div className="miner-stats">
+                  <span>XP: {miner.xp || 0}</span>
+                  <span>Tasks: {miner.stats?.completedTasks || 0}</span>
                 </div>
-              </div>
-            )}
-
-            {/* Waiting State */}
-            {isMining && !currentTask && modelStatus === 'ready' && (
-              <div className="waiting-card">
-                <div className="waiting-pulse"></div>
-                <h3>Waiting for tasks</h3>
-                <p>Connected and ready. Tasks arrive automatically.</p>
-              </div>
-            )}
-
-            {/* Not Mining */}
-            {!isMining && modelStatus !== 'loading' && (
-              <div className="info-card">
-                <h3>How it works</h3>
-                <ul>
-                  <li>Your browser downloads a 500MB AI model (Llama 3.2)</li>
-                  <li>Tasks are sent via WebSocket from the network</li>
-                  <li>Your GPU runs inference locally using WebGPU</li>
-                  <li>Responses are verified and you earn TAO rewards</li>
-                  <li>A cryptographic proof is created for each task</li>
-                </ul>
-                <p className="info-note">
-                  Mining continues even when navigating to other pages.
-                </p>
               </div>
             )}
 
             {/* Logs */}
-            {logs.length > 0 && (
-              <div className="logs-card">
-                <h4>Activity Log</h4>
-                <div className="logs-list">
-                  {logs.slice().reverse().slice(0, 10).map((log, i) => (
+            <div className="logs-panel">
+              <div className="logs-header">
+                <span>Activity Log</span>
+                <span className="log-count">{logs.length} entries</span>
+              </div>
+              <div className="logs-content">
+                {logs.length === 0 ? (
+                  <div className="log-empty">Waiting for activity...</div>
+                ) : (
+                  logs.slice().reverse().map((log, i) => (
                     <div key={i} className={`log-entry log-${log.type}`}>
                       <span className="log-time">{log.time}</span>
                       <span className="log-msg">{log.msg}</span>
                     </div>
-                  ))}
-                </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Last Proof */}
+            {lastProof && (
+              <div className="last-proof">
+                <span>Last Proof: {lastProof.id?.slice(0, 8)}...</span>
               </div>
             )}
           </div>
