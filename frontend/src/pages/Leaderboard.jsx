@@ -6,30 +6,81 @@ export default function Leaderboard() {
   const [miners, setMiners] = useState([]);
   const [sort, setSort] = useState('totalRewards');
   const [loading, setLoading] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState(null);
 
   useEffect(() => {
     loadLeaderboard();
+    // Auto-refresh every 5 seconds for live data
+    const interval = setInterval(loadLeaderboard, 5000);
+    return () => clearInterval(interval);
   }, [sort]);
 
   async function loadLeaderboard() {
-    setLoading(true);
     const data = await api.getLeaderboard(sort, 50);
-    if (data?.leaderboard) setMiners(data.leaderboard);
+    if (data?.leaderboard) {
+      setMiners(data.leaderboard);
+      setLastUpdate(new Date());
+    }
     setLoading(false);
   }
 
   const sortOptions = [
     { value: 'totalRewards', label: 'Total Rewards' },
     { value: 'tasks', label: 'Tasks Completed' },
-    { value: 'streak', label: 'Longest Streak' },
+    { value: 'reputation', label: 'Reputation' },
   ];
+
+  const getStatValue = (miner) => {
+    switch (sort) {
+      case 'totalRewards':
+        return api.formatNumber(miner.stats?.totalRewards || 0);
+      case 'tasks':
+        return miner.stats?.completedTasks || 0;
+      case 'reputation':
+        return miner.reputation || 50;
+      default:
+        return '-';
+    }
+  };
 
   return (
     <main className="leaderboard-page">
       <div className="container">
         <div className="page-header">
-          <h1 className="page-title">Leaderboard</h1>
-          <p className="page-subtitle">Top miners on the network</p>
+          <div>
+            <h1 className="page-title">Leaderboard</h1>
+            <p className="page-subtitle">Live network rankings - updates every 5s</p>
+          </div>
+          {lastUpdate && (
+            <span className="live-indicator">
+              <span className="live-dot"></span>
+              LIVE
+            </span>
+          )}
+        </div>
+
+        {/* Stats Summary */}
+        <div className="leaderboard-stats">
+          <div className="lb-stat">
+            <span className="lb-stat-value">{miners.length}</span>
+            <span className="lb-stat-label">Total Miners</span>
+          </div>
+          <div className="lb-stat">
+            <span className="lb-stat-value">{miners.filter(m => m.status === 'online').length}</span>
+            <span className="lb-stat-label">Online Now</span>
+          </div>
+          <div className="lb-stat">
+            <span className="lb-stat-value">
+              {miners.reduce((sum, m) => sum + (m.stats?.completedTasks || 0), 0)}
+            </span>
+            <span className="lb-stat-label">Total Tasks</span>
+          </div>
+          <div className="lb-stat">
+            <span className="lb-stat-value">
+              {api.formatNumber(miners.reduce((sum, m) => sum + Number(m.stats?.totalRewards || 0), 0))}
+            </span>
+            <span className="lb-stat-label">Total Rewards</span>
+          </div>
         </div>
 
         {/* Tabs */}
@@ -54,11 +105,12 @@ export default function Leaderboard() {
               <table>
                 <thead>
                   <tr>
-                    <th>Rank</th>
+                    <th>#</th>
                     <th>Miner</th>
-                    <th>Tier</th>
-                    <th>Level</th>
-                    <th>{sort === 'totalRewards' ? 'Rewards' : sort === 'tasks' ? 'Tasks' : 'Streak'}</th>
+                    <th>Status</th>
+                    <th>Tasks</th>
+                    <th>Reputation</th>
+                    <th>{sort === 'totalRewards' ? 'Rewards' : sort === 'tasks' ? 'Tasks' : 'Rep'}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -76,17 +128,19 @@ export default function Leaderboard() {
                         </div>
                       </td>
                       <td>
-                        <span className={`badge badge-${miner.stakingTier || 'bronze'}`}>
-                          {miner.stakingTier || 'bronze'}
+                        <span className={`status-badge status-${miner.status || 'offline'}`}>
+                          {miner.status || 'offline'}
                         </span>
                       </td>
+                      <td>{miner.stats?.completedTasks || 0}</td>
                       <td>
-                        <span className="level">Lv. {miner.level || 1}</span>
+                        <div className="rep-bar">
+                          <div className="rep-fill" style={{ width: `${miner.reputation || 50}%` }}></div>
+                          <span className="rep-value">{miner.reputation || 50}</span>
+                        </div>
                       </td>
-                      <td className="stat-col">
-                        {sort === 'totalRewards' && api.formatNumber(miner.stats?.totalRewards || 0)}
-                        {sort === 'tasks' && (miner.stats?.completedTasks || 0)}
-                        {sort === 'streak' && `${miner.currentStreak || 0} days`}
+                      <td className="stat-col highlight">
+                        {getStatValue(miner)}
                       </td>
                     </tr>
                   ))}
@@ -95,7 +149,8 @@ export default function Leaderboard() {
             </div>
           ) : (
             <div className="empty">
-              <p>No miners yet. Be the first to join!</p>
+              <p>No miners yet</p>
+              <p className="text-sm">Be the first to join the network!</p>
             </div>
           )}
         </div>
