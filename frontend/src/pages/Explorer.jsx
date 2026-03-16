@@ -3,9 +3,10 @@ import api from '../api';
 import './Explorer.css';
 
 export default function Explorer() {
-  const [stats, setStats] = useState(null);
   const [proofs, setProofs] = useState([]);
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedProof, setSelectedProof] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -14,129 +15,195 @@ export default function Explorer() {
   }, []);
 
   async function loadData() {
-    const [statsRes, proofsRes] = await Promise.all([
-      api.get('/api/proofs/stats'),
-      api.get('/api/proofs?limit=20')
+    const [proofsData, statsData] = await Promise.all([
+      api.get('/proofs?limit=20'),
+      api.get('/proofs/stats')
     ]);
-    
-    if (statsRes) setStats(statsRes);
-    if (proofsRes?.proofs) setProofs(proofsRes.proofs);
+    if (proofsData) setProofs(proofsData);
+    if (statsData) setStats(statsData);
     setLoading(false);
   }
 
-  if (loading) {
-    return (
-      <main className="explorer-page">
-        <div className="container">
-          <div className="loading">Loading...</div>
-        </div>
-      </main>
-    );
-  }
+  const formatHash = (hash) => {
+    if (!hash) return '-';
+    return `${hash.slice(0, 8)}...${hash.slice(-8)}`;
+  };
 
   return (
     <main className="explorer-page">
       <div className="container">
         {/* Header */}
-        <div className="explorer-header">
+        <div className="page-header">
           <div>
             <h1>Proof Explorer</h1>
-            <p className="text-secondary">Verify AI inference on the blockchain</p>
+            <p>Verify every AI inference on the chain</p>
           </div>
-          <div className="live-indicator">
+          <div className="live-badge">
             <span className="live-dot"></span>
-            LIVE
+            Live
           </div>
         </div>
 
-        {/* What is this */}
-        <div className="info-banner">
+        {/* Stats Grid */}
+        <div className="stats-grid">
+          <div className="stat-card">
+            <div className="stat-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              </svg>
+            </div>
+            <div className="stat-content">
+              <span className="stat-value">{stats?.height || 0}</span>
+              <span className="stat-label">Chain Height</span>
+            </div>
+          </div>
+          
+          <div className="stat-card">
+            <div className="stat-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+            </div>
+            <div className="stat-content">
+              <span className="stat-value">{stats?.totalProofs || 0}</span>
+              <span className="stat-label">Total Proofs</span>
+            </div>
+          </div>
+          
+          <div className="stat-card">
+            <div className="stat-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </div>
+            <div className="stat-content">
+              <span className="stat-value">{stats?.uniqueMiners || 0}</span>
+              <span className="stat-label">Unique Miners</span>
+            </div>
+          </div>
+          
+          <div className="stat-card">
+            <div className="stat-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+              </svg>
+            </div>
+            <div className="stat-content">
+              <span className="stat-value">{api.formatNumber(stats?.totalTokens || 0)}</span>
+              <span className="stat-label">Tokens Generated</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Explanation */}
+        <div className="explanation-card">
           <h3>What is Proof of Inference?</h3>
           <p>
-            Every AI task creates a cryptographic proof. The input prompt and output response 
-            are hashed (SHA256), creating an immutable record. Anyone can verify that the 
-            AI actually processed the request by recomputing the hashes.
+            Every AI task completed on TaoNet creates a cryptographic proof. The input prompt 
+            and output response are hashed using SHA-256, creating a verifiable record that 
+            the work was done. These proofs are chained together - each block references the 
+            previous one, making the history immutable.
           </p>
+          <div className="proof-diagram">
+            <div className="diagram-block">
+              <span className="block-label">Block N-1</span>
+              <span className="block-hash">prevHash</span>
+            </div>
+            <svg className="diagram-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+            <div className="diagram-block current">
+              <span className="block-label">Block N</span>
+              <span className="block-hash">blockHash</span>
+            </div>
+            <svg className="diagram-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+            <div className="diagram-block">
+              <span className="block-label">Block N+1</span>
+              <span className="block-hash">nextHash</span>
+            </div>
+          </div>
         </div>
 
-        {/* Stats */}
-        <div className="explorer-stats">
-          <div className="stat-box">
-            <span className="stat-value">{stats?.chain?.height || 0}</span>
-            <span className="stat-label">Block Height</span>
-          </div>
-          <div className="stat-box">
-            <span className="stat-value">{stats?.chain?.totalBlocks || 0}</span>
-            <span className="stat-label">Total Proofs</span>
-          </div>
-          <div className="stat-box">
-            <span className="stat-value">{stats?.inference?.uniqueMiners || 0}</span>
-            <span className="stat-label">Unique Miners</span>
-          </div>
-          <div className="stat-box">
-            <span className="stat-value">{api.formatNumber(stats?.inference?.totalTokensGenerated || 0)}</span>
-            <span className="stat-label">Tokens Generated</span>
-          </div>
-        </div>
-
-        {/* Proofs */}
+        {/* Proofs List */}
         <div className="proofs-section">
           <h2>Recent Proofs</h2>
           
-          {proofs.length > 0 ? (
+          {loading ? (
+            <div className="loading-state">
+              <div className="spinner"></div>
+              <p>Loading proofs...</p>
+            </div>
+          ) : proofs.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M8 12h8"/>
+                </svg>
+              </div>
+              <h3>No proofs yet</h3>
+              <p>Start mining to create the first inference proof on the chain.</p>
+            </div>
+          ) : (
             <div className="proofs-list">
-              {proofs.map((proof) => (
-                <div key={proof.blockHash} className="proof-card">
+              {proofs.map(proof => (
+                <div 
+                  key={proof._id} 
+                  className={`proof-card ${selectedProof?._id === proof._id ? 'selected' : ''}`}
+                  onClick={() => setSelectedProof(selectedProof?._id === proof._id ? null : proof)}
+                >
                   <div className="proof-header">
-                    <span className="block-number">#{proof.blockNumber}</span>
-                    <span className="proof-time">{api.timeAgo(proof.createdAt)}</span>
+                    <div className="proof-block">
+                      <span className="block-number">#{proof.blockNumber}</span>
+                      <span className="verified-badge">Verified</span>
+                    </div>
+                    <span className="proof-time">{api.timeAgo(proof.timestamp)}</span>
                   </div>
                   
-                  <div className="proof-content">
+                  <div className="proof-body">
                     <div className="proof-row">
-                      <label>Miner</label>
-                      <span className="mono">{api.shortAddress(proof.miner)}</span>
+                      <span className="row-label">Block Hash</span>
+                      <code className="row-value">{formatHash(proof.blockHash)}</code>
                     </div>
                     <div className="proof-row">
-                      <label>Model</label>
-                      <span>{proof.model || 'Llama 3.2 1B'}</span>
+                      <span className="row-label">Miner</span>
+                      <span className="row-value miner">{api.shortAddress(proof.miner)}</span>
                     </div>
-                    <div className="proof-row">
-                      <label>Tokens</label>
-                      <span>{proof.tokensGenerated || 0}</span>
-                    </div>
-                    <div className="proof-row">
-                      <label>Time</label>
+                    <div className="proof-metrics">
+                      <span>{proof.tokensGenerated || 0} tokens</span>
                       <span>{proof.processingTimeMs || 0}ms</span>
                     </div>
                   </div>
                   
-                  <div className="proof-hashes">
-                    <div className="hash-row">
-                      <label>Block Hash</label>
-                      <code>{proof.blockHash}</code>
+                  {selectedProof?._id === proof._id && (
+                    <div className="proof-details">
+                      <div className="detail-section">
+                        <label>Input Hash (SHA-256)</label>
+                        <code>{proof.inputHash}</code>
+                      </div>
+                      <div className="detail-section">
+                        <label>Output Hash (SHA-256)</label>
+                        <code>{proof.outputHash}</code>
+                      </div>
+                      <div className="detail-section">
+                        <label>Previous Block</label>
+                        <code>{proof.previousHash || 'Genesis'}</code>
+                      </div>
+                      {proof.prompt && (
+                        <div className="detail-section">
+                          <label>Prompt</label>
+                          <p>{proof.prompt}</p>
+                        </div>
+                      )}
                     </div>
-                    <div className="hash-row">
-                      <label>Input Hash</label>
-                      <code>{proof.inputHash}</code>
-                    </div>
-                    <div className="hash-row">
-                      <label>Output Hash</label>
-                      <code>{proof.outputHash}</code>
-                    </div>
-                  </div>
-                  
-                  <div className="proof-footer">
-                    <span className="verified-badge">Verified</span>
-                  </div>
+                  )}
                 </div>
               ))}
-            </div>
-          ) : (
-            <div className="empty-state">
-              <h3>No Proofs Yet</h3>
-              <p>Start mining to generate the first inference proofs!</p>
-              <a href="/mine" className="btn btn-primary mt-md">Start Mining</a>
             </div>
           )}
         </div>

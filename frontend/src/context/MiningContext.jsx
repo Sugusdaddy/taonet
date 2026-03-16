@@ -84,6 +84,13 @@ export function MiningProvider({ children }) {
         type: 'auth',
         address: wallet
       }));
+      // Send ready immediately after auth
+      setTimeout(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'ready' }));
+          addLog('Ready for tasks', 'info');
+        }
+      }, 500);
     };
     
     ws.onmessage = async (event) => {
@@ -96,8 +103,12 @@ export function MiningProvider({ children }) {
           break;
           
         case 'task':
-          if (engineRef.current && isMining) {
+          console.log('[Mining] Task received:', data.task);
+          addLog(`Task received: ${data.task?.prompt?.slice(0, 40)}...`, 'task');
+          if (engineRef.current) {
             await processTask(data.task);
+          } else {
+            addLog('Engine not ready, skipping task', 'error');
           }
           break;
           

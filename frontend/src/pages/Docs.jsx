@@ -1,165 +1,348 @@
+import { useState } from 'react';
 import './Docs.css';
 
 export default function Docs() {
+  const [activeSection, setActiveSection] = useState('overview');
+
+  const sections = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'getting-started', label: 'Getting Started' },
+    { id: 'mining', label: 'Mining' },
+    { id: 'proof-of-inference', label: 'Proof of Inference' },
+    { id: 'tiers', label: 'Staking Tiers' },
+    { id: 'api', label: 'API Reference' },
+  ];
+
   return (
     <main className="docs-page">
       <div className="container">
-        <div className="docs-layout">
+        <div className="docs-grid">
           {/* Sidebar */}
           <aside className="docs-sidebar">
-            <nav className="docs-nav">
-              <h4>Getting Started</h4>
-              <a href="#overview" className="active">Overview</a>
-              <a href="#quickstart">Quick Start</a>
-              <a href="#wallet">Wallet Setup</a>
-              
-              <h4>Mining</h4>
-              <a href="#browser">Browser Mining</a>
-              <a href="#cli">CLI Miner</a>
-              <a href="#sdk">SDK Integration</a>
-              
-              <h4>Rewards</h4>
-              <a href="#earning">How Earning Works</a>
-              <a href="#tiers">Tier System</a>
-              <a href="#jackpots">Jackpots</a>
-              
-              <h4>API Reference</h4>
-              <a href="#api-auth">Authentication</a>
-              <a href="#api-endpoints">Endpoints</a>
+            <nav>
+              {sections.map(section => (
+                <button
+                  key={section.id}
+                  className={`nav-item ${activeSection === section.id ? 'active' : ''}`}
+                  onClick={() => setActiveSection(section.id)}
+                >
+                  {section.label}
+                </button>
+              ))}
             </nav>
           </aside>
 
           {/* Content */}
           <div className="docs-content">
-            <section id="overview">
-              <h1>TaoNet Documentation</h1>
-              <p className="lead">
-                TaoNet is a decentralized AI inference network built on Solana.
-                Miners process AI tasks and earn tokens for their contributions.
-              </p>
-              
-              <div className="info-box">
-                <h4>What is TaoNet?</h4>
-                <p>
-                  TaoNet connects AI task requesters with distributed computing power.
-                  When you run a miner, you process AI inference requests and earn tokens.
+            {activeSection === 'overview' && (
+              <section>
+                <h1>TaoNet Documentation</h1>
+                <p className="lead">
+                  TaoNet is a decentralized AI inference network where miners contribute GPU 
+                  compute power to process AI tasks and earn TAO rewards.
                 </p>
-              </div>
-            </section>
 
-            <section id="quickstart">
-              <h2>Quick Start</h2>
-              <p>Get started in under 5 minutes:</p>
-              
-              <div className="steps">
-                <div className="doc-step">
-                  <span className="step-num">1</span>
-                  <div>
-                    <h4>Connect Wallet</h4>
-                    <p>Install Phantom and connect to TaoNet</p>
+                <div className="feature-grid">
+                  <div className="feature-card">
+                    <div className="feature-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/>
+                      </svg>
+                    </div>
+                    <h3>Proof of Inference</h3>
+                    <p>Every AI task creates a cryptographic proof, ensuring all work is verifiable.</p>
+                  </div>
+                  <div className="feature-card">
+                    <div className="feature-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="4" y="4" width="16" height="16" rx="2"/>
+                        <path d="M9 9h6v6H9z"/>
+                      </svg>
+                    </div>
+                    <h3>Browser Mining</h3>
+                    <p>Run AI inference directly in your browser using WebGPU. No setup required.</p>
+                  </div>
+                  <div className="feature-card">
+                    <div className="feature-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 6v6l4 2"/>
+                      </svg>
+                    </div>
+                    <h3>Instant Rewards</h3>
+                    <p>Earn TAO immediately upon task completion. Higher tiers earn more.</p>
                   </div>
                 </div>
-                <div className="doc-step">
-                  <span className="step-num">2</span>
-                  <div>
-                    <h4>Register</h4>
-                    <p>Choose a display name for the leaderboard</p>
+              </section>
+            )}
+
+            {activeSection === 'getting-started' && (
+              <section>
+                <h1>Getting Started</h1>
+                <p className="lead">Start mining in 3 simple steps.</p>
+
+                <div className="step-list">
+                  <div className="step">
+                    <div className="step-number">1</div>
+                    <div className="step-content">
+                      <h3>Connect Your Wallet</h3>
+                      <p>
+                        Click "Connect Wallet" and approve the connection in Phantom. 
+                        Your wallet address becomes your miner identity.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="step">
+                    <div className="step-number">2</div>
+                    <div className="step-content">
+                      <h3>Register as a Miner</h3>
+                      <p>
+                        Choose a name for your miner. This is how you'll appear on the 
+                        leaderboard.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="step">
+                    <div className="step-number">3</div>
+                    <div className="step-content">
+                      <h3>Start Mining</h3>
+                      <p>
+                        Click "Start Mining" to download the AI model (~500MB) and begin 
+                        processing tasks. Mining continues even when you navigate to other pages.
+                      </p>
+                    </div>
                   </div>
                 </div>
-                <div className="doc-step">
-                  <span className="step-num">3</span>
-                  <div>
-                    <h4>Start Mining</h4>
-                    <p>Use browser mining or install the CLI</p>
-                  </div>
+
+                <div className="note">
+                  <strong>Requirements:</strong> Chrome 113+ or Edge 113+ with WebGPU support. 
+                  The AI model is cached after the first download.
                 </div>
-              </div>
-            </section>
+              </section>
+            )}
 
-            <section id="browser">
-              <h2>Browser Mining</h2>
-              <p>The easiest way to start. Mine directly in your browser.</p>
-              
-              <div className="warning-box">
-                <h4>Note</h4>
-                <p>Browser mining has rate limits. For higher earnings, use the CLI miner.</p>
-              </div>
-              
-              <ol className="doc-list">
-                <li>Go to the Mine page</li>
-                <li>Connect your wallet</li>
-                <li>Register a miner name</li>
-                <li>Click "Start Mining"</li>
-              </ol>
-            </section>
+            {activeSection === 'mining' && (
+              <section>
+                <h1>Mining</h1>
+                <p className="lead">How AI inference mining works on TaoNet.</p>
 
-            <section id="cli">
-              <h2>CLI Miner</h2>
-              <p>For serious mining. Higher rate limits and better rewards.</p>
-              
-              <div className="code-block">
-                <div className="code-header">Installation</div>
-                <pre><code>npm install -g taonet-miner</code></pre>
-              </div>
-              
-              <div className="code-block">
-                <div className="code-header">Configuration</div>
-                <pre><code>taonet-miner config --wallet YOUR_WALLET_ADDRESS</code></pre>
-              </div>
-              
-              <div className="code-block">
-                <div className="code-header">Start Mining</div>
-                <pre><code>taonet-miner start</code></pre>
-              </div>
-            </section>
+                <h2>How It Works</h2>
+                <ol>
+                  <li>Connect to the network via WebSocket</li>
+                  <li>Receive tasks containing AI prompts</li>
+                  <li>Run inference locally using Llama 3.2 (1B parameters)</li>
+                  <li>Submit response with processing metrics</li>
+                  <li>Receive TAO rewards upon verification</li>
+                </ol>
 
-            <section id="tiers">
-              <h2>Tier System</h2>
-              <p>Hold more tokens to unlock higher earning multipliers.</p>
-              
-              <div className="table-container">
+                <h2>Task Types</h2>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Type</th>
+                      <th>Description</th>
+                      <th>Base Reward</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Text</td>
+                      <td>General text generation and Q&A</td>
+                      <td>1.0 TAO</td>
+                    </tr>
+                    <tr>
+                      <td>Code</td>
+                      <td>Code generation and debugging</td>
+                      <td>1.5 TAO</td>
+                    </tr>
+                    <tr>
+                      <td>Creative</td>
+                      <td>Stories, poems, creative writing</td>
+                      <td>1.2 TAO</td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <h2>Reward Calculation</h2>
+                <div className="code-block">
+                  <code>
+                    finalReward = baseReward * tierMultiplier * qualityScore
+                  </code>
+                </div>
+              </section>
+            )}
+
+            {activeSection === 'proof-of-inference' && (
+              <section>
+                <h1>Proof of Inference</h1>
+                <p className="lead">
+                  A novel consensus mechanism that verifies AI work cryptographically.
+                </p>
+
+                <h2>How Proofs Work</h2>
+                <p>
+                  Every completed inference task generates a proof containing:
+                </p>
+                <ul>
+                  <li><strong>Input Hash:</strong> SHA-256 of the prompt</li>
+                  <li><strong>Output Hash:</strong> SHA-256 of the response</li>
+                  <li><strong>Previous Hash:</strong> Link to the previous proof</li>
+                  <li><strong>Block Hash:</strong> Combined hash of all fields</li>
+                </ul>
+
+                <h2>Verification</h2>
+                <p>
+                  Anyone can verify a proof by:
+                </p>
+                <ol>
+                  <li>Recomputing the input/output hashes</li>
+                  <li>Checking the chain linkage</li>
+                  <li>Verifying the block hash computation</li>
+                </ol>
+
+                <div className="code-block">
+                  <code>
+{`GET /api/proofs/verify/:blockHash
+
+Response:
+{
+  "verified": true,
+  "proof": { ... },
+  "checks": {
+    "inputHashValid": true,
+    "outputHashValid": true,
+    "chainLinkValid": true
+  }
+}`}
+                  </code>
+                </div>
+              </section>
+            )}
+
+            {activeSection === 'tiers' && (
+              <section>
+                <h1>Staking Tiers</h1>
+                <p className="lead">
+                  Stake TAO to increase your reward multiplier.
+                </p>
+
                 <table>
                   <thead>
                     <tr>
                       <th>Tier</th>
-                      <th>Tokens Required</th>
+                      <th>Required Stake</th>
                       <th>Multiplier</th>
+                      <th>Rate Limit</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr><td><span className="badge badge-bronze">Bronze</span></td><td>Any</td><td>1x</td></tr>
-                    <tr><td><span className="badge badge-silver">Silver</span></td><td>10,000</td><td>1.25x</td></tr>
-                    <tr><td><span className="badge badge-gold">Gold</span></td><td>100,000</td><td>1.5x</td></tr>
-                    <tr><td><span className="badge badge-platinum">Platinum</span></td><td>1,000,000</td><td>2x</td></tr>
-                    <tr><td><span className="badge badge-diamond">Diamond</span></td><td>10,000,000</td><td>3x</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </section>
-
-            <section id="api-endpoints">
-              <h2>API Endpoints</h2>
-              <p>Base URL: <code>https://api.taonet.fun</code></p>
-              
-              <div className="table-container">
-                <table>
-                  <thead>
                     <tr>
-                      <th>Endpoint</th>
-                      <th>Method</th>
-                      <th>Description</th>
+                      <td><span className="tier bronze">Bronze</span></td>
+                      <td>0 TAO</td>
+                      <td>1.0x</td>
+                      <td>10 RPM</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    <tr><td><code>/health</code></td><td>GET</td><td>Health check</td></tr>
-                    <tr><td><code>/api/stats</code></td><td>GET</td><td>Network statistics</td></tr>
-                    <tr><td><code>/api/miners/leaderboard</code></td><td>GET</td><td>Top miners</td></tr>
-                    <tr><td><code>/api/miners/register</code></td><td>POST</td><td>Register miner</td></tr>
-                    <tr><td><code>/api/miners/:address</code></td><td>GET</td><td>Get miner info</td></tr>
+                    <tr>
+                      <td><span className="tier silver">Silver</span></td>
+                      <td>10,000 TAO</td>
+                      <td>1.25x</td>
+                      <td>30 RPM</td>
+                    </tr>
+                    <tr>
+                      <td><span className="tier gold">Gold</span></td>
+                      <td>100,000 TAO</td>
+                      <td>1.5x</td>
+                      <td>60 RPM</td>
+                    </tr>
+                    <tr>
+                      <td><span className="tier platinum">Platinum</span></td>
+                      <td>1,000,000 TAO</td>
+                      <td>2.0x</td>
+                      <td>120 RPM</td>
+                    </tr>
+                    <tr>
+                      <td><span className="tier diamond">Diamond</span></td>
+                      <td>10,000,000 TAO</td>
+                      <td>3.0x</td>
+                      <td>300 RPM</td>
+                    </tr>
                   </tbody>
                 </table>
-              </div>
-            </section>
+              </section>
+            )}
+
+            {activeSection === 'api' && (
+              <section>
+                <h1>API Reference</h1>
+                <p className="lead">
+                  REST API for developers. Base URL: <code>https://api.taonet.fun</code>
+                </p>
+
+                <h2>Endpoints</h2>
+
+                <div className="endpoint">
+                  <div className="endpoint-header">
+                    <span className="method get">GET</span>
+                    <code>/api/stats</code>
+                  </div>
+                  <p>Get network statistics</p>
+                </div>
+
+                <div className="endpoint">
+                  <div className="endpoint-header">
+                    <span className="method get">GET</span>
+                    <code>/api/miners/leaderboard</code>
+                  </div>
+                  <p>Get top miners sorted by rewards, tasks, or streak</p>
+                </div>
+
+                <div className="endpoint">
+                  <div className="endpoint-header">
+                    <span className="method get">GET</span>
+                    <code>/api/proofs</code>
+                  </div>
+                  <p>List recent inference proofs</p>
+                </div>
+
+                <div className="endpoint">
+                  <div className="endpoint-header">
+                    <span className="method get">GET</span>
+                    <code>/api/proofs/verify/:blockHash</code>
+                  </div>
+                  <p>Verify a proof cryptographically</p>
+                </div>
+
+                <div className="endpoint">
+                  <div className="endpoint-header">
+                    <span className="method post">POST</span>
+                    <code>/api/miners/register</code>
+                  </div>
+                  <p>Register a new miner</p>
+                </div>
+
+                <h2>WebSocket</h2>
+                <p>Connect to <code>wss://api.taonet.fun/ws</code> for real-time task streaming.</p>
+
+                <div className="code-block">
+                  <code>
+{`// Connect and authenticate
+ws.send(JSON.stringify({
+  type: "auth",
+  address: "your-wallet-address"
+}));
+
+// Receive tasks
+ws.onmessage = (event) => {
+  const msg = JSON.parse(event.data);
+  if (msg.type === "task") {
+    // Process msg.task.prompt
+    // Send response back
+  }
+};`}
+                  </code>
+                </div>
+              </section>
+            )}
           </div>
         </div>
       </div>

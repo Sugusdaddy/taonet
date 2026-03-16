@@ -4,154 +4,175 @@ import './Leaderboard.css';
 
 export default function Leaderboard() {
   const [miners, setMiners] = useState([]);
-  const [sort, setSort] = useState('totalRewards');
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [lastUpdate, setLastUpdate] = useState(null);
+  const [sortBy, setSortBy] = useState('rewards');
 
   useEffect(() => {
-    loadLeaderboard();
-    // Auto-refresh every 5 seconds for live data
-    const interval = setInterval(loadLeaderboard, 5000);
+    loadData();
+    const interval = setInterval(loadData, 5000);
     return () => clearInterval(interval);
-  }, [sort]);
+  }, [sortBy]);
 
-  async function loadLeaderboard() {
-    const data = await api.getLeaderboard(sort, 50);
-    if (data?.leaderboard) {
-      setMiners(data.leaderboard);
-      setLastUpdate(new Date());
-    }
+  async function loadData() {
+    const [minersData, statsData] = await Promise.all([
+      api.get(`/miners/leaderboard?sortBy=${sortBy}&limit=50`),
+      api.get('/stats')
+    ]);
+    if (minersData) setMiners(minersData);
+    if (statsData) setStats(statsData);
     setLoading(false);
   }
 
-  const sortOptions = [
-    { value: 'totalRewards', label: 'Total Rewards' },
-    { value: 'tasks', label: 'Tasks Completed' },
-    { value: 'reputation', label: 'Reputation' },
-  ];
+  const getTierColor = (tier) => {
+    const colors = {
+      bronze: 'var(--bronze)',
+      silver: 'var(--silver)',
+      gold: 'var(--gold)',
+      platinum: 'var(--platinum)',
+      diamond: 'var(--diamond)'
+    };
+    return colors[tier] || 'var(--text-4)';
+  };
 
-  const getStatValue = (miner) => {
-    switch (sort) {
-      case 'totalRewards':
-        return api.formatNumber(miner.stats?.totalRewards || 0);
-      case 'tasks':
-        return miner.stats?.completedTasks || 0;
-      case 'reputation':
-        return miner.reputation || 50;
-      default:
-        return '-';
-    }
+  const getRankBadge = (index) => {
+    if (index === 0) return { emoji: '1st', class: 'gold' };
+    if (index === 1) return { emoji: '2nd', class: 'silver' };
+    if (index === 2) return { emoji: '3rd', class: 'bronze' };
+    return null;
   };
 
   return (
     <main className="leaderboard-page">
       <div className="container">
+        {/* Header */}
         <div className="page-header">
           <div>
-            <h1 className="page-title">Leaderboard</h1>
-            <p className="page-subtitle">Live network rankings - updates every 5s</p>
+            <h1>Leaderboard</h1>
+            <p>Top miners on the network</p>
           </div>
-          {lastUpdate && (
-            <span className="live-indicator">
-              <span className="live-dot"></span>
-              LIVE
-            </span>
-          )}
-        </div>
-
-        {/* Stats Summary */}
-        <div className="leaderboard-stats">
-          <div className="lb-stat">
-            <span className="lb-stat-value">{miners.length}</span>
-            <span className="lb-stat-label">Total Miners</span>
-          </div>
-          <div className="lb-stat">
-            <span className="lb-stat-value">{miners.filter(m => m.status === 'online').length}</span>
-            <span className="lb-stat-label">Online Now</span>
-          </div>
-          <div className="lb-stat">
-            <span className="lb-stat-value">
-              {miners.reduce((sum, m) => sum + (m.stats?.completedTasks || 0), 0)}
-            </span>
-            <span className="lb-stat-label">Total Tasks</span>
-          </div>
-          <div className="lb-stat">
-            <span className="lb-stat-value">
-              {api.formatNumber(miners.reduce((sum, m) => sum + Number(m.stats?.totalRewards || 0), 0))}
-            </span>
-            <span className="lb-stat-label">Total Rewards</span>
+          <div className="live-badge">
+            <span className="live-dot"></span>
+            Live
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="tabs">
-          {sortOptions.map(opt => (
-            <button
-              key={opt.value}
-              className={`tab ${sort === opt.value ? 'active' : ''}`}
-              onClick={() => setSort(opt.value)}
-            >
-              {opt.label}
-            </button>
-          ))}
+        {/* Stats */}
+        <div className="stats-row">
+          <div className="mini-stat">
+            <span className="mini-value">{stats?.network?.totalMiners || 0}</span>
+            <span className="mini-label">Total Miners</span>
+          </div>
+          <div className="mini-stat">
+            <span className="mini-value online">{stats?.network?.onlineMiners || 0}</span>
+            <span className="mini-label">Online Now</span>
+          </div>
+          <div className="mini-stat">
+            <span className="mini-value">{stats?.tasks?.completed || 0}</span>
+            <span className="mini-label">Tasks Done</span>
+          </div>
+          <div className="mini-stat">
+            <span className="mini-value">{api.formatNumber(stats?.rewards?.totalDistributed || 0)}</span>
+            <span className="mini-label">TAO Distributed</span>
+          </div>
         </div>
 
-        {/* Table */}
-        <div className="card">
+        {/* Sort Tabs */}
+        <div className="sort-tabs">
+          <button 
+            className={`tab ${sortBy === 'rewards' ? 'active' : ''}`}
+            onClick={() => setSortBy('rewards')}
+          >
+            By Rewards
+          </button>
+          <button 
+            className={`tab ${sortBy === 'tasks' ? 'active' : ''}`}
+            onClick={() => setSortBy('tasks')}
+          >
+            By Tasks
+          </button>
+          <button 
+            className={`tab ${sortBy === 'streak' ? 'active' : ''}`}
+            onClick={() => setSortBy('streak')}
+          >
+            By Streak
+          </button>
+        </div>
+
+        {/* Leaderboard Table */}
+        <div className="leaderboard-card">
           {loading ? (
-            <div className="loading">Loading...</div>
-          ) : miners.length > 0 ? (
-            <div className="table-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Miner</th>
-                    <th>Status</th>
-                    <th>Tasks</th>
-                    <th>Reputation</th>
-                    <th>{sort === 'totalRewards' ? 'Rewards' : sort === 'tasks' ? 'Tasks' : 'Rep'}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {miners.map((miner, i) => (
-                    <tr key={miner.address} className={i < 3 ? `rank-${i + 1}` : ''}>
+            <div className="loading-state">
+              <div className="spinner"></div>
+              <p>Loading leaderboard...</p>
+            </div>
+          ) : miners.length === 0 ? (
+            <div className="empty-state">
+              <h3>No miners yet</h3>
+              <p>Be the first to start mining and claim the top spot!</p>
+            </div>
+          ) : (
+            <table>
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Miner</th>
+                  <th>Tier</th>
+                  <th>Tasks</th>
+                  <th>Rewards</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {miners.map((miner, index) => {
+                  const badge = getRankBadge(index);
+                  return (
+                    <tr key={miner._id || miner.address}>
                       <td>
-                        <span className={`rank ${i < 3 ? `top-${i + 1}` : ''}`}>
-                          {i + 1}
-                        </span>
+                        {badge ? (
+                          <span className={`rank-badge ${badge.class}`}>{badge.emoji}</span>
+                        ) : (
+                          <span className="rank-number">{index + 1}</span>
+                        )}
                       </td>
                       <td>
                         <div className="miner-cell">
-                          <span className="miner-name">{miner.name || 'Anonymous'}</span>
-                          <span className="miner-address">{api.shortAddress(miner.address)}</span>
+                          <div className="miner-avatar">
+                            {(miner.name || 'M')[0].toUpperCase()}
+                          </div>
+                          <div className="miner-info">
+                            <span className="miner-name">{miner.name || 'Anonymous'}</span>
+                            <span className="miner-address">{api.shortAddress(miner.address)}</span>
+                          </div>
                         </div>
                       </td>
                       <td>
-                        <span className={`status-badge status-${miner.status || 'offline'}`}>
+                        <span 
+                          className="tier-badge"
+                          style={{ color: getTierColor(miner.tier), borderColor: getTierColor(miner.tier) }}
+                        >
+                          {miner.tier || 'bronze'}
+                        </span>
+                      </td>
+                      <td>
+                        <span className="task-count">{miner.stats?.completedTasks || 0}</span>
+                      </td>
+                      <td>
+                        <span className="rewards-amount">
+                          {api.formatNumber(miner.stats?.totalRewards || 0)} TAO
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`status-badge ${miner.status || 'offline'}`}>
+                          <span className="status-dot"></span>
                           {miner.status || 'offline'}
                         </span>
                       </td>
-                      <td>{miner.stats?.completedTasks || 0}</td>
-                      <td>
-                        <div className="rep-bar">
-                          <div className="rep-fill" style={{ width: `${miner.reputation || 50}%` }}></div>
-                          <span className="rep-value">{miner.reputation || 50}</span>
-                        </div>
-                      </td>
-                      <td className="stat-col highlight">
-                        {getStatValue(miner)}
-                      </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="empty">
-              <p>No miners yet</p>
-              <p className="text-sm">Be the first to join the network!</p>
-            </div>
+                  );
+                })}
+              </tbody>
+            </table>
           )}
         </div>
       </div>
