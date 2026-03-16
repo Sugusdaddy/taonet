@@ -3,7 +3,6 @@ import { useWallet } from '../context/WalletContext';
 import api from '../api';
 import './Mine.css';
 
-// WebLLM for real AI inference
 let webllm = null;
 let engine = null;
 
@@ -11,9 +10,15 @@ export default function Mine() {
   const { wallet, miner, connect, registerMiner, isConnected } = useWallet();
   const [minerName, setMinerName] = useState('');
   const [mining, setMining] = useState(false);
-  const [stats, setStats] = useState({ tasks: 0, tokens: 0, time: 0, tokensGenerated: 0 });
+  const [stats, setStats] = useState({ tasks: 0, tokens: 0, time: 0, aiTokens: 0 });
   const [logs, setLogs] = useState([]);
   const [modelStatus, setModelStatus] = useState({ loading: false, ready: false, progress: 0, error: null });
+  
+  // Current task state - shows what AI is doing
+  const [currentTask, setCurrentTask] = useState(null);
+  const [streamingResponse, setStreamingResponse] = useState('');
+  const [taskMetrics, setTaskMetrics] = useState(null);
+  
   const wsRef = useRef(null);
   const timerRef = useRef(null);
   const engineRef = useRef(null);
@@ -30,7 +35,7 @@ export default function Mine() {
       type,
       message,
       time: new Date().toLocaleTimeString()
-    }, ...prev.slice(0, 99)]);
+    }, ...prev.slice(0, 49)]);
   }, []);
 
   // Check WebGPU support
@@ -42,7 +47,6 @@ export default function Mine() {
       const adapter = await navigator.gpu.requestAdapter();
       if (!adapter) return { supported: false, reason: 'No GPU adapter found' };
       
-      // Get GPU info - handle different browser implementations
       let gpuName = 'WebGPU Compatible GPU';
       try {
         if (adapter.requestAdapterInfo) {
@@ -51,9 +55,7 @@ export default function Mine() {
         } else if (adapter.info) {
           gpuName = adapter.info.description || adapter.info.device || adapter.info.vendor || gpuName;
         }
-      } catch (e) {
-        // Info not available, use default
-      }
+      } catch (e) {}
       
       return { supported: true, gpu: gpuName };
     } catch (e) {
@@ -64,7 +66,7 @@ export default function Mine() {
   // Load AI model
   const loadModel = async () => {
     setModelStatus({ loading: true, ready: false, progress: 0, error: null });
-    addLog('info', 'Checking WebGPU support...');
+    addLog('info', 'Checking GPU compatibility...');
 
     const gpuCheck = await checkWebGPU();
     if (!gpuCheck.supported) {
@@ -73,11 +75,10 @@ export default function Mine() {
       return false;
     }
 
-    addLog('success', `GPU detected: ${gpuCheck.gpu}`);
-    addLog('info', 'Loading AI model (Llama 3.2 1B)... This may take a few minutes on first load.');
+    addLog('success', `GPU: ${gpuCheck.gpu}`);
+    addLog('info', 'Downloading Llama 3.2 1B model (~500MB)...');
 
     try {
-      // Dynamic import WebLLM from correct package
       if (!webllm) {
         webllm = await import('https://esm.run/@mlc-ai/web-llm');
       }
@@ -86,46 +87,67 @@ export default function Mine() {
         initProgressCallback: (progress) => {
           const pct = Math.round(progress.progress * 100);
           setModelStatus(prev => ({ ...prev, progress: pct }));
-          if (pct % 20 === 0) {
-            addLog('info', `Model loading: ${pct}% - ${progress.text}`);
+          if (pct % 25 === 0 && pct > 0) {
+            addLog('info', `Download: ${pct}%`);
           }
         }
       });
 
       engineRef.current = engine;
       setModelStatus({ loading: false, ready: true, progress: 100, error: null });
-      addLog('success', 'AI Model loaded! Ready to mine.');
+      addLog('success', 'Model loaded! Your GPU is ready to run AI inference.');
       return true;
     } catch (error) {
       setModelStatus({ loading: false, ready: false, progress: 0, error: error.message });
-      addLog('error', `Failed to load model: ${error.message}`);
+      addLog('error', `Failed: ${error.message}`);
       return false;
     }
   };
 
-  // Run real AI inference
+  // Run real AI inference with streaming
   const runInference = async (prompt) => {
-    if (!engineRef.current) {
-      throw new Error('Model not loaded');
-    }
+    if (!engineRef.current) throw new Error('Model not loaded');
 
     const startTime = performance.now();
+    let fullResponse = '';
+    let tokenCount = 0;
     
-    const response = await engineRef.current.chat.completions.create({
+    setStreamingResponse('');
+    setTaskMetrics({ startTime, tokens: 0, tps: 0 });
+
+    // Use streaming to show response in real-time
+    const chunks = await engineRef.current.chat.completions.create({
       messages: [
-        { role: 'system', content: 'You are a helpful AI assistant. Be concise and accurate.' },
+        { role: 'system', content: 'You are a helpful AI assistant. Give clear, concise answers.' },
         { role: 'user', content: prompt }
       ],
       max_tokens: 256,
-      temperature: 0.7
+      temperature: 0.7,
+      stream: true
     });
+
+    for await (const chunk of chunks) {
+      const content = chunk.choices[0]?.delta?.content || '';
+      if (content) {
+        fullResponse += content;
+        tokenCount++;
+        setStreamingResponse(fullResponse);
+        
+        const elapsed = (performance.now() - startTime) / 1000;
+        setTaskMetrics({
+          startTime,
+          tokens: tokenCount,
+          tps: elapsed > 0 ? (tokenCount / elapsed).toFixed(1) : 0
+        });
+      }
+    }
 
     const endTime = performance.now();
     
     return {
-      response: response.choices[0].message.content,
+      response: fullResponse,
       processingTime: endTime - startTime,
-      tokensGenerated: response.usage?.completion_tokens || 0
+      tokensGenerated: tokenCount
     };
   };
 
@@ -140,17 +162,13 @@ export default function Mine() {
 
   const handleRegister = async () => {
     if (!minerName.trim()) {
-      addLog('error', 'Please enter a miner name');
+      addLog('error', 'Enter a miner name');
       return;
     }
-    
     try {
       const result = await registerMiner(minerName.trim());
-      if (result?.success) {
-        addLog('success', `Miner "${minerName}" registered`);
-      } else {
-        addLog('error', result?.error || 'Registration failed');
-      }
+      if (result?.success) addLog('success', `Registered as "${minerName}"`);
+      else addLog('error', result?.error || 'Registration failed');
     } catch (err) {
       addLog('error', err.message);
     }
@@ -158,23 +176,22 @@ export default function Mine() {
 
   const startMining = async () => {
     if (!miner) {
-      addLog('error', 'Please register first');
+      addLog('error', 'Register first');
       return;
     }
 
-    // Load model if not ready
     if (!modelStatus.ready) {
       const loaded = await loadModel();
       if (!loaded) return;
     }
 
-    addLog('info', 'Connecting to mining server...');
+    addLog('info', 'Connecting to TaoNet...');
     
     const ws = new WebSocket('wss://api.taonet.fun/ws');
     wsRef.current = ws;
 
     ws.onopen = () => {
-      addLog('success', 'Connected to server');
+      addLog('success', 'Connected');
       ws.send(JSON.stringify({ type: 'auth', address: wallet }));
     };
 
@@ -183,7 +200,7 @@ export default function Mine() {
         const msg = JSON.parse(event.data);
         
         if (msg.type === 'auth_success') {
-          addLog('success', 'Authenticated - Mining with real AI inference');
+          addLog('success', 'Mining started - waiting for tasks...');
           setMining(true);
           
           const startTime = Date.now();
@@ -195,16 +212,30 @@ export default function Mine() {
           const taskId = msg.task?.id || msg.taskId;
           const prompt = msg.task?.prompt || msg.prompt || 'Hello';
           
-          addLog('task', `Task received: ${prompt.substring(0, 50)}...`);
-          addLog('info', 'Running AI inference on your GPU...');
+          // Show current task
+          setCurrentTask({
+            id: taskId,
+            prompt: prompt,
+            status: 'processing',
+            startTime: Date.now()
+          });
+          
+          addLog('task', `New task: "${prompt.substring(0, 60)}${prompt.length > 60 ? '...' : ''}"`);
           
           try {
-            // REAL AI INFERENCE
+            // Run REAL AI inference
             const result = await runInference(prompt);
             
-            addLog('success', `Generated ${result.tokensGenerated} tokens in ${(result.processingTime/1000).toFixed(1)}s`);
+            // Update task status
+            setCurrentTask(prev => ({
+              ...prev,
+              status: 'completed',
+              response: result.response,
+              time: result.processingTime,
+              tokens: result.tokensGenerated
+            }));
             
-            // Send result back
+            // Send result to network
             ws.send(JSON.stringify({
               type: 'task_response',
               taskId: taskId,
@@ -218,30 +249,32 @@ export default function Mine() {
               ...s, 
               tasks: s.tasks + 1,
               tokens: s.tokens + earned,
-              tokensGenerated: s.tokensGenerated + result.tokensGenerated
+              aiTokens: s.aiTokens + result.tokensGenerated
             }));
-            addLog('success', `Task completed +${earned} TAO`);
             
-          } catch (inferenceError) {
-            addLog('error', `Inference failed: ${inferenceError.message}`);
-            ws.send(JSON.stringify({
-              type: 'task_response',
-              taskId: taskId,
-              error: inferenceError.message
-            }));
+            addLog('success', `Completed! Generated ${result.tokensGenerated} tokens in ${(result.processingTime/1000).toFixed(1)}s (+${earned} TAO)`);
+            
+            // Clear current task after a moment
+            setTimeout(() => {
+              setCurrentTask(null);
+              setStreamingResponse('');
+              setTaskMetrics(null);
+            }, 3000);
+            
+          } catch (err) {
+            setCurrentTask(prev => ({ ...prev, status: 'error', error: err.message }));
+            addLog('error', `Inference failed: ${err.message}`);
           }
         }
         else if (msg.type === 'jackpot') {
-          addLog('jackpot', `JACKPOT! ${msg.jackpotType} - ${msg.multiplier}x!`);
+          addLog('jackpot', `JACKPOT! ${msg.multiplier}x bonus!`);
           setStats(s => ({ ...s, tokens: s.tokens + (msg.bonus || 0) }));
         }
-      } catch (e) {
-        console.error('Message error:', e);
-      }
+      } catch (e) {}
     };
 
     ws.onclose = () => {
-      addLog('info', 'Disconnected from server');
+      addLog('info', 'Disconnected');
       setMining(false);
       if (timerRef.current) clearInterval(timerRef.current);
     };
@@ -250,201 +283,196 @@ export default function Mine() {
   };
 
   const stopMining = () => {
-    if (wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
-    }
+    if (wsRef.current) wsRef.current.close();
     setMining(false);
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
+    setCurrentTask(null);
+    if (timerRef.current) clearInterval(timerRef.current);
     addLog('info', 'Mining stopped');
   };
 
-  const formatTime = (seconds) => {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  const formatTime = (s) => {
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
   };
 
   return (
     <main className="mine-page">
       <div className="container">
         <div className="page-header">
-          <h1 className="page-title">Start Mining</h1>
-          <p className="page-subtitle">Run real AI inference on your GPU and earn tokens</p>
+          <h1 className="page-title">AI Mining</h1>
+          <p className="page-subtitle">Your GPU runs real AI inference - earn tokens for completed tasks</p>
         </div>
 
-        {/* GPU/Model Status Banner */}
+        {/* Model Loading Banner */}
         {modelStatus.loading && (
           <div className="model-banner loading">
-            <div className="model-info">
-              <span className="model-icon">&#9881;</span>
+            <div className="banner-content">
+              <div className="spinner"></div>
               <div>
-                <strong>Loading AI Model...</strong>
-                <p>Downloading Llama 3.2 1B to your browser ({modelStatus.progress}%)</p>
+                <strong>Downloading AI Model...</strong>
+                <p>Llama 3.2 1B ({modelStatus.progress}%) - cached after first download</p>
               </div>
             </div>
-            <div className="progress">
-              <div className="progress-bar" style={{ width: `${modelStatus.progress}%` }} />
-            </div>
-          </div>
-        )}
-        
-        {modelStatus.ready && (
-          <div className="model-banner ready">
-            <span className="model-icon">&#10003;</span>
-            <div>
-              <strong>AI Model Ready</strong>
-              <p>Llama 3.2 1B loaded - Real inference on your GPU</p>
-            </div>
+            <div className="progress"><div className="progress-bar" style={{ width: `${modelStatus.progress}%` }} /></div>
           </div>
         )}
 
         {modelStatus.error && (
           <div className="model-banner error">
-            <span className="model-icon">!</span>
-            <div>
-              <strong>GPU Not Available</strong>
-              <p>{modelStatus.error}</p>
-            </div>
+            <strong>GPU Error:</strong> {modelStatus.error}
           </div>
         )}
 
-        <div className="mine-grid">
-          {/* Setup Panel */}
-          <div className="card setup-panel">
-            <h3 className="card-title mb-lg">Setup</h3>
-            
-            {/* Step 1: Connect */}
-            <div className={`setup-step ${isConnected ? 'completed' : ''}`}>
-              <div className="step-header">
-                <span className="step-num">{isConnected ? '>' : '1'}</span>
-                <span className="step-title">Connect Wallet</span>
-              </div>
-              {!isConnected ? (
-                <button className="btn btn-primary w-full mt-md" onClick={handleConnect}>
-                  Connect Phantom
-                </button>
-              ) : (
-                <p className="step-status">Connected: {api.shortAddress(wallet)}</p>
-              )}
-            </div>
-
-            {/* Step 2: Register */}
-            <div className={`setup-step ${miner ? 'completed' : ''} ${!isConnected ? 'disabled' : ''}`}>
-              <div className="step-header">
-                <span className="step-num">{miner ? '>' : '2'}</span>
-                <span className="step-title">Register Miner</span>
-              </div>
-              {isConnected && !miner ? (
-                <div className="mt-md">
-                  <input
-                    type="text"
-                    className="input mb-sm"
-                    placeholder="Enter miner name"
-                    value={minerName}
-                    onChange={(e) => setMinerName(e.target.value)}
-                  />
-                  <button className="btn btn-primary w-full" onClick={handleRegister}>
-                    Register
-                  </button>
+        <div className="mine-layout">
+          {/* Left: Setup + Stats */}
+          <div className="mine-sidebar">
+            {/* Setup */}
+            <div className="card">
+              <h3 className="card-title">Setup</h3>
+              
+              <div className={`setup-step ${isConnected ? 'done' : ''}`}>
+                <span className="step-badge">{isConnected ? '>' : '1'}</span>
+                <div className="step-content">
+                  <strong>Connect Wallet</strong>
+                  {!isConnected ? (
+                    <button className="btn btn-primary btn-sm mt-sm" onClick={handleConnect}>Connect Phantom</button>
+                  ) : (
+                    <p className="step-info">{api.shortAddress(wallet)}</p>
+                  )}
                 </div>
-              ) : miner ? (
-                <p className="step-status">Registered as: {miner.name}</p>
-              ) : null}
+              </div>
+
+              <div className={`setup-step ${miner ? 'done' : ''} ${!isConnected ? 'disabled' : ''}`}>
+                <span className="step-badge">{miner ? '>' : '2'}</span>
+                <div className="step-content">
+                  <strong>Register Miner</strong>
+                  {isConnected && !miner ? (
+                    <div className="mt-sm">
+                      <input className="input input-sm" placeholder="Miner name" value={minerName} onChange={e => setMinerName(e.target.value)} />
+                      <button className="btn btn-primary btn-sm mt-sm" onClick={handleRegister}>Register</button>
+                    </div>
+                  ) : miner ? (
+                    <p className="step-info">{miner.name}</p>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className={`setup-step ${!miner ? 'disabled' : ''}`}>
+                <span className="step-badge">3</span>
+                <div className="step-content">
+                  <strong>Start Mining</strong>
+                  {miner && (
+                    <button 
+                      className={`btn btn-sm mt-sm ${mining ? 'btn-danger' : 'btn-primary'}`}
+                      onClick={mining ? stopMining : startMining}
+                      disabled={modelStatus.loading}
+                    >
+                      {modelStatus.loading ? 'Loading...' : mining ? 'Stop' : 'Start Mining'}
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
 
-            {/* Step 3: Mine */}
-            <div className={`setup-step ${!miner ? 'disabled' : ''}`}>
-              <div className="step-header">
-                <span className="step-num">3</span>
-                <span className="step-title">Start Mining</span>
+            {/* Stats */}
+            <div className="card mt-md">
+              <h3 className="card-title">Session Stats</h3>
+              <div className="stats-grid">
+                <div className="stat-item">
+                  <span className="stat-value">{formatTime(stats.time)}</span>
+                  <span className="stat-label">Time</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-value">{stats.tasks}</span>
+                  <span className="stat-label">Tasks</span>
+                </div>
+                <div className="stat-item highlight">
+                  <span className="stat-value">{stats.tokens}</span>
+                  <span className="stat-label">TAO Earned</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-value">{stats.aiTokens.toLocaleString()}</span>
+                  <span className="stat-label">AI Tokens</span>
+                </div>
               </div>
-              <p className="step-desc">Uses WebGPU to run Llama 3.2 1B locally</p>
-              {miner && (
-                <button 
-                  className={`btn w-full mt-md ${mining ? 'btn-secondary' : 'btn-primary'}`}
-                  onClick={mining ? stopMining : startMining}
-                  disabled={modelStatus.loading}
-                >
-                  {modelStatus.loading ? 'Loading Model...' : mining ? 'Stop Mining' : 'Start Mining'}
-                </button>
+            </div>
+          </div>
+
+          {/* Right: AI Activity */}
+          <div className="mine-main">
+            {/* Current Task - Real-time AI Activity */}
+            <div className="card ai-activity">
+              <div className="ai-header">
+                <h3 className="card-title">AI Activity</h3>
+                {mining && <span className="status-badge live">LIVE</span>}
+                {!mining && modelStatus.ready && <span className="status-badge ready">READY</span>}
+                {!mining && !modelStatus.ready && <span className="status-badge idle">IDLE</span>}
+              </div>
+
+              {currentTask ? (
+                <div className="task-display">
+                  {/* Input */}
+                  <div className="task-section">
+                    <div className="section-label">INPUT PROMPT</div>
+                    <div className="task-prompt">{currentTask.prompt}</div>
+                  </div>
+
+                  {/* Output - Streaming */}
+                  <div className="task-section">
+                    <div className="section-label">
+                      AI RESPONSE 
+                      {taskMetrics && (
+                        <span className="metrics-inline">
+                          {taskMetrics.tokens} tokens @ {taskMetrics.tps} tok/s
+                        </span>
+                      )}
+                    </div>
+                    <div className={`task-response ${currentTask.status === 'processing' ? 'typing' : ''}`}>
+                      {streamingResponse || '...'}
+                      {currentTask.status === 'processing' && <span className="cursor">|</span>}
+                    </div>
+                  </div>
+
+                  {/* Status */}
+                  {currentTask.status === 'completed' && (
+                    <div className="task-complete">
+                      Task completed in {(currentTask.time/1000).toFixed(1)}s - {currentTask.tokens} tokens generated
+                    </div>
+                  )}
+                </div>
+              ) : mining ? (
+                <div className="waiting-tasks">
+                  <div className="pulse-dot"></div>
+                  <p>Waiting for tasks from the network...</p>
+                  <p className="text-sm">Your GPU is ready. Tasks are assigned when clients submit AI requests.</p>
+                </div>
+              ) : (
+                <div className="not-mining">
+                  <p><strong>How it works:</strong></p>
+                  <ol>
+                    <li>Start mining to download the AI model (~500MB, cached)</li>
+                    <li>Your GPU connects to the TaoNet network</li>
+                    <li>When clients submit prompts, your GPU runs real AI inference</li>
+                    <li>You see the prompt and watch the AI generate a response</li>
+                    <li>Completed tasks earn you TAO tokens</li>
+                  </ol>
+                </div>
               )}
             </div>
-          </div>
 
-          {/* Stats Panel */}
-          <div className="card stats-panel">
-            <h3 className="card-title mb-lg">Mining Stats</h3>
-            
-            <div className="mining-stats">
-              <div className="mining-stat">
-                <span className="mining-stat-label">Status</span>
-                <span className={`mining-stat-value ${mining ? 'active' : ''}`}>
-                  {mining ? 'MINING' : modelStatus.loading ? 'LOADING' : 'IDLE'}
-                </span>
-              </div>
-              <div className="mining-stat">
-                <span className="mining-stat-label">Time</span>
-                <span className="mining-stat-value">{formatTime(stats.time)}</span>
-              </div>
-              <div className="mining-stat">
-                <span className="mining-stat-label">Tasks</span>
-                <span className="mining-stat-value">{stats.tasks}</span>
-              </div>
-              <div className="mining-stat">
-                <span className="mining-stat-label">Earned</span>
-                <span className="mining-stat-value accent">{stats.tokens}</span>
-              </div>
-              <div className="mining-stat span-2">
-                <span className="mining-stat-label">AI Tokens Generated</span>
-                <span className="mining-stat-value">{stats.tokensGenerated.toLocaleString()}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Activity Log */}
-        <div className="card mt-lg">
-          <h3 className="card-title mb-md">Activity Log</h3>
-          <div className="logs-container">
-            {logs.length > 0 ? logs.map((log, i) => (
-              <div key={i} className={`log-item log-${log.type}`}>
-                <span className="log-time">{log.time}</span>
-                <span className="log-message">{log.message}</span>
-              </div>
-            )) : (
-              <p className="text-tertiary">No activity yet. Start mining to see logs.</p>
-            )}
-          </div>
-        </div>
-
-        {/* How it Works */}
-        <div className="card mt-lg">
-          <h3 className="card-title mb-md">How Real Mining Works</h3>
-          <div className="how-it-works">
-            <div className="how-step">
-              <span className="how-num">1</span>
-              <div>
-                <h4>Model Loading</h4>
-                <p>Llama 3.2 1B is downloaded to your browser (cached after first load)</p>
-              </div>
-            </div>
-            <div className="how-step">
-              <span className="how-num">2</span>
-              <div>
-                <h4>GPU Inference</h4>
-                <p>Your GPU runs real AI inference via WebGPU - no server involved</p>
-              </div>
-            </div>
-            <div className="how-step">
-              <span className="how-num">3</span>
-              <div>
-                <h4>Earn Rewards</h4>
-                <p>Completed tasks are verified and you earn TAO tokens</p>
+            {/* Activity Log */}
+            <div className="card mt-md">
+              <h3 className="card-title">Log</h3>
+              <div className="logs-container">
+                {logs.map((log, i) => (
+                  <div key={i} className={`log-item log-${log.type}`}>
+                    <span className="log-time">{log.time}</span>
+                    <span className="log-msg">{log.message}</span>
+                  </div>
+                ))}
+                {logs.length === 0 && <p className="text-muted">Start mining to see activity</p>}
               </div>
             </div>
           </div>
