@@ -4,21 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#00ff41">
-  <meta name="description" content="TaoNet - Decentralized AI Inference Network. Mine AI tasks and earn token rewards.">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="TaoNet - Earn crypto by running AI. Simple.">
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" type="image/svg+xml" href="/icon.svg">
-  <link rel="apple-touch-icon" href="/icon.svg">
-  <title>TaoNet - Decentralized AI Inference Network</title>
-  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <title>TaoNet - Earn Crypto Running AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --green: #00ff41;
-      --dark-green: #00cc33;
+      --green-dim: #00cc33;
       --bg: #0a0a0a;
-      --terminal-bg: #0d1117;
-      --border: #1a3a1a;
+      --card: #111;
+      --border: #222;
+      --text: #fff;
+      --text-dim: #888;
       --gold: #ffd700;
       --blue: #0096ff;
       --purple: #9966ff;
@@ -28,197 +27,141 @@
     
     body {
       background: var(--bg);
-      color: var(--green);
-      font-family: 'Share Tech Mono', monospace;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-    
-    body::before {
-      content: "";
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: repeating-linear-gradient(0deg, rgba(0,0,0,0.15), rgba(0,0,0,0.15) 1px, transparent 1px, transparent 2px);
-      pointer-events: none;
-      z-index: 1000;
+      color: var(--text);
+      font-family: 'Inter', -apple-system, sans-serif;
+      line-height: 1.6;
     }
     
     .container {
-      max-width: 1200px;
+      max-width: 1100px;
       margin: 0 auto;
-      padding: 15px;
+      padding: 0 20px;
     }
     
-    /* Header & Navigation */
+    /* Header */
     header {
+      padding: 20px 0;
       border-bottom: 1px solid var(--border);
-      padding: 15px 0;
-      margin-bottom: 20px;
       position: sticky;
       top: 0;
       background: var(--bg);
       z-index: 100;
     }
     
-    .header-top {
+    .header-inner {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      flex-wrap: wrap;
-      gap: 15px;
     }
     
-    .logo-small {
-      font-family: 'VT323', monospace;
-      font-size: 28px;
+    .logo {
+      font-size: 24px;
+      font-weight: 700;
       color: var(--green);
-      text-shadow: 0 0 10px var(--green);
       text-decoration: none;
     }
     
-    .wallet-btn {
-      padding: 8px 16px;
-      border: 1px solid var(--gold);
-      color: var(--gold);
-      background: transparent;
-      font-family: 'Share Tech Mono', monospace;
-      cursor: pointer;
-      font-size: 11px;
-      transition: all 0.3s;
-    }
-    
-    .wallet-btn:hover {
-      background: var(--gold);
-      color: var(--bg);
-    }
-    
-    /* Main Navigation */
-    .main-nav {
+    nav {
       display: flex;
-      gap: 5px;
-      margin-top: 15px;
-      flex-wrap: wrap;
+      gap: 30px;
       align-items: center;
     }
     
-    .nav-section {
-      display: flex;
-      gap: 5px;
-      flex-wrap: wrap;
-    }
-    
-    .nav-divider {
-      width: 1px;
-      height: 30px;
-      background: var(--border);
-      margin: 0 10px;
-    }
-    
-    @media (max-width: 800px) {
-      .nav-divider { display: none; }
-    }
-    
-    .main-nav a {
-      color: var(--green);
+    nav a {
+      color: var(--text-dim);
       text-decoration: none;
-      padding: 8px 12px;
-      border: 1px solid var(--border);
-      transition: all 0.3s;
-      font-size: 11px;
-      white-space: nowrap;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s;
     }
     
-    .main-nav a:hover, .main-nav a.active {
+    nav a:hover { color: var(--text); }
+    
+    .nav-cta {
       background: var(--green);
       color: var(--bg);
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
     }
     
-    .main-nav a.nav-gold {
-      border-color: var(--gold);
-      color: var(--gold);
-    }
-    
-    .main-nav a.nav-gold:hover {
-      background: var(--gold);
+    .nav-cta:hover { 
+      background: var(--green-dim);
       color: var(--bg);
     }
     
-    .main-nav a.nav-blue {
-      border-color: var(--blue);
-      color: var(--blue);
+    /* Mobile menu */
+    .menu-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text);
+      font-size: 24px;
+      cursor: pointer;
     }
     
-    .main-nav a.nav-blue:hover {
-      background: var(--blue);
-      color: var(--bg);
-    }
-    
-    .terminal {
-      background: var(--terminal-bg);
-      border: 1px solid var(--border);
-      border-radius: 5px;
-      padding: 20px;
-      margin-bottom: 15px;
-    }
-    
-    @media (max-width: 600px) {
-      .terminal { padding: 15px; }
-    }
-    
-    .section-title {
-      font-family: 'VT323', monospace;
-      font-size: 22px;
-      margin-bottom: 15px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid var(--border);
-    }
-    
-    .section-title::before {
-      content: "> ";
-      color: var(--dark-green);
+    @media (max-width: 768px) {
+      .menu-toggle { display: block; }
+      nav { 
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--bg);
+        flex-direction: column;
+        padding: 20px;
+        gap: 15px;
+        border-bottom: 1px solid var(--border);
+      }
+      nav.open { display: flex; }
     }
     
     /* Hero */
     .hero {
+      padding: 80px 0;
       text-align: center;
-      padding: 50px 20px;
-      position: relative;
+    }
+    
+    @media (max-width: 768px) {
+      .hero { padding: 50px 0; }
     }
     
     .hero-badge {
       display: inline-block;
-      padding: 5px 15px;
-      border: 1px solid var(--gold);
-      color: var(--gold);
-      font-size: 10px;
-      margin-bottom: 20px;
-      letter-spacing: 2px;
-    }
-    
-    @media (max-width: 600px) {
-      .hero { padding: 30px 10px; }
+      background: rgba(0, 255, 65, 0.1);
+      color: var(--green);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 25px;
     }
     
     .hero h1 {
-      font-family: 'VT323', monospace;
-      font-size: 48px;
-      margin-bottom: 15px;
-      text-shadow: 0 0 20px var(--green);
+      font-size: 56px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      line-height: 1.1;
     }
     
-    @media (max-width: 600px) {
-      .hero h1 { font-size: 32px; }
+    .hero h1 span {
+      color: var(--green);
+    }
+    
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 36px; }
     }
     
     .hero p {
-      color: var(--dark-green);
-      font-size: 14px;
+      font-size: 20px;
+      color: var(--text-dim);
       max-width: 600px;
-      margin: 0 auto 30px;
-      line-height: 1.6;
+      margin: 0 auto 40px;
+    }
+    
+    @media (max-width: 768px) {
+      .hero p { font-size: 16px; }
     }
     
     .hero-buttons {
@@ -229,22 +172,15 @@
     }
     
     .btn {
-      display: inline-block;
-      padding: 14px 35px;
-      border: 2px solid var(--green);
-      color: var(--green);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 32px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
       text-decoration: none;
-      font-family: 'Share Tech Mono', monospace;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      transition: all 0.3s;
-      font-size: 13px;
-    }
-    
-    .btn:hover {
-      background: var(--green);
-      color: var(--bg);
-      transform: translateY(-2px);
+      transition: all 0.2s;
     }
     
     .btn-primary {
@@ -253,692 +189,649 @@
     }
     
     .btn-primary:hover {
-      background: transparent;
-      color: var(--green);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0, 255, 65, 0.3);
     }
     
-    .btn-gold {
-      border-color: var(--gold);
-      color: var(--gold);
+    .btn-secondary {
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border);
     }
     
-    .btn-gold:hover {
-      background: var(--gold);
-      color: var(--bg);
+    .btn-secondary:hover {
+      border-color: var(--green);
     }
     
-    /* Stats Grid */
+    /* Stats */
+    .stats {
+      padding: 40px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 15px;
+      gap: 20px;
     }
     
-    @media (max-width: 800px) {
+    @media (max-width: 768px) {
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
     }
     
-    @media (max-width: 400px) {
-      .stats-grid { grid-template-columns: 1fr; }
-    }
-    
-    .stat-box {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      padding: 20px;
+    .stat {
       text-align: center;
-      border-radius: 5px;
-      transition: all 0.3s;
-    }
-    
-    .stat-box:hover {
-      border-color: var(--green);
+      padding: 20px;
     }
     
     .stat-value {
-      font-family: 'VT323', monospace;
       font-size: 36px;
+      font-weight: 700;
       color: var(--green);
-      text-shadow: 0 0 10px var(--green);
-    }
-    
-    @media (max-width: 600px) {
-      .stat-value { font-size: 28px; }
     }
     
     .stat-label {
-      font-size: 10px;
-      color: var(--dark-green);
-      text-transform: uppercase;
+      font-size: 14px;
+      color: var(--text-dim);
       margin-top: 5px;
     }
     
-    /* Quick Actions */
-    .quick-actions {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 15px;
+    /* How it works */
+    .section {
+      padding: 80px 0;
+    }
+    
+    @media (max-width: 768px) {
+      .section { padding: 50px 0; }
+    }
+    
+    .section-title {
+      text-align: center;
+      margin-bottom: 50px;
+    }
+    
+    .section-title h2 {
+      font-size: 36px;
+      font-weight: 700;
       margin-bottom: 15px;
     }
     
-    @media (max-width: 800px) {
-      .quick-actions { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 768px) {
+      .section-title h2 { font-size: 28px; }
     }
     
-    .quick-action {
-      background: var(--terminal-bg);
+    .section-title p {
+      color: var(--text-dim);
+      font-size: 18px;
+    }
+    
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 30px;
+    }
+    
+    @media (max-width: 768px) {
+      .steps { grid-template-columns: 1fr; }
+    }
+    
+    .step {
+      background: var(--card);
       border: 1px solid var(--border);
-      padding: 25px 15px;
+      border-radius: 16px;
+      padding: 30px;
       text-align: center;
-      text-decoration: none;
-      color: var(--green);
-      border-radius: 5px;
-      transition: all 0.3s;
+      transition: all 0.2s;
     }
     
-    .quick-action:hover {
+    .step:hover {
       border-color: var(--green);
-      transform: translateY(-3px);
+      transform: translateY(-5px);
     }
     
-    .quick-action-icon {
-      font-family: 'VT323', monospace;
-      font-size: 36px;
+    .step-number {
+      width: 50px;
+      height: 50px;
+      background: var(--green);
+      color: var(--bg);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 700;
+      margin: 0 auto 20px;
+    }
+    
+    .step h3 {
+      font-size: 20px;
       margin-bottom: 10px;
     }
     
-    .quick-action-title {
-      font-size: 13px;
-      margin-bottom: 5px;
+    .step p {
+      color: var(--text-dim);
+      font-size: 14px;
     }
-    
-    .quick-action-desc {
-      font-size: 10px;
-      color: var(--dark-green);
-    }
-    
-    .quick-action.gold { border-color: rgba(255, 215, 0, 0.3); }
-    .quick-action.gold .quick-action-icon { color: var(--gold); }
-    .quick-action.gold:hover { border-color: var(--gold); }
-    
-    .quick-action.blue { border-color: rgba(0, 150, 255, 0.3); }
-    .quick-action.blue .quick-action-icon { color: var(--blue); }
-    .quick-action.blue:hover { border-color: var(--blue); }
-    
-    .quick-action.purple { border-color: rgba(153, 102, 255, 0.3); }
-    .quick-action.purple .quick-action-icon { color: var(--purple); }
-    .quick-action.purple:hover { border-color: var(--purple); }
     
     /* Features */
     .features-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 20px;
     }
     
-    @media (max-width: 800px) {
+    @media (max-width: 768px) {
       .features-grid { grid-template-columns: 1fr; }
     }
     
-    .feature-card {
-      background: var(--bg);
+    .feature {
+      background: var(--card);
       border: 1px solid var(--border);
-      padding: 25px;
-      border-radius: 5px;
-      transition: all 0.3s;
+      border-radius: 16px;
+      padding: 30px;
+      display: flex;
+      gap: 20px;
+      transition: border-color 0.2s;
     }
     
-    .feature-card:hover {
+    .feature:hover {
       border-color: var(--green);
     }
     
     .feature-icon {
-      font-family: 'VT323', monospace;
-      font-size: 28px;
-      color: var(--gold);
-      margin-bottom: 15px;
+      width: 50px;
+      height: 50px;
+      background: rgba(0, 255, 65, 0.1);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      flex-shrink: 0;
     }
     
-    .feature-title {
+    .feature h3 {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+    
+    .feature p {
+      color: var(--text-dim);
       font-size: 14px;
-      margin-bottom: 10px;
     }
     
-    .feature-desc {
-      font-size: 11px;
-      color: var(--dark-green);
-      line-height: 1.5;
-    }
-    
-    /* Live Activity */
-    .two-col {
+    /* Rewards */
+    .rewards-preview {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(4, 1fr);
       gap: 15px;
     }
     
-    @media (max-width: 800px) {
-      .two-col { grid-template-columns: 1fr; }
+    @media (max-width: 768px) {
+      .rewards-preview { grid-template-columns: repeat(2, 1fr); }
     }
     
-    .activity-list {
-      max-height: 300px;
-      overflow-y: auto;
-    }
-    
-    .activity-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 0;
-      border-bottom: 1px solid var(--border);
-      font-size: 12px;
-    }
-    
-    @media (max-width: 600px) {
-      .activity-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 5px;
-      }
-    }
-    
-    .activity-type {
-      padding: 2px 8px;
-      border-radius: 3px;
-      font-size: 10px;
-      background: rgba(0, 255, 65, 0.1);
+    .reward-card {
+      background: var(--card);
       border: 1px solid var(--border);
-    }
-    
-    /* Jackpot Preview */
-    .jackpot-preview {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-    }
-    
-    .jackpot-mini {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      padding: 15px;
+      border-radius: 12px;
+      padding: 25px 15px;
       text-align: center;
-      border-radius: 5px;
     }
     
-    .jackpot-mini.mini { border-color: var(--green); }
-    .jackpot-mini.regular { border-color: var(--blue); }
-    .jackpot-mini.mega { border-color: var(--gold); }
-    .jackpot-mini.ultra { border-color: var(--purple); }
+    .reward-card.mini { border-color: var(--green); }
+    .reward-card.regular { border-color: var(--blue); }
+    .reward-card.mega { border-color: var(--gold); }
+    .reward-card.ultra { border-color: var(--purple); }
     
-    .jackpot-type {
-      font-size: 10px;
+    .reward-type {
+      font-size: 12px;
+      font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 1px;
-      margin-bottom: 5px;
+      margin-bottom: 10px;
     }
     
-    .jackpot-mini.mini .jackpot-type { color: var(--green); }
-    .jackpot-mini.regular .jackpot-type { color: var(--blue); }
-    .jackpot-mini.mega .jackpot-type { color: var(--gold); }
-    .jackpot-mini.ultra .jackpot-type { color: var(--purple); }
+    .reward-card.mini .reward-type { color: var(--green); }
+    .reward-card.regular .reward-type { color: var(--blue); }
+    .reward-card.mega .reward-type { color: var(--gold); }
+    .reward-card.ultra .reward-type { color: var(--purple); }
     
-    .jackpot-mult {
-      font-family: 'VT323', monospace;
-      font-size: 28px;
+    .reward-mult {
+      font-size: 32px;
+      font-weight: 700;
     }
     
-    .jackpot-mini.mini .jackpot-mult { color: var(--green); }
-    .jackpot-mini.regular .jackpot-mult { color: var(--blue); }
-    .jackpot-mini.mega .jackpot-mult { color: var(--gold); }
-    .jackpot-mini.ultra .jackpot-mult { color: var(--purple); }
+    .reward-card.mini .reward-mult { color: var(--green); }
+    .reward-card.regular .reward-mult { color: var(--blue); }
+    .reward-card.mega .reward-mult { color: var(--gold); }
+    .reward-card.ultra .reward-mult { color: var(--purple); }
     
-    /* Staking Table */
-    .tier-table {
+    .reward-desc {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-top: 8px;
+    }
+    
+    /* Tiers */
+    .tiers-table {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    
+    .tiers-table table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 12px;
     }
     
-    .tier-table th, .tier-table td {
-      padding: 12px 10px;
+    .tiers-table th,
+    .tiers-table td {
+      padding: 20px;
       text-align: left;
       border-bottom: 1px solid var(--border);
     }
     
-    .tier-table th {
-      color: var(--dark-green);
-      font-weight: normal;
-      font-size: 10px;
+    .tiers-table th {
+      background: var(--bg);
+      font-size: 12px;
+      font-weight: 600;
       text-transform: uppercase;
+      color: var(--text-dim);
     }
     
-    .tier-bronze { color: #cd7f32; }
-    .tier-silver { color: #c0c0c0; }
-    .tier-gold { color: var(--gold); }
-    .tier-platinum { color: #e5e4e2; }
-    .tier-diamond { color: #b9f2ff; }
+    .tiers-table tr:last-child td {
+      border-bottom: none;
+    }
+    
+    .tier-name {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+    }
+    
+    .tier-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    
+    .tier-bronze .tier-dot { background: #cd7f32; }
+    .tier-silver .tier-dot { background: #c0c0c0; }
+    .tier-gold .tier-dot { background: var(--gold); }
+    .tier-platinum .tier-dot { background: #e5e4e2; }
+    .tier-diamond .tier-dot { background: #b9f2ff; }
+    
+    /* CTA */
+    .cta {
+      background: linear-gradient(135deg, rgba(0, 255, 65, 0.1), rgba(0, 150, 255, 0.1));
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 60px 40px;
+      text-align: center;
+      margin: 40px 0;
+    }
+    
+    .cta h2 {
+      font-size: 32px;
+      margin-bottom: 15px;
+    }
+    
+    .cta p {
+      color: var(--text-dim);
+      margin-bottom: 30px;
+      font-size: 18px;
+    }
     
     /* Footer */
     footer {
       border-top: 1px solid var(--border);
-      padding: 30px 0;
-      margin-top: 30px;
+      padding: 60px 0 30px;
     }
     
     .footer-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 30px;
+      grid-template-columns: 2fr repeat(3, 1fr);
+      gap: 40px;
+      margin-bottom: 40px;
     }
     
-    @media (max-width: 800px) {
-      .footer-grid { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 768px) {
+      .footer-grid { grid-template-columns: 1fr 1fr; }
     }
     
-    @media (max-width: 500px) {
-      .footer-grid { grid-template-columns: 1fr; }
-    }
-    
-    .footer-section h4 {
-      font-family: 'VT323', monospace;
-      font-size: 16px;
-      margin-bottom: 15px;
-      color: var(--green);
-    }
-    
-    .footer-section a {
+    .footer-brand .logo {
       display: block;
-      color: var(--dark-green);
-      text-decoration: none;
-      font-size: 11px;
-      padding: 5px 0;
-      transition: color 0.3s;
+      margin-bottom: 15px;
     }
     
-    .footer-section a:hover {
+    .footer-brand p {
+      color: var(--text-dim);
+      font-size: 14px;
+    }
+    
+    .footer-links h4 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: var(--text);
+    }
+    
+    .footer-links a {
+      display: block;
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 14px;
+      padding: 8px 0;
+      transition: color 0.2s;
+    }
+    
+    .footer-links a:hover {
       color: var(--green);
     }
     
     .footer-bottom {
-      margin-top: 30px;
-      padding-top: 20px;
-      border-top: 1px solid var(--border);
       text-align: center;
-      color: var(--dark-green);
-      font-size: 11px;
-    }
-    
-    .blink {
-      animation: blink 1s infinite;
-    }
-    
-    @keyframes blink {
-      0%, 50% { opacity: 1; }
-      51%, 100% { opacity: 0; }
+      padding-top: 30px;
+      border-top: 1px solid var(--border);
+      color: var(--text-dim);
+      font-size: 13px;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <div class="header-top">
-        <a href="index.html" class="logo-small">TAONET</a>
-        <button class="wallet-btn" id="walletBtn">CONNECT WALLET</button>
+  <header>
+    <div class="container">
+      <div class="header-inner">
+        <a href="/" class="logo">TaoNet</a>
+        <button class="menu-toggle" onclick="document.querySelector('nav').classList.toggle('open')">
+          &#9776;
+        </button>
+        <nav>
+          <a href="mine.html">Mine</a>
+          <a href="dashboard.html">Dashboard</a>
+          <a href="leaderboard.html">Leaderboard</a>
+          <a href="rewards.html">Rewards</a>
+          <a href="docs.html">Docs</a>
+          <a href="mine.html" class="nav-cta">Start Earning</a>
+        </nav>
       </div>
-      <nav class="main-nav">
-        <div class="nav-section">
-          <a href="index.html" class="active">[HOME]</a>
-          <a href="mine.html">[MINE]</a>
-          <a href="dashboard.html">[DASHBOARD]</a>
-        </div>
-        <div class="nav-divider"></div>
-        <div class="nav-section">
-          <a href="leaderboard.html">[LEADERBOARD]</a>
-          <a href="tournaments.html">[TOURNAMENTS]</a>
-          <a href="achievements.html">[ACHIEVEMENTS]</a>
-          <a href="rewards.html" class="nav-gold">[REWARDS]</a>
-        </div>
-        <div class="nav-divider"></div>
-        <div class="nav-section">
-          <a href="docs.html">[DOCS]</a>
-          <a href="developers.html" class="nav-blue">[DEVELOPERS]</a>
-        </div>
-      </nav>
-    </header>
+    </div>
+  </header>
 
+  <main>
     <!-- Hero -->
-    <div class="terminal">
-      <div class="hero">
-        <div class="hero-badge">SOLANA L2 · AI INFERENCE</div>
-        <h1>DECENTRALIZED AI COMPUTE</h1>
-        <p>Token holders become miners, running AI models locally to process inference tasks. Earn rewards for every task completed.</p>
+    <section class="hero">
+      <div class="container">
+        <div class="hero-badge">Built on Solana</div>
+        <h1>Earn Crypto by<br><span>Running AI</span></h1>
+        <p>Your computer runs AI tasks. You get paid. It's that simple.</p>
         <div class="hero-buttons">
-          <a href="mine.html" class="btn btn-primary">START MINING</a>
-          <a href="docs.html" class="btn">READ DOCS</a>
-          <a href="https://github.com/Sugusdaddy/taonet" target="_blank" class="btn btn-gold">GITHUB</a>
+          <a href="mine.html" class="btn btn-primary">Start Earning Now</a>
+          <a href="docs.html" class="btn btn-secondary">How It Works</a>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- Quick Actions -->
-    <div class="quick-actions">
-      <a href="mine.html" class="quick-action">
-        <div class="quick-action-icon">⛏️</div>
-        <div class="quick-action-title">START MINING</div>
-        <div class="quick-action-desc">Run AI models & earn</div>
-      </a>
-      <a href="dashboard.html" class="quick-action gold">
-        <div class="quick-action-icon">📊</div>
-        <div class="quick-action-title">DASHBOARD</div>
-        <div class="quick-action-desc">View your stats</div>
-      </a>
-      <a href="rewards.html" class="quick-action blue">
-        <div class="quick-action-icon">🎰</div>
-        <div class="quick-action-title">JACKPOTS</div>
-        <div class="quick-action-desc">Win up to 5163x</div>
-      </a>
-      <a href="referrals.html" class="quick-action purple">
-        <div class="quick-action-icon">👥</div>
-        <div class="quick-action-title">REFERRALS</div>
-        <div class="quick-action-desc">Invite & earn 5%</div>
-      </a>
-    </div>
-
-    <!-- Live Stats -->
-    <div class="terminal">
-      <h2 class="section-title">NETWORK STATUS <span class="blink" style="color: var(--green);">●</span></h2>
-      <div class="stats-grid">
-        <div class="stat-box">
-          <div class="stat-value" id="totalMiners">--</div>
-          <div class="stat-label">Total Miners</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-value" id="onlineMiners">--</div>
-          <div class="stat-label">Online Now</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-value" id="totalTasks">--</div>
-          <div class="stat-label">Tasks Completed</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-value" id="avgResponse">--</div>
-          <div class="stat-label">Avg Response (ms)</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Two Column: Activity + Jackpots -->
-    <div class="two-col">
-      <div class="terminal">
-        <h2 class="section-title">LIVE ACTIVITY</h2>
-        <div class="activity-list" id="activityList">
-          <div style="text-align: center; padding: 30px; color: var(--dark-green);">Connecting...</div>
-        </div>
-      </div>
-      
-      <div class="terminal">
-        <h2 class="section-title">ACTIVE JACKPOTS</h2>
-        <div class="jackpot-preview" id="jackpotPreview">
-          <div class="jackpot-mini">
-            <div class="jackpot-type">Loading...</div>
-            <div class="jackpot-mult">--</div>
+    <!-- Stats -->
+    <section class="stats">
+      <div class="container">
+        <div class="stats-grid">
+          <div class="stat">
+            <div class="stat-value" id="totalMiners">--</div>
+            <div class="stat-label">People Earning</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="onlineMiners">--</div>
+            <div class="stat-label">Online Now</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="totalTasks">--</div>
+            <div class="stat-label">Tasks Done</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="totalRewards">--</div>
+            <div class="stat-label">Tokens Paid</div>
           </div>
         </div>
-        <div style="text-align: center; margin-top: 15px;">
-          <a href="rewards.html" class="btn" style="padding: 10px 25px; font-size: 11px;">VIEW ALL</a>
+      </div>
+    </section>
+
+    <!-- How it works -->
+    <section class="section">
+      <div class="container">
+        <div class="section-title">
+          <h2>How It Works</h2>
+          <p>Three simple steps to start earning</p>
+        </div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-number">1</div>
+            <h3>Get Tokens</h3>
+            <p>Buy TaoNet tokens to join the network. More tokens = higher rewards.</p>
+          </div>
+          <div class="step">
+            <div class="step-number">2</div>
+            <h3>Run AI Tasks</h3>
+            <p>Your computer processes AI requests from users around the world.</p>
+          </div>
+          <div class="step">
+            <div class="step-number">3</div>
+            <h3>Get Paid</h3>
+            <p>Earn tokens for every task. Fast responses and quality work = bonus rewards.</p>
+          </div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- How it Works -->
-    <div class="terminal">
-      <h2 class="section-title">HOW IT WORKS</h2>
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon">[1]</div>
-          <div class="feature-title">HOLD TOKENS</div>
-          <div class="feature-desc">Acquire tokens to become eligible for mining. Higher holdings unlock better staking tiers and reward multipliers.</div>
+    <!-- Features -->
+    <section class="section" style="background: var(--card); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+      <div class="container">
+        <div class="section-title">
+          <h2>Why TaoNet?</h2>
+          <p>Built for simplicity and rewards</p>
         </div>
-        <div class="feature-card">
-          <div class="feature-icon">[2]</div>
-          <div class="feature-title">RUN MODELS</div>
-          <div class="feature-desc">Connect your local AI models or API endpoints to the network. Process text, code, images, and trading tasks.</div>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">[3]</div>
-          <div class="feature-title">EARN REWARDS</div>
-          <div class="feature-desc">Get paid for every task completed. Build streaks, unlock achievements, and compete in tournaments for bonus rewards.</div>
+        <div class="features-grid">
+          <div class="feature">
+            <div class="feature-icon">$</div>
+            <div>
+              <h3>Instant Payments</h3>
+              <p>Get paid immediately for every task you complete. No waiting, no minimum withdrawals.</p>
+            </div>
+          </div>
+          <div class="feature">
+            <div class="feature-icon">*</div>
+            <div>
+              <h3>Bonus Multipliers</h3>
+              <p>Hold more tokens to unlock up to 3x reward multipliers on everything you earn.</p>
+            </div>
+          </div>
+          <div class="feature">
+            <div class="feature-icon">!</div>
+            <div>
+              <h3>Random Jackpots</h3>
+              <p>Any task could trigger a jackpot worth up to 5000x your normal reward.</p>
+            </div>
+          </div>
+          <div class="feature">
+            <div class="feature-icon">+</div>
+            <div>
+              <h3>Daily Tournaments</h3>
+              <p>Compete with others for bonus prize pools. Top performers win big.</p>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- Staking Tiers -->
-    <div class="terminal">
-      <h2 class="section-title">STAKING TIERS</h2>
-      <div style="overflow-x: auto;">
-        <table class="tier-table">
-          <thead>
-            <tr>
-              <th>Tier</th>
-              <th>Requirement</th>
-              <th>Multiplier</th>
-              <th>Daily Limit</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="tier-bronze">● BRONZE</td>
-              <td>0+</td>
-              <td>1.0x</td>
-              <td>1,000 tasks</td>
-            </tr>
-            <tr>
-              <td class="tier-silver">● SILVER</td>
-              <td>10,000+</td>
-              <td>1.25x</td>
-              <td>5,000 tasks</td>
-            </tr>
-            <tr>
-              <td class="tier-gold">● GOLD</td>
-              <td>100,000+</td>
-              <td>1.5x</td>
-              <td>20,000 tasks</td>
-            </tr>
-            <tr>
-              <td class="tier-platinum">● PLATINUM</td>
-              <td>1,000,000+</td>
-              <td>2.0x</td>
-              <td>100,000 tasks</td>
-            </tr>
-            <tr>
-              <td class="tier-diamond">● DIAMOND</td>
-              <td>10,000,000+</td>
-              <td>3.0x</td>
-              <td>500,000 tasks</td>
-            </tr>
-          </tbody>
-        </table>
+    <!-- Jackpots -->
+    <section class="section">
+      <div class="container">
+        <div class="section-title">
+          <h2>Jackpot Rewards</h2>
+          <p>Every task is a chance to win big</p>
+        </div>
+        <div class="rewards-preview" id="jackpotPreview">
+          <div class="reward-card mini">
+            <div class="reward-type">Mini</div>
+            <div class="reward-mult">32x</div>
+            <div class="reward-desc">Every 50 tasks</div>
+          </div>
+          <div class="reward-card regular">
+            <div class="reward-type">Regular</div>
+            <div class="reward-mult">144x</div>
+            <div class="reward-desc">Every 500 tasks</div>
+          </div>
+          <div class="reward-card mega">
+            <div class="reward-type">Mega</div>
+            <div class="reward-mult">699x</div>
+            <div class="reward-desc">Every 5,000 tasks</div>
+          </div>
+          <div class="reward-card ultra">
+            <div class="reward-type">Ultra</div>
+            <div class="reward-mult">5163x</div>
+            <div class="reward-desc">Every 50,000 tasks</div>
+          </div>
+        </div>
+        <div style="text-align: center; margin-top: 30px;">
+          <a href="rewards.html" class="btn btn-secondary">View All Rewards</a>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <!-- Footer -->
-    <footer>
+    <!-- Tiers -->
+    <section class="section" style="background: var(--card); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+      <div class="container">
+        <div class="section-title">
+          <h2>Earning Tiers</h2>
+          <p>Hold more tokens, earn more rewards</p>
+        </div>
+        <div class="tiers-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Tier</th>
+                <th>Tokens Needed</th>
+                <th>Reward Boost</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><div class="tier-name tier-bronze"><span class="tier-dot"></span> Bronze</div></td>
+                <td>Any amount</td>
+                <td>1x (base rate)</td>
+              </tr>
+              <tr>
+                <td><div class="tier-name tier-silver"><span class="tier-dot"></span> Silver</div></td>
+                <td>10,000+</td>
+                <td>1.25x</td>
+              </tr>
+              <tr>
+                <td><div class="tier-name tier-gold"><span class="tier-dot"></span> Gold</div></td>
+                <td>100,000+</td>
+                <td>1.5x</td>
+              </tr>
+              <tr>
+                <td><div class="tier-name tier-platinum"><span class="tier-dot"></span> Platinum</div></td>
+                <td>1,000,000+</td>
+                <td>2x</td>
+              </tr>
+              <tr>
+                <td><div class="tier-name tier-diamond"><span class="tier-dot"></span> Diamond</div></td>
+                <td>10,000,000+</td>
+                <td>3x</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="section">
+      <div class="container">
+        <div class="cta">
+          <h2>Ready to Start Earning?</h2>
+          <p>Join thousands of people earning crypto with their computers</p>
+          <a href="mine.html" class="btn btn-primary">Start Mining Now</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
       <div class="footer-grid">
-        <div class="footer-section">
-          <h4>MINING</h4>
+        <div class="footer-brand">
+          <a href="/" class="logo">TaoNet</a>
+          <p>Decentralized AI inference network. Earn crypto by running AI tasks on your computer.</p>
+        </div>
+        <div class="footer-links">
+          <h4>Earn</h4>
           <a href="mine.html">Start Mining</a>
           <a href="dashboard.html">Dashboard</a>
-          <a href="history.html">Task History</a>
-          <a href="rewards.html">Claim Rewards</a>
+          <a href="rewards.html">Rewards</a>
+          <a href="history.html">History</a>
         </div>
-        <div class="footer-section">
-          <h4>COMPETE</h4>
+        <div class="footer-links">
+          <h4>Compete</h4>
           <a href="leaderboard.html">Leaderboard</a>
           <a href="tournaments.html">Tournaments</a>
           <a href="achievements.html">Achievements</a>
           <a href="referrals.html">Referrals</a>
         </div>
-        <div class="footer-section">
-          <h4>DEVELOPERS</h4>
+        <div class="footer-links">
+          <h4>Resources</h4>
           <a href="docs.html">Documentation</a>
-          <a href="developers.html">API Keys</a>
-          <a href="playground.html">API Playground</a>
+          <a href="developers.html">Developers</a>
           <a href="https://github.com/Sugusdaddy/taonet" target="_blank">GitHub</a>
-        </div>
-        <div class="footer-section">
-          <h4>NETWORK</h4>
-          <a href="health.html">Network Health</a>
-          <a href="token.html">Token Info</a>
-          <a href="admin.html">Admin</a>
-          <a href="monitor.html">Monitor</a>
+          <a href="health.html">Network Status</a>
         </div>
       </div>
       <div class="footer-bottom">
-        <p>TaoNet - Decentralized AI Inference Network on Solana</p>
-        <p style="margin-top: 8px;">Built for the future of distributed AI compute</p>
+        TaoNet - Built on Solana
       </div>
-    </footer>
-  </div>
+    </div>
+  </footer>
 
   <script>
-    const API_URL = 'https://api.taonet.fun';
-    let ws;
+    const API = 'https://api.taonet.fun';
 
     async function loadStats() {
       try {
-        const response = await fetch(`${API_URL}/api/stats`);
-        const data = await response.json();
-        
+        const res = await fetch(`${API}/api/stats`);
+        const data = await res.json();
         document.getElementById('totalMiners').textContent = data.network?.totalMiners || 0;
         document.getElementById('onlineMiners').textContent = data.network?.onlineMiners || 0;
-        document.getElementById('totalTasks').textContent = data.tasks?.completed || 0;
-        document.getElementById('avgResponse').textContent = Math.round(data.tasks?.avgResponseTimeMs || 0);
-      } catch (error) {
-        console.error('Failed to load stats:', error);
-      }
+        document.getElementById('totalTasks').textContent = (data.tasks?.completed || 0).toLocaleString();
+        document.getElementById('totalRewards').textContent = (data.rewards?.total || 0).toLocaleString();
+      } catch(e) {}
     }
 
     async function loadJackpots() {
       try {
-        const response = await fetch(`${API_URL}/api/game/jackpots/active`);
-        const data = await response.json();
-        
-        const container = document.getElementById('jackpotPreview');
-        
-        if (!data.jackpots || data.jackpots.length === 0) {
-          container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--dark-green); grid-column: 1/-1;">No active jackpots</div>';
-          return;
+        const res = await fetch(`${API}/api/game/jackpots/active`);
+        const data = await res.json();
+        if (data.jackpots?.length) {
+          const container = document.getElementById('jackpotPreview');
+          const order = ['mini', 'regular', 'mega', 'ultra'];
+          data.jackpots.sort((a, b) => order.indexOf(a.type) - order.indexOf(b.type));
+          container.innerHTML = data.jackpots.map(jp => `
+            <div class="reward-card ${jp.type}">
+              <div class="reward-type">${jp.type}</div>
+              <div class="reward-mult">${jp.multiplier}x</div>
+              <div class="reward-desc">${jp.tasksUntilTrigger} tasks left</div>
+            </div>
+          `).join('');
         }
-        
-        const order = ['mini', 'regular', 'mega', 'ultra'];
-        data.jackpots.sort((a, b) => order.indexOf(a.type) - order.indexOf(b.type));
-        
-        container.innerHTML = data.jackpots.map(jp => `
-          <div class="jackpot-mini ${jp.type}">
-            <div class="jackpot-type">${jp.type}</div>
-            <div class="jackpot-mult">${jp.multiplier}x</div>
-            <div style="font-size: 9px; color: var(--dark-green); margin-top: 5px;">${jp.tasksUntilTrigger} left</div>
-          </div>
-        `).join('');
-      } catch (error) {
-        console.error('Failed to load jackpots:', error);
-      }
+      } catch(e) {}
     }
 
-    function connectWebSocket() {
-      try {
-        ws = new WebSocket(`wss://api.taonet.fun/ws`);
-        
-        ws.onopen = () => {
-          document.getElementById('activityList').innerHTML = 
-            '<div style="text-align: center; padding: 20px; color: var(--dark-green);">Connected. Waiting for activity...</div>';
-        };
-        
-        ws.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data);
-            if (data.type === 'task_completed' || data.type === 'miner_registered' || data.type === 'task_assigned') {
-              addActivity(data);
-            }
-          } catch (e) {}
-        };
-        
-        ws.onerror = () => {
-          document.getElementById('activityList').innerHTML = 
-            '<div style="text-align: center; padding: 20px; color: var(--dark-green);">Connecting...</div>';
-        };
-        
-        ws.onclose = () => {
-          setTimeout(connectWebSocket, 3000);
-        };
-      } catch (error) {
-        console.error('WebSocket error:', error);
-      }
-    }
-
-    const activities = [];
-    function addActivity(data) {
-      const list = document.getElementById('activityList');
-      
-      let text = '';
-      let type = '';
-      
-      if (data.type === 'task_completed') {
-        text = `Task completed by ${(data.miner || '').slice(0, 8)}...`;
-        type = 'DONE';
-      } else if (data.type === 'miner_registered') {
-        text = `New miner: ${(data.address || '').slice(0, 8)}...`;
-        type = 'JOIN';
-      } else if (data.type === 'task_assigned') {
-        text = `Task assigned: ${data.taskType || 'unknown'}`;
-        type = 'NEW';
-      }
-      
-      if (!text) return;
-      
-      activities.unshift({ text, type, time: new Date() });
-      if (activities.length > 15) activities.pop();
-      
-      list.innerHTML = activities.map(a => `
-        <div class="activity-item">
-          <span>${a.text}</span>
-          <span class="activity-type">${a.type}</span>
-        </div>
-      `).join('');
-    }
-
-    // Wallet button
-    document.getElementById('walletBtn').addEventListener('click', async () => {
-      if (window.solana && window.solana.isPhantom) {
-        try {
-          const resp = await window.solana.connect();
-          document.getElementById('walletBtn').textContent = resp.publicKey.toString().slice(0, 8) + '...';
-        } catch (e) {
-          console.error(e);
-        }
-      } else {
-        window.open('https://phantom.app/', '_blank');
-      }
-    });
-
-    // Check if already connected
-    if (window.solana && window.solana.isConnected) {
-      document.getElementById('walletBtn').textContent = window.solana.publicKey.toString().slice(0, 8) + '...';
-    }
-
-    // Service Worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW error:', err));
-    }
-
-    // Initialize
     loadStats();
     loadJackpots();
-    connectWebSocket();
-    
-    setInterval(loadStats, 15000);
-    setInterval(loadJackpots, 30000);
+    setInterval(loadStats, 30000);
   </script>
 </body>
 </html>

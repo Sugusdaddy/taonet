@@ -3,378 +3,507 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Dashboard - TaoNet</title>
-  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js"></script>
+  <title>Dashboard - TaoNet</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root { --green: #00ff41; --dark-green: #00cc33; --bg: #0a0a0a; --terminal-bg: #0d1117; --border: #1a3a1a; --gold: #ffd700; --red: #ff4444; }
+    :root {
+      --green: #00ff41;
+      --green-dim: #00cc33;
+      --bg: #0a0a0a;
+      --card: #111;
+      --border: #222;
+      --text: #fff;
+      --text-dim: #888;
+      --gold: #ffd700;
+      --blue: #0096ff;
+      --purple: #9966ff;
+      --red: #ff4444;
+    }
+    
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: var(--bg); color: var(--green); font-family: 'Share Tech Mono', monospace; min-height: 100vh; }
-    body::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: repeating-linear-gradient(0deg, rgba(0,0,0,0.15), rgba(0,0,0,0.15) 1px, transparent 1px, transparent 2px); pointer-events: none; z-index: 1000; }
-    .container { max-width: 1000px; margin: 0 auto; padding: 15px; }
-    header { border-bottom: 1px solid var(--border); padding: 15px 0; margin-bottom: 20px; }
-    .logo { font-family: 'VT323', monospace; font-size: 11px; line-height: 1.2; white-space: pre; text-shadow: 0 0 10px var(--green); overflow-x: auto; }
-    @media (max-width: 600px) { .logo { font-size: 8px; } }
-    nav { display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap; }
-    nav a { color: var(--green); text-decoration: none; padding: 8px 12px; border: 1px solid var(--border); transition: all 0.3s; font-size: 11px; }
-    nav a:hover, nav a.active { background: var(--green); color: var(--bg); }
     
-    .card { background: var(--terminal-bg); border: 1px solid var(--border); border-radius: 5px; padding: 20px; margin-bottom: 15px; }
-    @media (max-width: 600px) { .card { padding: 15px; } }
-    .card-title { font-family: 'VT323', monospace; font-size: 20px; margin-bottom: 15px; color: var(--dark-green); }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, sans-serif;
+      line-height: 1.6;
+    }
     
-    .btn { display: inline-block; padding: 10px 20px; border: 2px solid var(--green); color: var(--green); text-decoration: none; font-family: 'Share Tech Mono', monospace; text-transform: uppercase; transition: all 0.3s; cursor: pointer; background: transparent; font-size: 11px; }
-    .btn:hover { background: var(--green); color: var(--bg); }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 20px;
+    }
     
-    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
-    @media (max-width: 700px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
-    .stat { background: var(--bg); padding: 15px; text-align: center; border-radius: 5px; border: 1px solid var(--border); }
-    .stat-value { font-family: 'VT323', monospace; font-size: 28px; text-shadow: 0 0 10px var(--green); }
-    .stat-label { font-size: 9px; color: var(--dark-green); text-transform: uppercase; margin-top: 5px; }
+    header {
+      padding: 20px 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
     
-    .profile-header { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
-    .profile-avatar { width: 80px; height: 80px; border: 2px solid var(--green); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'VT323', monospace; font-size: 32px; background: var(--bg); }
-    .profile-info h2 { font-family: 'VT323', monospace; font-size: 28px; margin-bottom: 5px; }
-    .profile-address { font-size: 11px; color: var(--dark-green); }
-    .profile-tier { display: inline-block; padding: 3px 10px; border-radius: 3px; font-size: 10px; margin-top: 5px; text-transform: uppercase; }
-    .tier-bronze { background: rgba(205, 127, 50, 0.2); color: #cd7f32; border: 1px solid #cd7f32; }
-    .tier-silver { background: rgba(192, 192, 192, 0.2); color: #c0c0c0; border: 1px solid #c0c0c0; }
-    .tier-gold { background: rgba(255, 215, 0, 0.2); color: var(--gold); border: 1px solid var(--gold); }
-    .tier-platinum { background: rgba(229, 228, 226, 0.2); color: #e5e4e2; border: 1px solid #e5e4e2; }
-    .tier-diamond { background: rgba(185, 242, 255, 0.2); color: #b9f2ff; border: 1px solid #b9f2ff; }
+    .logo {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--green);
+      text-decoration: none;
+    }
     
-    .xp-bar { background: var(--bg); height: 20px; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); margin: 15px 0; }
-    .xp-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--gold)); transition: width 0.5s; }
-    .xp-text { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 5px; }
+    nav {
+      display: flex;
+      gap: 25px;
+    }
     
-    .notification-list { max-height: 400px; overflow-y: auto; }
-    .notification { padding: 12px; border-bottom: 1px solid var(--border); display: flex; gap: 12px; align-items: flex-start; }
-    .notification:hover { background: rgba(0, 255, 65, 0.05); }
-    .notification.unread { border-left: 2px solid var(--green); }
-    .notification-icon { font-size: 20px; flex-shrink: 0; }
-    .notification-content { flex: 1; min-width: 0; }
-    .notification-title { font-size: 12px; margin-bottom: 3px; }
-    .notification-message { font-size: 11px; color: var(--dark-green); }
-    .notification-time { font-size: 9px; color: var(--dark-green); margin-top: 5px; }
+    nav a {
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+    }
     
-    .streak-display { display: flex; align-items: center; gap: 15px; }
-    .streak-number { font-family: 'VT323', monospace; font-size: 48px; color: var(--gold); text-shadow: 0 0 15px var(--gold); }
-    .streak-info { font-size: 11px; }
-    .streak-label { color: var(--dark-green); }
+    nav a:hover, nav a.active { color: var(--text); }
     
-    .multipliers { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
-    .multiplier { background: var(--bg); padding: 12px; text-align: center; border-radius: 5px; border: 1px solid var(--border); }
-    .multiplier-value { font-family: 'VT323', monospace; font-size: 20px; color: var(--gold); }
-    .multiplier-label { font-size: 9px; color: var(--dark-green); }
+    h1 {
+      font-size: 28px;
+      margin-bottom: 30px;
+    }
     
-    .not-connected { text-align: center; padding: 60px 20px; }
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      margin-bottom: 30px;
+    }
     
-    footer { border-top: 1px solid var(--border); padding: 25px 0; margin-top: 30px; text-align: center; color: var(--dark-green); font-size: 11px; }
+    @media (max-width: 768px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+    }
+    
+    .stat-value.green { color: var(--green); }
+    .stat-value.gold { color: var(--gold); }
+    .stat-value.blue { color: var(--blue); }
+    
+    .stat-change {
+      font-size: 12px;
+      margin-top: 5px;
+    }
+    
+    .stat-change.up { color: var(--green); }
+    .stat-change.down { color: var(--red); }
+    
+    /* Two Column Layout */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    
+    @media (max-width: 768px) {
+      .two-col { grid-template-columns: 1fr; }
+    }
+    
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .card-title a {
+      color: var(--green);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    
+    /* Progress Bar */
+    .progress-section {
+      margin-bottom: 20px;
+    }
+    
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+    
+    .progress-label { color: var(--text-dim); }
+    .progress-value { font-weight: 600; }
+    
+    .progress-bar {
+      height: 8px;
+      background: var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: var(--green);
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
+    
+    .progress-fill.gold { background: var(--gold); }
+    .progress-fill.blue { background: var(--blue); }
+    
+    /* Tier Badge */
+    .tier-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 15px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+    }
+    
+    .tier-badge.bronze { background: rgba(205, 127, 50, 0.1); color: #cd7f32; border: 1px solid #cd7f32; }
+    .tier-badge.silver { background: rgba(192, 192, 192, 0.1); color: #c0c0c0; border: 1px solid #c0c0c0; }
+    .tier-badge.gold { background: rgba(255, 215, 0, 0.1); color: var(--gold); border: 1px solid var(--gold); }
+    .tier-badge.platinum { background: rgba(229, 228, 226, 0.1); color: #e5e4e2; border: 1px solid #e5e4e2; }
+    .tier-badge.diamond { background: rgba(185, 242, 255, 0.1); color: #b9f2ff; border: 1px solid #b9f2ff; }
+    
+    /* Recent Activity */
+    .activity-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    
+    .activity-item:last-child { border-bottom: none; }
+    
+    .activity-type {
+      color: var(--text-dim);
+    }
+    
+    .activity-reward {
+      color: var(--green);
+      font-weight: 600;
+    }
+    
+    .activity-time {
+      color: var(--text-dim);
+      font-size: 11px;
+    }
+    
+    /* Achievement */
+    .achievement {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .achievement:last-child { border-bottom: none; }
+    
+    .achievement-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--border);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    
+    .achievement-icon.unlocked {
+      background: rgba(0, 255, 65, 0.1);
+    }
+    
+    .achievement-name {
+      font-weight: 500;
+      font-size: 14px;
+    }
+    
+    .achievement-desc {
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+    
+    /* No data */
+    .no-data {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-dim);
+    }
+    
+    .btn {
+      display: inline-block;
+      background: var(--green);
+      color: var(--bg);
+      padding: 12px 24px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <header>
-      <div class="logo">
-████████╗ █████╗  ██████╗ ███╗   ██╗███████╗████████╗
-╚══██╔══╝██╔══██╗██╔═══██╗████╗  ██║██╔════╝╚══██╔══╝
-   ██║   ███████║██║   ██║██╔██╗ ██║█████╗     ██║   
-   ██║   ██╔══██║██║   ██║██║╚██╗██║██╔══╝     ██║   
-   ██║   ██║  ██║╚██████╔╝██║ ╚████║███████╗   ██║   
-   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝   ╚═╝   
-      </div>
+      <a href="index.html" class="logo">TaoNet</a>
       <nav>
-        <a href="index.html">[HOME]</a>
-        <a href="mine.html">[MINE]</a>
-        <a href="dashboard.html" class="active">[DASHBOARD]</a>
-        <a href="leaderboard.html">[LEADERBOARD]</a>
-        <a href="rewards.html">[REWARDS]</a>
-        <a href="achievements.html">[ACHIEVEMENTS]</a>
+        <a href="mine.html">Mine</a>
+        <a href="dashboard.html" class="active">Dashboard</a>
+        <a href="leaderboard.html">Leaderboard</a>
+        <a href="rewards.html">Rewards</a>
       </nav>
     </header>
 
-    <!-- Not Connected -->
-    <div id="notConnected" class="card">
-      <div class="not-connected">
-        <h2 style="font-family: 'VT323', monospace; font-size: 28px; margin-bottom: 15px;">MINER DASHBOARD</h2>
-        <p style="color: var(--dark-green); margin-bottom: 20px;">Connect your wallet to view your mining stats</p>
-        <button class="btn" onclick="connectWallet()">CONNECT WALLET</button>
+    <h1>Your Dashboard</h1>
+
+    <div id="dashboardContent">
+      <div class="no-data">
+        <p style="margin-bottom: 20px;">Connect your wallet to view your dashboard</p>
+        <a href="mine.html" class="btn">Start Mining</a>
       </div>
     </div>
 
-    <!-- Connected View -->
-    <div id="connectedView" style="display: none;">
-      <!-- Profile Card -->
-      <div class="card">
-        <div class="profile-header">
-          <div class="profile-avatar" id="profileAvatar">M</div>
-          <div class="profile-info">
-            <h2 id="profileName">Loading...</h2>
-            <div class="profile-address" id="profileAddress">--</div>
-            <span class="profile-tier tier-bronze" id="profileTier">BRONZE</span>
-          </div>
-          <div style="margin-left: auto;">
-            <button class="btn" onclick="claimDailyBonus()">CLAIM DAILY</button>
-          </div>
-        </div>
-        
-        <div style="margin-top: 20px;">
-          <div class="xp-text">
-            <span>Level <span id="profileLevel">1</span></span>
-            <span><span id="profileXp">0</span> / <span id="profileXpNeeded">100</span> XP</span>
-          </div>
-          <div class="xp-bar">
-            <div class="xp-fill" id="xpFill" style="width: 0%"></div>
-          </div>
-        </div>
-      </div>
-
+    <div id="dashboardData" class="hidden">
       <!-- Stats -->
       <div class="stats-grid">
-        <div class="stat">
-          <div class="stat-value" id="statTasks">0</div>
+        <div class="stat-card">
+          <div class="stat-label">Total Earned</div>
+          <div class="stat-value green" id="totalEarned">0</div>
+          <div class="stat-change up" id="earnedChange">--</div>
+        </div>
+        <div class="stat-card">
           <div class="stat-label">Tasks Completed</div>
+          <div class="stat-value" id="totalTasks">0</div>
+          <div class="stat-change" id="tasksChange">--</div>
         </div>
-        <div class="stat">
-          <div class="stat-value" id="statReputation">0</div>
-          <div class="stat-label">Reputation</div>
+        <div class="stat-card">
+          <div class="stat-label">Current Streak</div>
+          <div class="stat-value gold" id="streak">0</div>
+          <div class="stat-change">days</div>
         </div>
-        <div class="stat">
-          <div class="stat-value" id="statRewards">0</div>
-          <div class="stat-label">Total Rewards</div>
-        </div>
-        <div class="stat">
-          <div class="stat-value" id="statRank">--</div>
-          <div class="stat-label">Network Rank</div>
+        <div class="stat-card">
+          <div class="stat-label">Leaderboard Rank</div>
+          <div class="stat-value blue" id="rank">#--</div>
         </div>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-        <!-- Streak -->
-        <div class="card">
-          <div class="card-title">MINING STREAK</div>
-          <div class="streak-display">
-            <div class="streak-number" id="streakDays">0</div>
-            <div class="streak-info">
-              <div>days</div>
-              <div class="streak-label">Longest: <span id="longestStreak">0</span></div>
+      <div class="two-col">
+        <!-- Left Column -->
+        <div>
+          <!-- Tier Progress -->
+          <div class="card">
+            <div class="card-title">Your Tier</div>
+            <div class="tier-badge bronze" id="tierBadge">Bronze</div>
+            <div class="progress-section">
+              <div class="progress-header">
+                <span class="progress-label">Progress to next tier</span>
+                <span class="progress-value" id="tierProgress">0%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill gold" id="tierProgressBar" style="width: 0%"></div>
+              </div>
+            </div>
+            <p style="font-size: 12px; color: var(--text-dim);" id="tierNextInfo">Hold more tokens to unlock higher tiers</p>
+          </div>
+
+          <!-- Level Progress -->
+          <div class="card">
+            <div class="card-title">Level <span id="currentLevel">1</span></div>
+            <div class="progress-section">
+              <div class="progress-header">
+                <span class="progress-label">XP Progress</span>
+                <span class="progress-value"><span id="currentXP">0</span> / <span id="nextLevelXP">100</span></span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" id="xpProgressBar" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Achievements -->
+          <div class="card">
+            <div class="card-title">
+              Recent Achievements
+              <a href="achievements.html">View All</a>
+            </div>
+            <div id="recentAchievements">
+              <div class="achievement">
+                <div class="achievement-icon">?</div>
+                <div>
+                  <div class="achievement-name">Complete tasks to unlock</div>
+                  <div class="achievement-desc">Achievements reward your progress</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Multipliers -->
-        <div class="card">
-          <div class="card-title">ACTIVE MULTIPLIERS</div>
-          <div class="multipliers">
-            <div class="multiplier">
-              <div class="multiplier-value" id="multTier">1.0x</div>
-              <div class="multiplier-label">Tier</div>
+        <!-- Right Column -->
+        <div>
+          <!-- Recent Activity -->
+          <div class="card">
+            <div class="card-title">
+              Recent Activity
+              <a href="history.html">View All</a>
             </div>
-            <div class="multiplier">
-              <div class="multiplier-value" id="multStreak">1.0x</div>
-              <div class="multiplier-label">Streak</div>
-            </div>
-            <div class="multiplier">
-              <div class="multiplier-value" id="multLevel">1.0x</div>
-              <div class="multiplier-label">Level</div>
-            </div>
-            <div class="multiplier">
-              <div class="multiplier-value" id="multTotal">1.0x</div>
-              <div class="multiplier-label">Total</div>
+            <div id="recentActivity">
+              <div class="activity-item">
+                <div>
+                  <div class="activity-type">No recent activity</div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- Notifications -->
-      <div class="card">
-        <div class="card-title">NOTIFICATIONS <span id="unreadBadge" style="background: var(--green); color: var(--bg); padding: 2px 8px; border-radius: 10px; font-size: 10px; margin-left: 10px; display: none;">0</span></div>
-        <div class="notification-list" id="notificationList">
-          <div style="text-align: center; padding: 30px; color: var(--dark-green);">No notifications</div>
-        </div>
-        <div style="margin-top: 15px;">
-          <button class="btn" onclick="markAllRead()">MARK ALL READ</button>
-        </div>
-      </div>
-
-      <!-- Recent Activity -->
-      <div class="card">
-        <div class="card-title">RECENT ACTIVITY</div>
-        <div id="recentActivity" style="max-height: 200px; overflow-y: auto;">
-          <div style="text-align: center; padding: 30px; color: var(--dark-green);">No recent activity</div>
+          <!-- Quick Stats -->
+          <div class="card">
+            <div class="card-title">Performance</div>
+            <div class="progress-section">
+              <div class="progress-header">
+                <span class="progress-label">Avg Response Time</span>
+                <span class="progress-value" id="avgResponse">-- ms</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill blue" id="responseBar" style="width: 50%"></div>
+              </div>
+            </div>
+            <div class="progress-section">
+              <div class="progress-header">
+                <span class="progress-label">Quality Score</span>
+                <span class="progress-value" id="qualityScore">--%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" id="qualityBar" style="width: 0%"></div>
+              </div>
+            </div>
+            <div class="progress-section">
+              <div class="progress-header">
+                <span class="progress-label">Success Rate</span>
+                <span class="progress-value" id="successRate">--%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" id="successBar" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-
-    <footer>
-      <p>TaoNet - Decentralized AI Inference Network</p>
-    </footer>
   </div>
 
   <script>
-    const API_URL = 'https://api.taonet.fun';
-    let connectedAddress = null;
-
-    window.onload = () => {
-      const saved = localStorage.getItem('taonet_address');
-      if (saved) {
-        connectedAddress = saved;
-        showDashboard();
-      }
-    };
-
-    async function connectWallet() {
-      if (typeof window.ethereum === 'undefined') {
-        alert('Please install MetaMask');
-        return;
-      }
-
-      try {
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        connectedAddress = accounts[0].toLowerCase();
-        localStorage.setItem('taonet_address', connectedAddress);
-        showDashboard();
-      } catch (error) {
-        alert('Failed to connect wallet');
-      }
+    const API = 'https://api.taonet.fun';
+    
+    // Check for saved miner
+    const saved = localStorage.getItem('taonet_miner');
+    if (saved) {
+      const { minerId } = JSON.parse(saved);
+      loadDashboard(minerId);
     }
 
-    function showDashboard() {
-      document.getElementById('notConnected').style.display = 'none';
-      document.getElementById('connectedView').style.display = 'block';
-      loadProfile();
-      loadNotifications();
+    // Also try Phantom
+    if (window.solana && window.solana.isConnected) {
+      loadDashboard(window.solana.publicKey.toString());
     }
 
-    async function loadProfile() {
+    async function loadDashboard(minerId) {
+      document.getElementById('dashboardContent').classList.add('hidden');
+      document.getElementById('dashboardData').classList.remove('hidden');
+
       try {
-        const res = await fetch(`${API_URL}/api/game/${connectedAddress}/profile`);
+        const res = await fetch(`${API}/api/miners/${minerId}`);
+        if (!res.ok) return;
+
         const data = await res.json();
-        
-        document.getElementById('profileName').textContent = data.name || 'Miner';
-        document.getElementById('profileAddress').textContent = `${connectedAddress.slice(0, 10)}...${connectedAddress.slice(-6)}`;
-        document.getElementById('profileAvatar').textContent = (data.name || 'M')[0].toUpperCase();
-        
-        const tier = (data.stakingTier || 'bronze').toLowerCase();
-        const tierEl = document.getElementById('profileTier');
-        tierEl.textContent = tier.toUpperCase();
-        tierEl.className = `profile-tier tier-${tier}`;
-        
-        document.getElementById('profileLevel').textContent = data.level || 1;
-        document.getElementById('profileXp').textContent = data.xp || 0;
-        document.getElementById('profileXpNeeded').textContent = data.xpToNextLevel || 100;
-        
-        const xpPercent = data.xpToNextLevel > 0 ? (data.xp / data.xpToNextLevel * 100) : 0;
-        document.getElementById('xpFill').style.width = `${Math.min(100, xpPercent)}%`;
-        
-        document.getElementById('statTasks').textContent = data.tasksCompleted || 0;
-        document.getElementById('statReputation').textContent = data.reputation || 0;
-        document.getElementById('statRewards').textContent = data.totalRewards || 0;
-        
-        document.getElementById('streakDays').textContent = data.currentStreak || 0;
-        document.getElementById('longestStreak').textContent = data.longestStreak || 0;
-        
-        // Multipliers
-        const tierMult = { bronze: 1.0, silver: 1.25, gold: 1.5, platinum: 2.0, diamond: 3.0 }[tier] || 1.0;
-        const streakMult = Math.min(2.0, 1 + (data.currentStreak || 0) * 0.033);
-        const levelMult = 1 + ((data.level || 1) - 1) * 0.05;
-        const totalMult = tierMult * streakMult * levelMult;
-        
-        document.getElementById('multTier').textContent = `${tierMult.toFixed(2)}x`;
-        document.getElementById('multStreak').textContent = `${streakMult.toFixed(2)}x`;
-        document.getElementById('multLevel').textContent = `${levelMult.toFixed(2)}x`;
-        document.getElementById('multTotal').textContent = `${totalMult.toFixed(2)}x`;
-        
+        const miner = data.miner;
+
+        if (miner) {
+          document.getElementById('totalEarned').textContent = (miner.totalRewards || 0).toLocaleString();
+          document.getElementById('totalTasks').textContent = (miner.tasksCompleted || 0).toLocaleString();
+          document.getElementById('streak').textContent = miner.streak || 0;
+          
+          // Tier
+          const tier = miner.tier || 'bronze';
+          const tierBadge = document.getElementById('tierBadge');
+          tierBadge.className = 'tier-badge ' + tier;
+          tierBadge.textContent = tier.charAt(0).toUpperCase() + tier.slice(1);
+
+          // Level
+          document.getElementById('currentLevel').textContent = miner.level || 1;
+          document.getElementById('currentXP').textContent = miner.xp || 0;
+          const nextXP = 100 * Math.pow(1.5, (miner.level || 1));
+          document.getElementById('nextLevelXP').textContent = Math.round(nextXP);
+          const xpPercent = Math.min(100, ((miner.xp || 0) / nextXP) * 100);
+          document.getElementById('xpProgressBar').style.width = xpPercent + '%';
+
+          // Performance
+          if (miner.avgResponseTime) {
+            document.getElementById('avgResponse').textContent = Math.round(miner.avgResponseTime) + ' ms';
+          }
+          if (miner.qualityScore) {
+            document.getElementById('qualityScore').textContent = miner.qualityScore + '%';
+            document.getElementById('qualityBar').style.width = miner.qualityScore + '%';
+          }
+          if (miner.successRate) {
+            document.getElementById('successRate').textContent = miner.successRate + '%';
+            document.getElementById('successBar').style.width = miner.successRate + '%';
+          }
+        }
+
         // Load rank
-        const rankRes = await fetch(`${API_URL}/api/miners/leaderboard?limit=100`);
-        const rankData = await rankRes.json();
-        const rank = (rankData.miners || []).findIndex(m => m.address.toLowerCase() === connectedAddress) + 1;
-        document.getElementById('statRank').textContent = rank > 0 ? `#${rank}` : '--';
-        
-      } catch (error) {
-        console.error('Failed to load profile:', error);
+        try {
+          const rankRes = await fetch(`${API}/api/miners/${minerId}/rank`);
+          if (rankRes.ok) {
+            const rankData = await rankRes.json();
+            document.getElementById('rank').textContent = '#' + (rankData.rank || '--');
+          }
+        } catch(e) {}
+
+      } catch(e) {
+        console.error(e);
       }
     }
 
-    async function loadNotifications() {
-      try {
-        const res = await fetch(`${API_URL}/api/notifications/${connectedAddress}`);
-        const data = await res.json();
-        
-        const badge = document.getElementById('unreadBadge');
-        if (data.unreadCount > 0) {
-          badge.textContent = data.unreadCount;
-          badge.style.display = 'inline';
-        } else {
-          badge.style.display = 'none';
-        }
-        
-        const list = document.getElementById('notificationList');
-        if (!data.notifications || data.notifications.length === 0) {
-          list.innerHTML = '<div style="text-align: center; padding: 30px; color: var(--dark-green);">No notifications</div>';
-          return;
-        }
-        
-        const icons = {
-          achievement_unlocked: '[ACH]',
-          jackpot_won: '[JP]',
-          level_up: '[LVL]',
-          streak_milestone: '[STR]',
-          reward_received: '[RWD]',
-          referral_joined: '[REF]',
-          system: '[SYS]'
-        };
-        
-        list.innerHTML = data.notifications.map(n => `
-          <div class="notification ${n.read ? '' : 'unread'}" onclick="markRead('${n._id}')">
-            <div class="notification-icon">${icons[n.type] || '[N]'}</div>
-            <div class="notification-content">
-              <div class="notification-title">${n.title}</div>
-              <div class="notification-message">${n.message}</div>
-              <div class="notification-time">${new Date(n.createdAt).toLocaleString()}</div>
-            </div>
-          </div>
-        `).join('');
-        
-      } catch (error) {
-        console.error('Failed to load notifications:', error);
-      }
-    }
-
-    async function markRead(id) {
-      await fetch(`${API_URL}/api/notifications/${connectedAddress}/read/${id}`, { method: 'POST' });
-      loadNotifications();
-    }
-
-    async function markAllRead() {
-      await fetch(`${API_URL}/api/notifications/${connectedAddress}/read-all`, { method: 'POST' });
-      loadNotifications();
-    }
-
-    async function claimDailyBonus() {
-      try {
-        const res = await fetch(`${API_URL}/api/game/${connectedAddress}/daily-bonus`, { method: 'POST' });
-        const data = await res.json();
-        
-        if (data.success) {
-          alert(`Daily bonus claimed! +${data.amount} tokens, +${data.xp} XP`);
-          loadProfile();
-          loadNotifications();
-        } else {
-          alert(data.error || 'Already claimed today');
-        }
-      } catch (error) {
-        alert('Failed to claim bonus');
-      }
-    }
-
-    // Auto refresh
-    setInterval(() => {
-      if (connectedAddress) {
-        loadProfile();
-        loadNotifications();
-      }
-    }, 60000);
+    // Style fix
+    document.querySelector('.hidden')?.classList.remove('hidden');
   </script>
+  
+  <style>.hidden { display: none; }</style>
 </body>
 </html>
