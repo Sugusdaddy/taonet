@@ -16,8 +16,8 @@ export default function Leaderboard() {
 
   async function loadData() {
     const [minersData, statsData] = await Promise.all([
-      api.get(`/miners/leaderboard?sortBy=${sortBy}&limit=50`),
-      api.get('/stats')
+      api.get(`/api/miners/leaderboard?sortBy=${sortBy}&limit=50`),
+      api.get('/api/stats')
     ]);
     if (minersData) setMiners(minersData);
     if (statsData) setStats(statsData);

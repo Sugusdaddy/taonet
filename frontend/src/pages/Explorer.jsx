@@ -16,8 +16,8 @@ export default function Explorer() {
 
   async function loadData() {
     const [proofsData, statsData] = await Promise.all([
-      api.get('/proofs?limit=20'),
-      api.get('/proofs/stats')
+      api.get('/api/proofs?limit=20'),
+      api.get('/api/proofs/stats')
     ]);
     if (proofsData) setProofs(proofsData);
     if (statsData) setStats(statsData);
