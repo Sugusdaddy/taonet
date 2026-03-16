@@ -19,7 +19,8 @@ export default function Explorer() {
       api.get('/api/proofs?limit=20'),
       api.get('/api/proofs/stats')
     ]);
-    if (proofsData) setProofs(proofsData);
+    if (proofsData?.proofs) setProofs(proofsData.proofs);
+    else if (Array.isArray(proofsData)) setProofs(proofsData);
     if (statsData) setStats(statsData);
     setLoading(false);
   }

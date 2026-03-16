@@ -19,7 +19,8 @@ export default function Leaderboard() {
       api.get(`/api/miners/leaderboard?sortBy=${sortBy}&limit=50`),
       api.get('/api/stats')
     ]);
-    if (minersData) setMiners(minersData);
+    if (minersData?.leaderboard) setMiners(minersData.leaderboard);
+    else if (Array.isArray(minersData)) setMiners(minersData);
     if (statsData) setStats(statsData);
     setLoading(false);
   }
