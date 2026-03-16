@@ -293,7 +293,7 @@ class RewardEngine {
     }
     
     const miners = await Miner.find({
-      'stats.completedTasks': { $gt: 0 },
+      'stats.completedTasks': { $gt: 0 }, status: { $exists: true },
       ...dateFilter
     }).lean();
     
@@ -317,6 +317,7 @@ class RewardEngine {
       return {
         address: m.address,
         name: m.name || m.address.slice(0, 8),
+        status: m.status || 'offline',
         level: m.level,
         xp: m.xp,
         reputation: m.reputation,

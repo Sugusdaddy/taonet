@@ -177,6 +177,7 @@ export default function Leaderboard() {
                   <th>Tasks</th>
                   <th>Rewards</th>
                   <th>Multiplier</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -243,6 +244,12 @@ export default function Leaderboard() {
                       <td>
                         <span className={`multiplier-badge ${parseFloat(miner.totalMultiplier) > 1.5 ? 'high' : ''}`}>
                           {miner.totalMultiplier}x
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`status-badge ${miner.status}`}>
+                          <span className="status-dot"></span>
+                          {miner.status}
                         </span>
                       </td>
                     </tr>

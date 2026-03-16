@@ -21,6 +21,16 @@ const TaskSchema = new mongoose.Schema({
     required: true
   },
   
+  // Difficulty system
+  difficulty: { 
+    type: String, 
+    enum: ['novice', 'apprentice', 'journeyman', 'expert', 'master', 'grandmaster'], 
+    default: 'novice' 
+  },
+  difficultyName: { type: String, default: 'Novice' },
+  rewardMultiplier: { type: Number, default: 1.0 },
+  xpMultiplier: { type: Number, default: 1.0 },
+  
   // Additional parameters
   params: {
     model: String,
