@@ -17,7 +17,8 @@ const RewardSchema = new mongoose.Schema({
       'streak_bonus',   // Streak milestone bonus
       'level_up',       // Level up bonus
       'airdrop',        // Promotional airdrop
-      'bonus'           // Generic bonus
+      'bonus',          // Generic bonus
+      'task_winner'     // Task winner reward
     ],
     required: true
   },

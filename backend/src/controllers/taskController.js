@@ -1,4 +1,6 @@
 const Task = require('../models/Task');
+const InferenceProof = require("../models/InferenceProof");
+const activityRoutes = require('../routes/activity');
 const Miner = require('../models/Miner');
 const Reward = require('../models/Reward');
 const Jackpot = require('../models/Jackpot');
@@ -133,6 +135,9 @@ class TaskController {
         responseTime
       });
       
+      // Calculate response time for proof
+      
+
       // Update miner stats
       miner.stats.totalTasks += 1;
       miner.status = 'online';
@@ -331,7 +336,29 @@ class TaskController {
       task.rewardDistributed = true;
       await task.save();
       
+      // Calculate response time for proof
+      const responseTime = (winningResponse.submittedAt && task.assignedAt) ? new Date(winningResponse.submittedAt) - new Date(task.assignedAt) : winningResponse.processingTime || 1000;
+      
+
       // Update miner stats
+      // Create verifiable inference proof
+      try {
+        const proof = await InferenceProof.createProof(
+          task._id,
+          miner.address,
+          task.prompt,
+          winningResponse.response?.response || winningResponse.response || "",
+          {
+            tokensGenerated: winningResponse.response?.tokensGenerated || 0,
+            processingTimeMs: responseTime,
+            model: "Llama-3.2-1B"
+          }
+        );
+        console.log(`Inference proof created: block #${proof.blockNumber} hash ${proof.blockHash.slice(0,18)}...`);
+      } catch (proofErr) {
+        console.error("Failed to create proof:", proofErr.message);
+      }
+
       miner.stats.completedTasks += 1;
       miner.stats.successfulTasks += 1;
       miner.stats.totalRewards = (
@@ -339,7 +366,7 @@ class TaskController {
       ).toString();
       
       // Update avg response time
-      const responseTime = new Date(winningResponse.submittedAt) - new Date(task.assignedAt);
+      
       miner.stats.avgResponseTime = Math.floor(
         (miner.stats.avgResponseTime * (miner.stats.completedTasks - 1) + responseTime) / 
         miner.stats.completedTasks

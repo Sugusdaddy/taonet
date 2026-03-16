@@ -1,4 +1,6 @@
 const Miner = require('../models/Miner');
+const { TaskController } = require('./taskController');
+const activityRoutes = require('../routes/activity');
 const { ethers } = require('ethers');
 
 class MinerController {
@@ -38,6 +40,7 @@ class MinerController {
         miner.hardware = hardware || miner.hardware;
         miner.lastSeen = new Date();
         await miner.save();
+    await activityRoutes.logActivity('miner_joined', miner);
       } else {
         // Create new miner
         miner = new Miner({
@@ -46,6 +49,7 @@ class MinerController {
           hardware
         });
         await miner.save();
+    await activityRoutes.logActivity('miner_joined', miner);
       }
       
       res.json({ 
@@ -77,7 +81,7 @@ class MinerController {
         await this.handleHeartbeat(ws, address);
         break;
       case 'task_response':
-        await this.handleTaskResponse(ws, address, payload);
+        await this.handleTaskResponse(ws, ws.minerAddress, payload || data);
         break;
       case 'status_update':
         await this.handleStatusUpdate(ws, address, payload);
@@ -116,12 +120,14 @@ class MinerController {
           isEligible: true
         });
         await miner.save();
+    await activityRoutes.logActivity('miner_joined', miner);
       }
       
       // Update miner status
       miner.status = 'online';
       miner.lastSeen = new Date();
       await miner.save();
+    await activityRoutes.logActivity('miner_joined', miner);
       
       // Add to active miners
       global.activeMiners.set(address.toLowerCase(), {
@@ -148,6 +154,10 @@ class MinerController {
   
   // Handle heartbeat from miner
   static async handleHeartbeat(ws, address) {
+    if (!address) {
+      ws.send(JSON.stringify({ type: "heartbeat_ack" }));
+      return;
+    }
     const minerEntry = global.activeMiners.get(address.toLowerCase());
     if (minerEntry) {
       minerEntry.lastHeartbeat = new Date();
@@ -160,20 +170,23 @@ class MinerController {
   }
   
   // Handle task response from miner
-  static async handleTaskResponse(ws, address, payload) {
+    static async handleTaskResponse(ws, address, payload) {
     try {
       const { taskId, response, processingTime } = payload;
       const Task = require('../models/Task');
       
+      console.log('[Miner] Task response from', (address || 'unknown').slice(0,8), 'for task', taskId?.slice(-6));
+      
       const task = await Task.findById(taskId);
       if (!task) {
+        console.log('[Miner] Task not found:', taskId);
         ws.send(JSON.stringify({ type: 'task_error', error: 'Task not found' }));
         return;
       }
       
       // Add response
       task.responses.push({
-        miner: address.toLowerCase(),
+        miner: (address || ws.minerAddress || 'unknown').toLowerCase(),
         response,
         submittedAt: new Date(),
         processingTime
@@ -183,20 +196,36 @@ class MinerController {
       
       // Update miner stats
       await Miner.updateOne(
-        { address: address.toLowerCase() },
+        { address: (address || ws.minerAddress || 'unknown').toLowerCase() },
         { 
           $inc: { 'stats.completedTasks': 1 },
           status: 'online'
         }
       );
       
+      // Mark miner as available for new tasks
+      ws.isBusy = false;
+      ws.currentTaskId = null;
+      
       ws.send(JSON.stringify({ 
         type: 'task_received', 
         taskId,
         message: 'Response received, pending validation'
       }));
+      
+      console.log('[Miner] Task', taskId.slice(-6), 'completed, miner available again');
+
+      // If task has enough responses, evaluate and create proof
+      if (task.responses.length >= (task.requiredResponses || 1)) {
+        task.status = 'evaluating';
+        await task.save();
+        
+        console.log('[Miner] Evaluating task', taskId.slice(-6));
+        TaskController.completeTask(task._id, task.responses[0]);
+      }
     } catch (error) {
-      console.error('Task response error:', error);
+      console.error('[Miner] Task response error:', error.message);
+      ws.isBusy = false;
       ws.send(JSON.stringify({ type: 'task_error', error: 'Failed to process response' }));
     }
   }
@@ -262,7 +291,7 @@ class MinerController {
           sortField = { 'stats.totalRewards': -1 };
       }
       
-      const miners = await Miner.find({ 'stats.completedTasks': { $gt: 0 } })
+      const miners = await Miner.find({})
         .sort(sortField)
         .limit(parseInt(limit))
         .select('address name stats reputation status');
