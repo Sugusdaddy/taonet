@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard';
 import Leaderboard from './pages/Leaderboard';
 import Explorer from './pages/Explorer';
 import Rewards from './pages/Rewards';
+import Playground from './pages/Playground';
 import Docs from './pages/Docs';
 import './styles/index.css';
 
@@ -26,6 +27,7 @@ export default function App() {
               <Route path="/leaderboard" element={<Leaderboard />} />
               <Route path="/explorer" element={<Explorer />} />
               <Route path="/rewards" element={<Rewards />} />
+              <Route path="/playground" element={<Playground />} />
               <Route path="/docs" element={<Docs />} />
             </Routes>
             <Footer />

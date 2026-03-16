@@ -12,6 +12,7 @@ export default function Header() {
   const navLinks = [
     { path: '/', label: 'Home' },
     { path: '/mine', label: 'Mine' },
+    { path: '/playground', label: 'SolanaGPT' },
     { path: '/explorer', label: 'Explorer' },
     { path: '/leaderboard', label: 'Leaderboard' },
     { path: '/docs', label: 'Docs' },
