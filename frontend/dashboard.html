@@ -5,235 +5,266 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard - TaoNet</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" type="image/svg+xml" href="/icon.svg">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="container header-inner">
+      <a href="/" class="logo">TaoNet</a>
+      <nav class="nav">
+        <a href="mine.html">Mine</a>
+        <a href="dashboard.html" class="active">Dashboard</a>
+        <a href="leaderboard.html">Leaderboard</a>
+        <a href="rewards.html">Rewards</a>
+      </nav>
+      <button class="wallet-btn" data-wallet-btn onclick="handleWalletClick()">Connect Wallet</button>
+      <button class="menu-toggle" onclick="document.querySelector('.nav').classList.toggle('open')">☰</button>
+    </div>
+  </header>
+
+  <main class="container" style="padding-top: 40px; padding-bottom: 60px;">
+    <!-- Not Connected View -->
+    <div id="notConnected">
+      <div style="text-align: center; padding: 80px 20px;">
+        <h1 style="font-size: 2rem; margin-bottom: 15px;">Your Dashboard</h1>
+        <p class="text-dim" style="margin-bottom: 30px;">Connect your wallet to view your mining stats</p>
+        <button class="btn btn-primary btn-lg" onclick="handleWalletClick()">Connect Wallet</button>
+        <p style="margin-top: 20px; font-size: 0.9rem;" class="text-dim">
+          Or <a href="mine.html" style="color: var(--green);">start mining in demo mode</a>
+        </p>
+      </div>
+    </div>
+
+    <!-- Connected View -->
+    <div id="dashboardView" class="hidden">
+      <h1 style="font-size: 2rem; margin-bottom: 30px;">Your Dashboard</h1>
+      
+      <!-- Main Stats -->
+      <div class="stats-grid-4">
+        <div class="stat-card">
+          <div class="stat-label">Total Earned</div>
+          <div class="stat-value green" id="totalEarned">0</div>
+          <div class="stat-sub" id="earnedToday">+0 today</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Tasks Done</div>
+          <div class="stat-value" id="totalTasks">0</div>
+          <div class="stat-sub" id="tasksToday">+0 today</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Current Streak</div>
+          <div class="stat-value gold" id="streak">0</div>
+          <div class="stat-sub">days</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Rank</div>
+          <div class="stat-value blue" id="rank">#-</div>
+          <div class="stat-sub" id="rankChange">-</div>
+        </div>
+      </div>
+
+      <!-- Two Column -->
+      <div class="two-col">
+        <!-- Left -->
+        <div>
+          <!-- Tier Card -->
+          <div class="card mb-20">
+            <div class="card-header">
+              <h3 class="card-title">Your Tier</h3>
+            </div>
+            <div class="tier-display" id="tierDisplay">
+              <span class="tier-badge-lg bronze" id="tierBadge">Bronze</span>
+              <span class="tier-mult-display" id="tierMult">1x rewards</span>
+            </div>
+            <div class="progress-section">
+              <div class="progress-header">
+                <span class="text-dim">Progress to next tier</span>
+                <span id="tierProgressText">0 / 10,000</span>
+              </div>
+              <div class="progress">
+                <div class="progress-fill" id="tierProgress" style="width: 0%;"></div>
+              </div>
+              <p class="text-dim" style="font-size: 0.8rem; margin-top: 10px;" id="tierHint">Hold more tokens to unlock Silver tier</p>
+            </div>
+          </div>
+
+          <!-- Level Card -->
+          <div class="card mb-20">
+            <div class="card-header">
+              <h3 class="card-title">Level <span id="currentLevel">1</span></h3>
+            </div>
+            <div class="progress-section">
+              <div class="progress-header">
+                <span class="text-dim">Experience</span>
+                <span><span id="currentXP">0</span> / <span id="nextLevelXP">100</span> XP</span>
+              </div>
+              <div class="progress">
+                <div class="progress-fill" id="xpProgress" style="width: 0%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Achievements -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Recent Achievements</h3>
+              <a href="achievements.html" style="color: var(--green); font-size: 0.85rem;">View All</a>
+            </div>
+            <div id="achievementsList">
+              <div class="achievement-item">
+                <div class="achievement-icon">?</div>
+                <div>
+                  <div class="achievement-name">Complete tasks to unlock</div>
+                  <div class="achievement-desc text-dim">Achievements give bonus rewards</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right -->
+        <div>
+          <!-- Recent Activity -->
+          <div class="card mb-20">
+            <div class="card-header">
+              <h3 class="card-title">Recent Activity</h3>
+              <a href="history.html" style="color: var(--green); font-size: 0.85rem;">View All</a>
+            </div>
+            <div id="activityList">
+              <div class="activity-row">
+                <span class="text-dim">No recent activity</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Performance -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Performance</h3>
+            </div>
+            <div class="progress-section">
+              <div class="progress-header">
+                <span class="text-dim">Avg Response Time</span>
+                <span id="avgResponse">- ms</span>
+              </div>
+              <div class="progress">
+                <div class="progress-fill blue" id="responseProgress" style="width: 50%;"></div>
+              </div>
+            </div>
+            <div class="progress-section">
+              <div class="progress-header">
+                <span class="text-dim">Quality Score</span>
+                <span id="qualityScore">-%</span>
+              </div>
+              <div class="progress">
+                <div class="progress-fill" id="qualityProgress" style="width: 0%;"></div>
+              </div>
+            </div>
+            <div class="progress-section" style="margin-bottom: 0;">
+              <div class="progress-header">
+                <span class="text-dim">Success Rate</span>
+                <span id="successRate">-%</span>
+              </div>
+              <div class="progress">
+                <div class="progress-fill" id="successProgress" style="width: 0%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
   <style>
-    :root {
-      --green: #00ff41;
-      --green-dim: #00cc33;
-      --bg: #0a0a0a;
-      --card: #111;
-      --border: #222;
-      --text: #fff;
-      --text-dim: #888;
-      --gold: #ffd700;
-      --blue: #0096ff;
-      --purple: #9966ff;
-      --red: #ff4444;
-    }
-    
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Inter', -apple-system, sans-serif;
-      line-height: 1.6;
-    }
-    
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    
-    header {
-      padding: 20px 0;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 30px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    
-    .logo {
-      font-size: 24px;
-      font-weight: 700;
-      color: var(--green);
-      text-decoration: none;
-    }
-    
-    nav {
-      display: flex;
-      gap: 25px;
-    }
-    
-    nav a {
-      color: var(--text-dim);
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 500;
-    }
-    
-    nav a:hover, nav a.active { color: var(--text); }
-    
-    h1 {
-      font-size: 28px;
-      margin-bottom: 30px;
-    }
-    
-    /* Stats Grid */
-    .stats-grid {
+    .stats-grid-4 {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 15px;
       margin-bottom: 30px;
     }
-    
     @media (max-width: 768px) {
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .stats-grid-4 { grid-template-columns: repeat(2, 1fr); }
     }
     
     .stat-card {
-      background: var(--card);
+      background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 20px;
     }
-    
     .stat-label {
-      font-size: 12px;
+      font-size: 0.75rem;
       color: var(--text-dim);
       text-transform: uppercase;
       margin-bottom: 8px;
     }
-    
     .stat-value {
-      font-size: 28px;
+      font-size: 1.75rem;
       font-weight: 700;
     }
-    
     .stat-value.green { color: var(--green); }
     .stat-value.gold { color: var(--gold); }
     .stat-value.blue { color: var(--blue); }
-    
-    .stat-change {
-      font-size: 12px;
+    .stat-sub {
+      font-size: 0.8rem;
+      color: var(--text-dim);
       margin-top: 5px;
     }
     
-    .stat-change.up { color: var(--green); }
-    .stat-change.down { color: var(--red); }
-    
-    /* Two Column Layout */
     .two-col {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 20px;
     }
-    
     @media (max-width: 768px) {
       .two-col { grid-template-columns: 1fr; }
     }
     
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-    
-    .card-title {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 20px;
+    .tier-display {
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .tier-badge-lg {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 1rem;
+    }
+    .tier-badge-lg.bronze { background: rgba(205, 127, 50, 0.15); color: var(--bronze); border: 1px solid var(--bronze); }
+    .tier-badge-lg.silver { background: rgba(192, 192, 192, 0.15); color: var(--silver); border: 1px solid var(--silver); }
+    .tier-badge-lg.gold { background: rgba(255, 215, 0, 0.15); color: var(--gold); border: 1px solid var(--gold); }
+    .tier-badge-lg.platinum { background: rgba(229, 228, 226, 0.15); color: var(--platinum); border: 1px solid var(--platinum); }
+    .tier-badge-lg.diamond { background: rgba(185, 242, 255, 0.15); color: var(--diamond); border: 1px solid var(--diamond); }
+    
+    .tier-mult-display {
+      color: var(--text-dim);
+      font-size: 0.9rem;
     }
     
-    .card-title a {
-      color: var(--green);
-      text-decoration: none;
-      font-size: 13px;
-      font-weight: 500;
-    }
-    
-    /* Progress Bar */
     .progress-section {
       margin-bottom: 20px;
     }
-    
     .progress-header {
       display: flex;
       justify-content: space-between;
+      font-size: 0.85rem;
       margin-bottom: 8px;
-      font-size: 13px;
     }
-    
-    .progress-label { color: var(--text-dim); }
-    .progress-value { font-weight: 600; }
-    
-    .progress-bar {
-      height: 8px;
-      background: var(--border);
-      border-radius: 4px;
-      overflow: hidden;
-    }
-    
-    .progress-fill {
-      height: 100%;
-      background: var(--green);
-      border-radius: 4px;
-      transition: width 0.3s;
-    }
-    
-    .progress-fill.gold { background: var(--gold); }
     .progress-fill.blue { background: var(--blue); }
+    .progress-fill.gold { background: var(--gold); }
     
-    /* Tier Badge */
-    .tier-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 15px;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      margin-bottom: 15px;
-    }
-    
-    .tier-badge.bronze { background: rgba(205, 127, 50, 0.1); color: #cd7f32; border: 1px solid #cd7f32; }
-    .tier-badge.silver { background: rgba(192, 192, 192, 0.1); color: #c0c0c0; border: 1px solid #c0c0c0; }
-    .tier-badge.gold { background: rgba(255, 215, 0, 0.1); color: var(--gold); border: 1px solid var(--gold); }
-    .tier-badge.platinum { background: rgba(229, 228, 226, 0.1); color: #e5e4e2; border: 1px solid #e5e4e2; }
-    .tier-badge.diamond { background: rgba(185, 242, 255, 0.1); color: #b9f2ff; border: 1px solid #b9f2ff; }
-    
-    /* Recent Activity */
-    .activity-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 12px 0;
-      border-bottom: 1px solid var(--border);
-      font-size: 13px;
-    }
-    
-    .activity-item:last-child { border-bottom: none; }
-    
-    .activity-type {
-      color: var(--text-dim);
-    }
-    
-    .activity-reward {
-      color: var(--green);
-      font-weight: 600;
-    }
-    
-    .activity-time {
-      color: var(--text-dim);
-      font-size: 11px;
-    }
-    
-    /* Achievement */
-    .achievement {
+    .achievement-item {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 15px;
       padding: 12px 0;
       border-bottom: 1px solid var(--border);
     }
-    
-    .achievement:last-child { border-bottom: none; }
-    
+    .achievement-item:last-child { border-bottom: none; }
     .achievement-icon {
       width: 40px;
       height: 40px;
@@ -242,268 +273,134 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
+      font-size: 1.2rem;
     }
+    .achievement-icon.unlocked { background: var(--green-bg); }
+    .achievement-name { font-weight: 500; }
+    .achievement-desc { font-size: 0.8rem; }
     
-    .achievement-icon.unlocked {
-      background: rgba(0, 255, 65, 0.1);
+    .activity-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
     }
-    
-    .achievement-name {
-      font-weight: 500;
-      font-size: 14px;
-    }
-    
-    .achievement-desc {
-      font-size: 12px;
-      color: var(--text-dim);
-    }
-    
-    /* No data */
-    .no-data {
-      text-align: center;
-      padding: 40px;
-      color: var(--text-dim);
-    }
-    
-    .btn {
-      display: inline-block;
-      background: var(--green);
-      color: var(--bg);
-      padding: 12px 24px;
-      border-radius: 8px;
-      text-decoration: none;
-      font-weight: 600;
-      font-size: 14px;
-    }
+    .activity-row:last-child { border-bottom: none; }
+    .activity-reward { color: var(--green); font-weight: 600; }
   </style>
-</head>
-<body>
-  <div class="container">
-    <header>
-      <a href="index.html" class="logo">TaoNet</a>
-      <nav>
-        <a href="mine.html">Mine</a>
-        <a href="dashboard.html" class="active">Dashboard</a>
-        <a href="leaderboard.html">Leaderboard</a>
-        <a href="rewards.html">Rewards</a>
-      </nav>
-    </header>
 
-    <h1>Your Dashboard</h1>
-
-    <div id="dashboardContent">
-      <div class="no-data">
-        <p style="margin-bottom: 20px;">Connect your wallet to view your dashboard</p>
-        <a href="mine.html" class="btn">Start Mining</a>
-      </div>
-    </div>
-
-    <div id="dashboardData" class="hidden">
-      <!-- Stats -->
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-label">Total Earned</div>
-          <div class="stat-value green" id="totalEarned">0</div>
-          <div class="stat-change up" id="earnedChange">--</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Tasks Completed</div>
-          <div class="stat-value" id="totalTasks">0</div>
-          <div class="stat-change" id="tasksChange">--</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Current Streak</div>
-          <div class="stat-value gold" id="streak">0</div>
-          <div class="stat-change">days</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Leaderboard Rank</div>
-          <div class="stat-value blue" id="rank">#--</div>
-        </div>
-      </div>
-
-      <div class="two-col">
-        <!-- Left Column -->
-        <div>
-          <!-- Tier Progress -->
-          <div class="card">
-            <div class="card-title">Your Tier</div>
-            <div class="tier-badge bronze" id="tierBadge">Bronze</div>
-            <div class="progress-section">
-              <div class="progress-header">
-                <span class="progress-label">Progress to next tier</span>
-                <span class="progress-value" id="tierProgress">0%</span>
-              </div>
-              <div class="progress-bar">
-                <div class="progress-fill gold" id="tierProgressBar" style="width: 0%"></div>
-              </div>
-            </div>
-            <p style="font-size: 12px; color: var(--text-dim);" id="tierNextInfo">Hold more tokens to unlock higher tiers</p>
-          </div>
-
-          <!-- Level Progress -->
-          <div class="card">
-            <div class="card-title">Level <span id="currentLevel">1</span></div>
-            <div class="progress-section">
-              <div class="progress-header">
-                <span class="progress-label">XP Progress</span>
-                <span class="progress-value"><span id="currentXP">0</span> / <span id="nextLevelXP">100</span></span>
-              </div>
-              <div class="progress-bar">
-                <div class="progress-fill" id="xpProgressBar" style="width: 0%"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Recent Achievements -->
-          <div class="card">
-            <div class="card-title">
-              Recent Achievements
-              <a href="achievements.html">View All</a>
-            </div>
-            <div id="recentAchievements">
-              <div class="achievement">
-                <div class="achievement-icon">?</div>
-                <div>
-                  <div class="achievement-name">Complete tasks to unlock</div>
-                  <div class="achievement-desc">Achievements reward your progress</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Right Column -->
-        <div>
-          <!-- Recent Activity -->
-          <div class="card">
-            <div class="card-title">
-              Recent Activity
-              <a href="history.html">View All</a>
-            </div>
-            <div id="recentActivity">
-              <div class="activity-item">
-                <div>
-                  <div class="activity-type">No recent activity</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Quick Stats -->
-          <div class="card">
-            <div class="card-title">Performance</div>
-            <div class="progress-section">
-              <div class="progress-header">
-                <span class="progress-label">Avg Response Time</span>
-                <span class="progress-value" id="avgResponse">-- ms</span>
-              </div>
-              <div class="progress-bar">
-                <div class="progress-fill blue" id="responseBar" style="width: 50%"></div>
-              </div>
-            </div>
-            <div class="progress-section">
-              <div class="progress-header">
-                <span class="progress-label">Quality Score</span>
-                <span class="progress-value" id="qualityScore">--%</span>
-              </div>
-              <div class="progress-bar">
-                <div class="progress-fill" id="qualityBar" style="width: 0%"></div>
-              </div>
-            </div>
-            <div class="progress-section">
-              <div class="progress-header">
-                <span class="progress-label">Success Rate</span>
-                <span class="progress-value" id="successRate">--%</span>
-              </div>
-              <div class="progress-bar">
-                <div class="progress-fill" id="successBar" style="width: 0%"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
+  <script src="taonet.js"></script>
   <script>
-    const API = 'https://api.taonet.fun';
-    
-    // Check for saved miner
-    const saved = localStorage.getItem('taonet_miner');
-    if (saved) {
-      const { minerId } = JSON.parse(saved);
-      loadDashboard(minerId);
-    }
-
-    // Also try Phantom
-    if (window.solana && window.solana.isConnected) {
-      loadDashboard(window.solana.publicKey.toString());
-    }
-
-    async function loadDashboard(minerId) {
-      document.getElementById('dashboardContent').classList.add('hidden');
-      document.getElementById('dashboardData').classList.remove('hidden');
-
-      try {
-        const res = await fetch(`${API}/api/miners/${minerId}`);
-        if (!res.ok) return;
-
-        const data = await res.json();
-        const miner = data.miner;
-
-        if (miner) {
-          document.getElementById('totalEarned').textContent = (miner.totalRewards || 0).toLocaleString();
-          document.getElementById('totalTasks').textContent = (miner.tasksCompleted || 0).toLocaleString();
-          document.getElementById('streak').textContent = miner.streak || 0;
-          
-          // Tier
-          const tier = miner.tier || 'bronze';
-          const tierBadge = document.getElementById('tierBadge');
-          tierBadge.className = 'tier-badge ' + tier;
-          tierBadge.textContent = tier.charAt(0).toUpperCase() + tier.slice(1);
-
-          // Level
-          document.getElementById('currentLevel').textContent = miner.level || 1;
-          document.getElementById('currentXP').textContent = miner.xp || 0;
-          const nextXP = 100 * Math.pow(1.5, (miner.level || 1));
-          document.getElementById('nextLevelXP').textContent = Math.round(nextXP);
-          const xpPercent = Math.min(100, ((miner.xp || 0) / nextXP) * 100);
-          document.getElementById('xpProgressBar').style.width = xpPercent + '%';
-
-          // Performance
-          if (miner.avgResponseTime) {
-            document.getElementById('avgResponse').textContent = Math.round(miner.avgResponseTime) + ' ms';
-          }
-          if (miner.qualityScore) {
-            document.getElementById('qualityScore').textContent = miner.qualityScore + '%';
-            document.getElementById('qualityBar').style.width = miner.qualityScore + '%';
-          }
-          if (miner.successRate) {
-            document.getElementById('successRate').textContent = miner.successRate + '%';
-            document.getElementById('successBar').style.width = miner.successRate + '%';
-          }
-        }
-
-        // Load rank
-        try {
-          const rankRes = await fetch(`${API}/api/miners/${minerId}/rank`);
-          if (rankRes.ok) {
-            const rankData = await rankRes.json();
-            document.getElementById('rank').textContent = '#' + (rankData.rank || '--');
-          }
-        } catch(e) {}
-
-      } catch(e) {
-        console.error(e);
+    async function handleWalletClick() {
+      if (TAONET.wallet) {
+        TAONET.disconnectWallet();
+        showNotConnected();
+        return;
+      }
+      
+      const addr = await TAONET.connectWallet();
+      if (addr) {
+        loadDashboard();
       }
     }
 
-    // Style fix
-    document.querySelector('.hidden')?.classList.remove('hidden');
+    function showNotConnected() {
+      document.getElementById('notConnected').classList.remove('hidden');
+      document.getElementById('dashboardView').classList.add('hidden');
+    }
+
+    function showDashboard() {
+      document.getElementById('notConnected').classList.add('hidden');
+      document.getElementById('dashboardView').classList.remove('hidden');
+    }
+
+    async function loadDashboard() {
+      // Check for demo miner
+      const savedState = localStorage.getItem('taonet_mining_state');
+      const savedMiner = localStorage.getItem('taonet_miner');
+      
+      let minerId = TAONET.wallet;
+      
+      if (!minerId && savedMiner) {
+        const miner = JSON.parse(savedMiner);
+        minerId = miner.address || miner._id;
+      }
+      
+      if (!minerId) {
+        showNotConnected();
+        return;
+      }
+      
+      showDashboard();
+      
+      // Load miner data
+      const miner = await TAONET.getMiner(minerId);
+      
+      if (miner) {
+        // Stats
+        document.getElementById('totalEarned').textContent = (miner.totalRewards || 0).toLocaleString();
+        document.getElementById('totalTasks').textContent = (miner.tasksCompleted || 0).toLocaleString();
+        document.getElementById('streak').textContent = miner.streak || 0;
+        
+        // Tier
+        const tier = miner.tier || 'bronze';
+        const tierBadge = document.getElementById('tierBadge');
+        tierBadge.className = 'tier-badge-lg ' + tier;
+        tierBadge.textContent = tier.charAt(0).toUpperCase() + tier.slice(1);
+        
+        const mults = { bronze: '1x', silver: '1.25x', gold: '1.5x', platinum: '2x', diamond: '3x' };
+        document.getElementById('tierMult').textContent = (mults[tier] || '1x') + ' rewards';
+        
+        // Level
+        document.getElementById('currentLevel').textContent = miner.level || 1;
+        document.getElementById('currentXP').textContent = miner.xp || 0;
+        const nextXP = Math.round(100 * Math.pow(1.5, (miner.level || 1)));
+        document.getElementById('nextLevelXP').textContent = nextXP;
+        const xpPct = Math.min(100, ((miner.xp || 0) / nextXP) * 100);
+        document.getElementById('xpProgress').style.width = xpPct + '%';
+        
+        // Performance
+        if (miner.avgResponseTime) {
+          document.getElementById('avgResponse').textContent = Math.round(miner.avgResponseTime) + ' ms';
+          const respPct = Math.max(0, 100 - (miner.avgResponseTime / 50)); // Lower is better
+          document.getElementById('responseProgress').style.width = respPct + '%';
+        }
+        if (miner.qualityScore !== undefined) {
+          document.getElementById('qualityScore').textContent = miner.qualityScore + '%';
+          document.getElementById('qualityProgress').style.width = miner.qualityScore + '%';
+        }
+        if (miner.successRate !== undefined) {
+          document.getElementById('successRate').textContent = miner.successRate + '%';
+          document.getElementById('successProgress').style.width = miner.successRate + '%';
+        }
+      }
+      
+      // Also update from mining state if demo
+      if (savedState) {
+        const state = JSON.parse(savedState);
+        document.getElementById('totalEarned').textContent = (state.tokens || 0).toLocaleString();
+        document.getElementById('totalTasks').textContent = (state.tasks || 0).toLocaleString();
+      }
+      
+      // Load rank
+      try {
+        const rankData = await TAONET.fetchAPI('/api/miners/' + minerId + '/rank');
+        if (rankData?.rank) {
+          document.getElementById('rank').textContent = '#' + rankData.rank;
+        }
+      } catch(e) {}
+    }
+
+    // Init
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        if (TAONET.wallet || localStorage.getItem('taonet_miner') || localStorage.getItem('taonet_mining_state')) {
+          loadDashboard();
+        }
+      }, 100);
+    });
   </script>
-  
-  <style>.hidden { display: none; }</style>
 </body>
 </html>
