@@ -1,122 +1,153 @@
 const express = require('express');
 const router = express.Router();
 const Task = require('../models/Task');
-const Miner = require('../models/Miner');
-const InferenceProof = require('../models/InferenceProof');
+const Knowledge = require('../models/Knowledge');
 
-// Solana-specialized system prompt
-const SOLANA_SYSTEM_PROMPT = `You are SolanaGPT, an expert AI assistant specialized in Solana blockchain development. You have deep knowledge of:
-- Solana architecture (accounts, programs, transactions, PDAs)
-- Anchor framework for smart contract development
-- Rust programming for Solana programs
-- SPL tokens and token programs
-- Metaplex for NFTs
-- Solana Web3.js and wallet adapters
-- DeFi protocols on Solana
-- Best practices for security and optimization
+// Search knowledge base for similar questions
+async function searchKnowledge(query) {
+  const queryLower = query.toLowerCase();
+  const words = queryLower.split(/\s+/).filter(w => w.length > 3);
+  
+  // Try exact match first
+  let match = await Knowledge.findOne({ questionLower: queryLower });
+  if (match) {
+    match.usageCount++;
+    await match.save();
+    return match;
+  }
+  
+  // Try text search
+  if (words.length > 0) {
+    const searchQuery = words.join(' ');
+    const results = await Knowledge.find(
+      { $text: { $search: searchQuery } },
+      { score: { $meta: 'textScore' } }
+    ).sort({ score: { $meta: 'textScore' } }).limit(5);
+    
+    if (results.length > 0 && results[0].answer) {
+      results[0].usageCount++;
+      await results[0].save();
+      return results[0];
+    }
+  }
+  
+  // Try keyword matching
+  for (const word of words) {
+    const keywordMatch = await Knowledge.findOne({
+      questionLower: { $regex: word, $options: 'i' },
+      answer: { $exists: true, $ne: '' }
+    });
+    if (keywordMatch) {
+      keywordMatch.usageCount++;
+      await keywordMatch.save();
+      return keywordMatch;
+    }
+  }
+  
+  return null;
+}
 
-Always provide practical, working code examples. Be concise but thorough.`;
-
-// Query the model
+// Query endpoint
 router.post('/query', async (req, res) => {
   try {
-    const { prompt, context, address } = req.body;
+    const { prompt, address } = req.body;
     
     if (!prompt) {
       return res.status(400).json({ error: 'Prompt required' });
     }
     
-    // Create task with Solana context
-    const fullPrompt = context 
-      ? `${SOLANA_SYSTEM_PROMPT}\n\nPrevious conversation:\n${context}\n\nUser: ${prompt}\n\nAssistant:`
-      : `${SOLANA_SYSTEM_PROMPT}\n\nUser: ${prompt}\n\nAssistant:`;
+    // First, search knowledge base
+    const knowledge = await searchKnowledge(prompt);
+    if (knowledge && knowledge.answer) {
+      console.log(`[Playground] Knowledge hit: "${prompt.slice(0,40)}..."`);
+      return res.json({
+        response: knowledge.answer,
+        miner: knowledge.minedBy || 'knowledge_base',
+        processingTime: 0,
+        proofId: knowledge.taskId,
+        fromKnowledge: true,
+        category: knowledge.category
+      });
+    }
     
-    // Check for available miners
+    // No knowledge found, check for miners
     let availableMiners = [];
     if (global.activeMiners) {
       for (const [addr, data] of global.activeMiners) {
-        if (data.miner?.status === 'online' && data.ws?.readyState === 1) {
+        if (data.ws?.readyState === 1) {
           availableMiners.push({ address: addr, ...data });
         }
       }
     }
     
     if (availableMiners.length === 0) {
-      // Fallback: return a helpful message about Solana
+      // Save question to knowledge for miners to answer later
+      const newQuestion = new Knowledge({
+        question: prompt,
+        questionLower: prompt.toLowerCase(),
+        category: detectCategory(prompt)
+      });
+      await newQuestion.save();
+      
       return res.json({
-        response: "I'm currently waiting for miners to come online. While you wait, here are some Solana resources:\n\n- **Docs**: https://docs.solana.com\n- **Anchor**: https://anchor-lang.com\n- **Cookbook**: https://solanacookbook.com\n\nTry again in a moment!",
+        response: "Your question has been queued for miners to answer. Currently no miners are online. Please try again later or start mining at /mine to help build our knowledge base!",
         miner: null,
         processingTime: 0,
         proofId: null,
-        fallback: true
+        queued: true
       });
     }
     
-    // Select random miner
+    // Send to miner
     const selected = availableMiners[Math.floor(Math.random() * availableMiners.length)];
     
-    // Create task
     const task = new Task({
       type: 'text',
-      prompt: fullPrompt,
+      prompt,
       difficulty: 'expert',
-      difficultyName: 'Expert',
-      rewardPool: '2000000000000000000', // 2 tokens for playground
       requester: address || 'playground',
       priority: 1,
       status: 'assigned',
       assignedMiner: selected.address,
       assignedAt: new Date(),
       expiresAt: new Date(Date.now() + 60000),
-      options: {
-        isPlayground: true,
-        maxTokens: 500
-      }
+      options: { isPlayground: true, maxTokens: 500, category: detectCategory(prompt) }
     });
     await task.save();
     
-    // Create promise to wait for response
     const responsePromise = new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(new Error('Timeout'));
-      }, 30000);
-      
-      // Store resolver in task
+      const timeout = setTimeout(() => reject(new Error('Timeout')), 30000);
       if (!global.playgroundCallbacks) global.playgroundCallbacks = new Map();
       global.playgroundCallbacks.set(task._id.toString(), { resolve, reject, timeout });
     });
     
-    // Send to miner
     selected.ws.send(JSON.stringify({
       type: 'task',
       task: {
-        id: task._id,
-        type: 'text',
-        prompt: fullPrompt,
+        id: task._id.toString(),
+        _id: task._id.toString(),
+        prompt,
+        taskType: 'text',
         isPlayground: true,
         maxTokens: 500
       }
     }));
     
-    // Wait for response
+    console.log(`[Playground] Query to miner: "${prompt.slice(0,40)}..."`);
+    
     try {
       const result = await responsePromise;
-      
-      // Get the proof if created
-      const proof = await InferenceProof.findOne({ task: task._id });
-      
       res.json({
         response: result.response,
         miner: selected.address,
         processingTime: result.processingTime || 0,
-        proofId: proof?._id
+        proofId: task._id,
+        fromMiner: true
       });
     } catch (err) {
-      // Cleanup
       global.playgroundCallbacks?.delete(task._id.toString());
-      
       res.json({
-        response: "The miner took too long to respond. Please try again.",
+        response: "The miner took too long. Your question has been saved and will be answered when miners are available.",
         miner: selected.address,
         processingTime: 0,
         proofId: null,
@@ -125,40 +156,57 @@ router.post('/query', async (req, res) => {
     }
     
   } catch (error) {
-    console.error('Playground query error:', error);
+    console.error('Playground error:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Get playground stats
+// Detect category from prompt
+function detectCategory(prompt) {
+  const lower = prompt.toLowerCase();
+  if (lower.includes('anchor')) return 'anchor';
+  if (lower.includes('rust') || lower.includes('program')) return 'rust';
+  if (lower.includes('token') || lower.includes('spl')) return 'tokens';
+  if (lower.includes('nft') || lower.includes('metaplex')) return 'nfts';
+  if (lower.includes('defi') || lower.includes('swap') || lower.includes('jupiter')) return 'defi';
+  if (lower.includes('web3') || lower.includes('javascript')) return 'web3js';
+  if (lower.includes('security') || lower.includes('audit')) return 'security';
+  if (lower.includes('optimize') || lower.includes('compute')) return 'optimization';
+  return 'basics';
+}
+
+// Stats endpoint
 router.get('/stats', async (req, res) => {
   try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const queriesToday = await Task.countDocuments({
-      'options.isPlayground': true,
-      createdAt: { $gte: today }
-    });
-    
-    const recentTasks = await Task.find({
-      'options.isPlayground': true,
-      status: 'completed'
-    }).sort({ completedAt: -1 }).limit(20);
-    
-    let totalTime = 0;
-    let count = 0;
-    for (const task of recentTasks) {
-      if (task.responses?.[0]?.responseTime) {
-        totalTime += task.responses[0].responseTime;
-        count++;
-      }
-    }
+    const totalKnowledge = await Knowledge.countDocuments({ answer: { $exists: true, $ne: '' } });
+    const pendingQuestions = await Knowledge.countDocuments({ answer: { $exists: false } });
     
     res.json({
-      queries: queriesToday,
-      avgTime: count > 0 ? Math.round(totalTime / count) : 0
+      knowledge: totalKnowledge,
+      pending: pendingQuestions,
+      minersOnline: global.activeMiners?.size || 0
     });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Browse knowledge
+router.get('/knowledge', async (req, res) => {
+  try {
+    const { category, limit = 20, offset = 0 } = req.query;
+    const query = { answer: { $exists: true, $ne: '' } };
+    if (category) query.category = category;
+    
+    const items = await Knowledge.find(query)
+      .sort({ usageCount: -1, createdAt: -1 })
+      .skip(parseInt(offset))
+      .limit(parseInt(limit))
+      .select('question answer category usageCount minedBy createdAt');
+    
+    const total = await Knowledge.countDocuments(query);
+    
+    res.json({ items, total, categories: Object.keys(require('../taskGenerator').SOLANA_PROMPTS || {}) });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

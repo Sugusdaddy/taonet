@@ -1,6 +1,7 @@
 const Miner = require('./models/Miner');
 const Task = require('./models/Task');
 const InferenceProof = require('./models/InferenceProof');
+const Knowledge = require('./models/Knowledge');
 const RewardEngine = require('./services/rewardEngine');
 const crypto = require('crypto');
 
@@ -15,6 +16,7 @@ async function handleWebSocketMessage(ws, message) {
       await handleHeartbeat(ws, message);
       break;
     case 'response':
+    case 'task_response':
       await handleTaskResponse(ws, message);
       break;
     case 'ready':
@@ -37,7 +39,6 @@ async function handleAuth(ws, message) {
   ws.capabilities = capabilities || {};
   ws.isBusy = false;
   
-  // Update/create miner
   let miner = await Miner.findOne({ address: addr });
   if (!miner) {
     miner = new Miner({ address: addr, status: 'online' });
@@ -48,32 +49,23 @@ async function handleAuth(ws, message) {
     await miner.save();
   }
   
-  // Store in global map
+  ws.minerLevel = miner.level || 1;
+  
   if (!global.activeMiners) global.activeMiners = new Map();
   global.activeMiners.set(addr, { ws, miner, joinedAt: new Date() });
   
-  console.log(`[WS] Miner authenticated: ${addr.slice(0,8)}...`);
+  console.log(`[WS] Miner authenticated: ${addr.slice(0,8)}... (Lv.${miner.level})`);
   
   ws.send(JSON.stringify({
     type: 'auth_success',
-    miner: {
-      address: miner.address,
-      level: miner.level,
-      xp: miner.xp
-    }
+    miner: { address: miner.address, level: miner.level, xp: miner.xp }
   }));
 }
 
 async function handleHeartbeat(ws, message) {
   if (!ws.minerAddress) return;
-  
   ws.isAlive = true;
-  
-  await Miner.updateOne(
-    { address: ws.minerAddress },
-    { lastSeen: new Date(), status: 'online' }
-  );
-  
+  await Miner.updateOne({ address: ws.minerAddress }, { lastSeen: new Date(), status: 'online' });
   ws.send(JSON.stringify({ type: 'heartbeat_ack', timestamp: Date.now() }));
 }
 
@@ -85,10 +77,9 @@ async function handleTaskResponse(ws, message) {
     return;
   }
   
-  // Mark miner as not busy
   ws.isBusy = false;
   
-  // Check for playground callback first
+  // Playground callback
   if (global.playgroundCallbacks?.has(taskId)) {
     const callback = global.playgroundCallbacks.get(taskId);
     clearTimeout(callback.timeout);
@@ -106,7 +97,7 @@ async function handleTaskResponse(ws, message) {
     const miner = await Miner.findOne({ address: ws.minerAddress });
     if (!miner) return;
     
-    // Create hashes for proof
+    // Create hashes
     const inputHash = crypto.createHash('sha256').update(task.prompt).digest('hex');
     const outputHash = crypto.createHash('sha256').update(response).digest('hex');
     const combinedHash = crypto.createHash('sha256').update(inputHash + outputHash).digest('hex');
@@ -123,7 +114,34 @@ async function handleTaskResponse(ws, message) {
     task.completedAt = new Date();
     await task.save();
     
-    // Create inference proof
+    // Save to Knowledge base
+    const existingKnowledge = await Knowledge.findOne({ 
+      questionLower: task.prompt.toLowerCase() 
+    });
+    
+    if (!existingKnowledge) {
+      const knowledge = new Knowledge({
+        question: task.prompt,
+        questionLower: task.prompt.toLowerCase(),
+        answer: response,
+        category: task.options?.category || 'general',
+        minedBy: ws.minerAddress,
+        taskId: task._id
+      });
+      await knowledge.save();
+      console.log(`[Knowledge] Saved: "${task.prompt.slice(0,40)}..."`);
+    } else {
+      // Update if response is longer (potentially better)
+      if (response.length > existingKnowledge.answer.length) {
+        existingKnowledge.answer = response;
+        existingKnowledge.updatedAt = new Date();
+        await existingKnowledge.save();
+      }
+      existingKnowledge.usageCount++;
+      await existingKnowledge.save();
+    }
+    
+    // Create proof
     const proof = new InferenceProof({
       miner: ws.minerAddress,
       task: task._id,
@@ -140,31 +158,32 @@ async function handleTaskResponse(ws, message) {
     });
     await proof.save();
     
-    // Calculate and apply rewards
+    // Calculate rewards
     const rewardResult = RewardEngine.calculateReward({
       baseReward: BigInt(task.rewardPool || '1000000000000000000'),
       miner,
       responseTime: processingTime || 5000,
-      qualityScore: 80,
+      qualityScore: Math.min(100, 50 + response.length / 20),
       taskType: task.type || 'text'
     });
     
-    // Update miner stats
+    // Update miner
     miner.stats.completedTasks = (miner.stats.completedTasks || 0) + 1;
     miner.stats.totalRewards = (BigInt(miner.stats.totalRewards || 0) + rewardResult.finalReward).toString();
     miner.xp = (miner.xp || 0) + rewardResult.xpEarned;
     miner.lastSeen = new Date();
     
-    // Check level up
     const xpNeeded = RewardEngine.getXpForLevel(miner.level + 1);
     if (miner.xp >= xpNeeded) {
       miner.level++;
       miner.xp -= xpNeeded;
+      ws.minerLevel = miner.level;
+      console.log(`[WS] ${ws.minerAddress.slice(0,8)} leveled up to ${miner.level}!`);
     }
     
     await miner.save();
     
-    console.log(`[WS] Task ${taskId.slice(-6)} completed by ${ws.minerAddress.slice(0,8)} - reward: ${rewardResult.finalReward.toString()}`);
+    console.log(`[WS] Task completed: ${taskId.slice(-6)} by ${ws.minerAddress.slice(0,8)} (+${rewardResult.xpEarned}XP)`);
     
     ws.send(JSON.stringify({
       type: 'task_accepted',
