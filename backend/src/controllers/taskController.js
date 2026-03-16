@@ -1,4 +1,5 @@
 const Task = require('../models/Task');
+const RewardEngine = require('../services/rewardEngine');
 const InferenceProof = require("../models/InferenceProof");
 const activityRoutes = require('../routes/activity');
 const Miner = require('../models/Miner');
@@ -301,31 +302,32 @@ class TaskController {
       const miner = await Miner.findOne({ address: winningResponse.miner });
       if (!miner) return { error: 'Miner not found' };
       
-      // Calculate reward with multipliers
-      const baseReward = BigInt(task.rewardPool);
-      const totalMultiplier = 
-        (miner.multipliers?.staking || 1) * 
-        (miner.multipliers?.streak || 1) * 
-        (miner.multipliers?.level || 1) * 
-        (miner.multipliers?.achievement || 1);
+      // Calculate reward with RewardEngine
+      const { reward: calculatedReward, breakdown } = await RewardEngine.calculateReward(
+        task,
+        miner,
+        winningResponse
+      );
+      const finalReward = BigInt(calculatedReward);
+      const totalMultiplier = parseFloat(breakdown.totalMultiplier);
       
-      const finalReward = BigInt(Math.floor(Number(baseReward) * totalMultiplier));
+      // Calculate XP
+      const xpEarned = RewardEngine.calculateXP(task, winningResponse);
+      await miner.addXp(xpEarned);
       
-      // Create reward
+      // Update reputation
+      RewardEngine.updateReputation(miner, winningResponse.score || 50, true);
+      
+      // Create reward with detailed breakdown
       const reward = new Reward({
         miner: miner.address,
         type: 'task',
         amount: finalReward.toString(),
-        multipliers: {
-          base: 1,
-          staking: miner.multipliers?.staking || 1,
-          streak: miner.multipliers?.streak || 1,
-          level: miner.multipliers?.level || 1,
-          achievement: miner.multipliers?.achievement || 1,
-          total: totalMultiplier
-        },
+        multipliers: breakdown.multipliers,
+        factors: breakdown.factors,
+        bonuses: breakdown.bonuses,
         task: task._id,
-        xpEarned: 0, // XP already given on response
+        xpEarned,
         status: 'pending'
       });
       await reward.save();

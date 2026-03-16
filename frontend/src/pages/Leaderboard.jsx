@@ -6,17 +6,18 @@ export default function Leaderboard() {
   const [miners, setMiners] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [sortBy, setSortBy] = useState('rewards');
+  const [sortBy, setSortBy] = useState('composite');
+  const [timeframe, setTimeframe] = useState('all');
 
   useEffect(() => {
     loadData();
     const interval = setInterval(loadData, 5000);
     return () => clearInterval(interval);
-  }, [sortBy]);
+  }, [sortBy, timeframe]);
 
   async function loadData() {
     const [minersData, statsData] = await Promise.all([
-      api.get(`/api/miners/leaderboard?sortBy=${sortBy}&limit=50`),
+      api.get(`/api/miners/leaderboard?sortBy=${sortBy}&limit=50&timeframe=${timeframe}`),
       api.get('/api/stats')
     ]);
     if (minersData?.leaderboard) setMiners(minersData.leaderboard);
@@ -27,20 +28,24 @@ export default function Leaderboard() {
 
   const getTierColor = (tier) => {
     const colors = {
-      bronze: 'var(--bronze)',
-      silver: 'var(--silver)',
-      gold: 'var(--gold)',
-      platinum: 'var(--platinum)',
-      diamond: 'var(--diamond)'
+      bronze: '#cd7f32',
+      silver: '#c0c0c0',
+      gold: '#ffd700',
+      platinum: '#e5e4e2',
+      diamond: '#b9f2ff'
     };
     return colors[tier] || 'var(--text-4)';
   };
 
-  const getRankBadge = (index) => {
-    if (index === 0) return { emoji: '1st', class: 'gold' };
-    if (index === 1) return { emoji: '2nd', class: 'silver' };
-    if (index === 2) return { emoji: '3rd', class: 'bronze' };
+  const getRankBadge = (rank) => {
+    if (rank === 1) return { emoji: '1st', class: 'gold' };
+    if (rank === 2) return { emoji: '2nd', class: 'silver' };
+    if (rank === 3) return { emoji: '3rd', class: 'bronze' };
     return null;
+  };
+
+  const getScoreBarWidth = (score, maxScore = 100) => {
+    return Math.min((parseFloat(score) / maxScore) * 100, 100);
   };
 
   return (
@@ -50,7 +55,7 @@ export default function Leaderboard() {
         <div className="page-header">
           <div>
             <h1>Leaderboard</h1>
-            <p>Top miners on the network</p>
+            <p>Top miners ranked by performance</p>
           </div>
           <div className="live-badge">
             <span className="live-dot"></span>
@@ -78,26 +83,75 @@ export default function Leaderboard() {
           </div>
         </div>
 
-        {/* Sort Tabs */}
-        <div className="sort-tabs">
-          <button 
-            className={`tab ${sortBy === 'rewards' ? 'active' : ''}`}
-            onClick={() => setSortBy('rewards')}
-          >
-            By Rewards
-          </button>
-          <button 
-            className={`tab ${sortBy === 'tasks' ? 'active' : ''}`}
-            onClick={() => setSortBy('tasks')}
-          >
-            By Tasks
-          </button>
-          <button 
-            className={`tab ${sortBy === 'streak' ? 'active' : ''}`}
-            onClick={() => setSortBy('streak')}
-          >
-            By Streak
-          </button>
+        {/* Filters */}
+        <div className="filters-row">
+          {/* Sort Tabs */}
+          <div className="sort-tabs">
+            <button 
+              className={`tab ${sortBy === 'composite' ? 'active' : ''}`}
+              onClick={() => setSortBy('composite')}
+            >
+              Score
+            </button>
+            <button 
+              className={`tab ${sortBy === 'rewards' ? 'active' : ''}`}
+              onClick={() => setSortBy('rewards')}
+            >
+              Rewards
+            </button>
+            <button 
+              className={`tab ${sortBy === 'tasks' ? 'active' : ''}`}
+              onClick={() => setSortBy('tasks')}
+            >
+              Tasks
+            </button>
+            <button 
+              className={`tab ${sortBy === 'efficiency' ? 'active' : ''}`}
+              onClick={() => setSortBy('efficiency')}
+            >
+              Efficiency
+            </button>
+            <button 
+              className={`tab ${sortBy === 'level' ? 'active' : ''}`}
+              onClick={() => setSortBy('level')}
+            >
+              Level
+            </button>
+            <button 
+              className={`tab ${sortBy === 'streak' ? 'active' : ''}`}
+              onClick={() => setSortBy('streak')}
+            >
+              Streak
+            </button>
+          </div>
+
+          {/* Timeframe Tabs */}
+          <div className="timeframe-tabs">
+            <button 
+              className={`tab-small ${timeframe === 'day' ? 'active' : ''}`}
+              onClick={() => setTimeframe('day')}
+            >
+              24h
+            </button>
+            <button 
+              className={`tab-small ${timeframe === 'week' ? 'active' : ''}`}
+              onClick={() => setTimeframe('week')}
+            >
+              7d
+            </button>
+            <button 
+              className={`tab-small ${timeframe === 'month' ? 'active' : ''}`}
+              onClick={() => setTimeframe('month')}
+            >
+              30d
+            </button>
+            <button 
+              className={`tab-small ${timeframe === 'all' ? 'active' : ''}`}
+              onClick={() => setTimeframe('all')}
+            >
+              All
+            </button>
+          </div>
         </div>
 
         {/* Leaderboard Table */}
@@ -118,55 +172,77 @@ export default function Leaderboard() {
                 <tr>
                   <th>Rank</th>
                   <th>Miner</th>
-                  <th>Tier</th>
+                  <th>Level</th>
+                  <th>Score</th>
                   <th>Tasks</th>
                   <th>Rewards</th>
-                  <th>Status</th>
+                  <th>Multiplier</th>
                 </tr>
               </thead>
               <tbody>
-                {miners.map((miner, index) => {
-                  const badge = getRankBadge(index);
+                {miners.map((miner) => {
+                  const badge = getRankBadge(miner.rank);
                   return (
-                    <tr key={miner._id || miner.address}>
+                    <tr key={miner.address} className={miner.rank <= 3 ? 'top-rank' : ''}>
                       <td>
                         {badge ? (
                           <span className={`rank-badge ${badge.class}`}>{badge.emoji}</span>
                         ) : (
-                          <span className="rank-number">{index + 1}</span>
+                          <span className="rank-number">{miner.rank}</span>
                         )}
                       </td>
                       <td>
                         <div className="miner-cell">
-                          <div className="miner-avatar">
+                          <div 
+                            className="miner-avatar"
+                            style={{ borderColor: getTierColor(miner.stakingTier) }}
+                          >
                             {(miner.name || 'M')[0].toUpperCase()}
                           </div>
                           <div className="miner-info">
                             <span className="miner-name">{miner.name || 'Anonymous'}</span>
-                            <span className="miner-address">{api.shortAddress(miner.address)}</span>
+                            <div className="miner-meta">
+                              <span className="miner-address">{api.shortAddress(miner.address)}</span>
+                              <span 
+                                className="tier-dot"
+                                style={{ background: getTierColor(miner.stakingTier) }}
+                                title={miner.stakingTier}
+                              ></span>
+                            </div>
                           </div>
                         </div>
                       </td>
                       <td>
-                        <span 
-                          className="tier-badge"
-                          style={{ color: getTierColor(miner.tier), borderColor: getTierColor(miner.tier) }}
-                        >
-                          {miner.tier || 'bronze'}
-                        </span>
+                        <div className="level-cell">
+                          <span className="level-badge">Lv.{miner.level}</span>
+                          <span className="xp-text">{miner.xp} XP</span>
+                        </div>
                       </td>
                       <td>
-                        <span className="task-count">{miner.stats?.completedTasks || 0}</span>
+                        <div className="score-cell">
+                          <span className="score-value">{miner.scores?.composite || '0'}</span>
+                          <div className="score-bar">
+                            <div 
+                              className="score-fill"
+                              style={{ width: `${getScoreBarWidth(miner.scores?.composite || 0, 150)}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="tasks-cell">
+                          <span className="task-count">{miner.stats?.completedTasks || 0}</span>
+                          <span className="success-rate">{miner.stats?.successRate || 0}%</span>
+                        </div>
                       </td>
                       <td>
                         <span className="rewards-amount">
-                          {api.formatNumber(miner.stats?.totalRewards || 0)} TAO
+                          {api.formatNumber(miner.stats?.totalRewards || 0)}
                         </span>
                       </td>
                       <td>
-                        <span className={`status-badge ${miner.status || 'offline'}`}>
-                          <span className="status-dot"></span>
-                          {miner.status || 'offline'}
+                        <span className={`multiplier-badge ${parseFloat(miner.totalMultiplier) > 1.5 ? 'high' : ''}`}>
+                          {miner.totalMultiplier}x
                         </span>
                       </td>
                     </tr>
@@ -175,6 +251,33 @@ export default function Leaderboard() {
               </tbody>
             </table>
           )}
+        </div>
+
+        {/* Legend */}
+        <div className="legend-card">
+          <h4>Scoring Formula</h4>
+          <div className="legend-items">
+            <div className="legend-item">
+              <span className="legend-pct">40%</span>
+              <span>Rewards</span>
+            </div>
+            <div className="legend-item">
+              <span className="legend-pct">25%</span>
+              <span>Tasks</span>
+            </div>
+            <div className="legend-item">
+              <span className="legend-pct">20%</span>
+              <span>Reputation</span>
+            </div>
+            <div className="legend-item">
+              <span className="legend-pct">10%</span>
+              <span>Level</span>
+            </div>
+            <div className="legend-item">
+              <span className="legend-pct">5%</span>
+              <span>Streak</span>
+            </div>
+          </div>
         </div>
       </div>
     </main>
