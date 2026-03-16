@@ -4,39 +4,43 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Leaderboard - TaoNet</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
   <link rel="stylesheet" href="styles.css">
-  <link rel="icon" type="image/svg+xml" href="/icon.svg">
 </head>
 <body>
   <header class="header">
     <div class="container header-inner">
-      <a href="/" class="logo">TaoNet</a>
+      <a href="/" class="logo">Tao<span>Net</span></a>
       <nav class="nav">
         <a href="mine.html">Mine</a>
         <a href="dashboard.html">Dashboard</a>
         <a href="leaderboard.html" class="active">Leaderboard</a>
         <a href="rewards.html">Rewards</a>
+        <a href="docs.html">Docs</a>
       </nav>
-      <button class="wallet-btn" data-wallet-btn onclick="TAONET.wallet ? TAONET.disconnectWallet() : TAONET.connectWallet()">Connect Wallet</button>
-      <button class="menu-toggle" onclick="document.querySelector('.nav').classList.toggle('open')">☰</button>
+      <div class="header-actions">
+        <button class="wallet-btn" data-wallet-btn onclick="handleWalletClick()">Connect</button>
+        <button class="menu-btn" onclick="toggleMenu()">&#9776;</button>
+      </div>
     </div>
   </header>
 
-  <main class="container" style="padding-top: 40px; padding-bottom: 60px;">
-    <h1 style="font-size: 2rem; margin-bottom: 10px;">Leaderboard</h1>
-    <p class="text-dim" style="margin-bottom: 30px;">Top miners by total rewards earned</p>
+  <main>
+    <div class="container">
+      <div class="page-header">
+        <h1 class="page-title">Leaderboard</h1>
+        <p class="page-subtitle">Top miners ranked by performance</p>
+      </div>
 
-    <!-- Filter Tabs -->
-    <div class="tabs">
-      <button class="tab active" onclick="loadLeaderboard('rewards')">By Rewards</button>
-      <button class="tab" onclick="loadLeaderboard('tasks')">By Tasks</button>
-      <button class="tab" onclick="loadLeaderboard('streak')">By Streak</button>
-    </div>
+      <!-- Tabs -->
+      <div class="tabs mb-lg">
+        <button class="tab active" data-sort="totalRewards">By Rewards</button>
+        <button class="tab" data-sort="tasksCompleted">By Tasks</button>
+        <button class="tab" data-sort="streak">By Streak</button>
+      </div>
 
-    <!-- Leaderboard Table -->
-    <div class="card">
-      <div class="table-wrapper">
+      <!-- Table -->
+      <div class="table-container">
         <table>
           <thead>
             <tr>
@@ -49,7 +53,7 @@
           </thead>
           <tbody id="leaderboardBody">
             <tr>
-              <td colspan="5" style="text-align: center; padding: 40px;">Loading...</td>
+              <td colspan="5" class="text-center text-tertiary" style="padding: 60px;">Loading...</td>
             </tr>
           </tbody>
         </table>
@@ -60,124 +64,129 @@
   <style>
     .tabs {
       display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
+      gap: var(--space-sm);
+      flex-wrap: wrap;
     }
+    
     .tab {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      color: var(--text-dim);
       padding: 10px 20px;
-      border-radius: 8px;
-      font-size: 0.9rem;
+      font-family: var(--font-sans);
+      font-size: 14px;
       font-weight: 500;
+      color: var(--text-tertiary);
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-full);
       cursor: pointer;
       transition: all 0.2s;
-      font-family: inherit;
     }
-    .tab:hover { border-color: var(--green); color: var(--text); }
-    .tab.active { background: var(--green); color: var(--bg); border-color: var(--green); }
+    
+    .tab:hover {
+      color: var(--text-primary);
+      border-color: var(--text-tertiary);
+    }
+    
+    .tab.active {
+      background: var(--accent);
+      color: #000;
+      border-color: var(--accent);
+    }
     
     .rank-cell {
       font-weight: 700;
-      font-size: 1.1rem;
+      font-size: 16px;
     }
+    
     .rank-1 { color: var(--gold); }
     .rank-2 { color: var(--silver); }
     .rank-3 { color: var(--bronze); }
     
-    .miner-info {
+    .miner-cell {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: var(--space-md);
     }
+    
     .miner-avatar {
       width: 36px;
       height: 36px;
-      background: var(--border);
+      background: var(--bg-tertiary);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.9rem;
-    }
-    .miner-name { font-weight: 500; }
-    .miner-address { font-size: 0.75rem; color: var(--text-dim); }
-    
-    .tier-badge-sm {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 4px;
-      font-size: 0.7rem;
       font-weight: 600;
-      text-transform: uppercase;
+      font-size: 14px;
     }
-    .tier-badge-sm.bronze { background: rgba(205, 127, 50, 0.15); color: var(--bronze); }
-    .tier-badge-sm.silver { background: rgba(192, 192, 192, 0.15); color: var(--silver); }
-    .tier-badge-sm.gold { background: rgba(255, 215, 0, 0.15); color: var(--gold); }
-    .tier-badge-sm.platinum { background: rgba(229, 228, 226, 0.15); color: var(--platinum); }
-    .tier-badge-sm.diamond { background: rgba(185, 242, 255, 0.15); color: var(--diamond); }
     
-    .rewards-cell { color: var(--green); font-weight: 600; }
+    .miner-name {
+      font-weight: 500;
+    }
+    
+    .miner-address {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      font-family: var(--font-mono);
+    }
+    
+    .rewards-cell {
+      color: var(--accent);
+      font-weight: 600;
+    }
   </style>
 
-  <script src="taonet.js"></script>
+  <script src="app.js"></script>
   <script>
-    let currentSort = 'rewards';
-
-    async function loadLeaderboard(sortBy = 'rewards') {
-      currentSort = sortBy;
-      
-      // Update tabs
-      document.querySelectorAll('.tab').forEach((tab, i) => {
-        tab.classList.toggle('active', 
-          (sortBy === 'rewards' && i === 0) ||
-          (sortBy === 'tasks' && i === 1) ||
-          (sortBy === 'streak' && i === 2)
-        );
+    let currentSort = 'totalRewards';
+    
+    // Tab clicks
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        currentSort = tab.dataset.sort;
+        loadLeaderboard();
       });
-
+    });
+    
+    async function loadLeaderboard() {
       const tbody = document.getElementById('leaderboardBody');
-      tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;">Loading...</td></tr>';
-
-      try {
-        const data = await TAONET.fetchAPI('/api/miners/leaderboard?limit=100&sort=' + sortBy);
-        
-        if (!data?.miners?.length) {
-          tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;" class="text-dim">No miners yet. Be the first!</td></tr>';
-          return;
-        }
-
-        tbody.innerHTML = data.miners.map((miner, i) => {
-          const rank = i + 1;
-          const rankClass = rank <= 3 ? 'rank-' + rank : '';
-          const tier = miner.tier || 'bronze';
-          const initial = (miner.name || 'M')[0].toUpperCase();
-          
-          return `
-            <tr>
-              <td><span class="rank-cell ${rankClass}">#${rank}</span></td>
-              <td>
-                <div class="miner-info">
-                  <div class="miner-avatar">${initial}</div>
-                  <div>
-                    <div class="miner-name">${miner.name || 'Anonymous'}</div>
-                    <div class="miner-address">${TAONET.shortAddress(miner.address)}</div>
-                  </div>
-                </div>
-              </td>
-              <td><span class="tier-badge-sm ${tier}">${tier}</span></td>
-              <td>${(miner.tasksCompleted || 0).toLocaleString()}</td>
-              <td class="rewards-cell">${(miner.totalRewards || 0).toLocaleString()}</td>
-            </tr>
-          `;
-        }).join('');
-      } catch(e) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;" class="text-dim">Failed to load leaderboard</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-tertiary" style="padding: 60px;">Loading...</td></tr>';
+      
+      const data = await TAONET.getLeaderboard(currentSort, 100);
+      
+      if (!data?.miners?.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-tertiary" style="padding: 60px;">No miners yet. Be the first!</td></tr>';
+        return;
       }
+      
+      tbody.innerHTML = data.miners.map((miner, i) => {
+        const rank = i + 1;
+        const rankClass = rank <= 3 ? `rank-${rank}` : '';
+        const tier = (miner.tier || 'bronze').toLowerCase();
+        const initial = (miner.name || 'M')[0].toUpperCase();
+        const isYou = TAONET.wallet && miner.address === TAONET.wallet;
+        
+        return `
+          <tr ${isYou ? 'style="background: var(--accent-bg);"' : ''}>
+            <td><span class="rank-cell ${rankClass}">#${rank}</span></td>
+            <td>
+              <div class="miner-cell">
+                <div class="miner-avatar">${initial}</div>
+                <div>
+                  <div class="miner-name">${miner.name || 'Anonymous'}${isYou ? ' (You)' : ''}</div>
+                  <div class="miner-address">${TAONET.shortAddress(miner.address)}</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="badge badge-${tier}">${tier}</span></td>
+            <td>${(miner.tasksCompleted || 0).toLocaleString()}</td>
+            <td class="rewards-cell">${(miner.totalRewards || 0).toLocaleString()}</td>
+          </tr>
+        `;
+      }).join('');
     }
-
-    // Init
+    
     loadLeaderboard();
   </script>
 </body>

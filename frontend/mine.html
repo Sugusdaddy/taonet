@@ -3,191 +3,298 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Start Mining - TaoNet</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <title>Mine - TaoNet</title>
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
   <link rel="stylesheet" href="styles.css">
-  <link rel="icon" type="image/svg+xml" href="/icon.svg">
 </head>
 <body>
-  <!-- Header -->
   <header class="header">
     <div class="container header-inner">
-      <a href="/" class="logo">TaoNet</a>
+      <a href="/" class="logo">Tao<span>Net</span></a>
       <nav class="nav">
         <a href="mine.html" class="active">Mine</a>
         <a href="dashboard.html">Dashboard</a>
         <a href="leaderboard.html">Leaderboard</a>
         <a href="rewards.html">Rewards</a>
+        <a href="docs.html">Docs</a>
       </nav>
-      <button class="wallet-btn" data-wallet-btn onclick="handleWalletClick()">Connect Wallet</button>
-      <button class="menu-toggle" onclick="document.querySelector('.nav').classList.toggle('open')">☰</button>
+      <div class="header-actions">
+        <button class="wallet-btn" data-wallet-btn onclick="handleWalletClick()">Connect</button>
+        <button class="menu-btn" onclick="toggleMenu()">&#9776;</button>
+      </div>
     </div>
   </header>
 
-  <main class="container" style="padding-top: 40px; padding-bottom: 60px;">
-    <h1 style="font-size: 2rem; margin-bottom: 10px;">Start Mining</h1>
-    <p class="text-dim" style="margin-bottom: 40px;">Set up in 2 minutes and start earning</p>
+  <main>
+    <div class="container">
+      <div class="page-header">
+        <h1 class="page-title">Start Mining</h1>
+        <p class="page-subtitle">Connect, register, and start earning</p>
+      </div>
 
-    <!-- Setup Steps (shown when not mining) -->
-    <div id="setupView">
-      <!-- Step 1: Connect -->
-      <div class="card mb-20" id="step1Card">
-        <div class="flex items-center gap-10" style="margin-bottom: 15px;">
-          <div class="step-badge" id="step1Badge">1</div>
-          <h3>Connect Wallet</h3>
+      <!-- Setup Flow -->
+      <div id="setupView">
+        <!-- Step 1: Connect Wallet -->
+        <div class="setup-step" id="step1">
+          <div class="step-indicator">
+            <div class="step-number" id="step1Num">1</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-content">
+            <h3>Connect Wallet</h3>
+            <p class="text-secondary mb-md">Connect your Solana wallet to get started</p>
+            
+            <div data-show-disconnected>
+              <button class="btn btn-primary" onclick="handleWalletClick()">Connect Phantom</button>
+              <p class="text-tertiary mt-md" style="font-size: 13px;">
+                Don't have Phantom? <a href="https://phantom.app/" target="_blank">Download here</a>
+              </p>
+            </div>
+            
+            <div data-show-connected class="hidden">
+              <div class="alert alert-success">
+                Connected: <span class="font-mono" id="connectedAddr"></span>
+              </div>
+            </div>
+          </div>
         </div>
-        <p class="text-dim" style="margin-bottom: 20px;">Connect your Solana wallet to get started. We use Phantom wallet.</p>
-        
-        <div data-show-disconnected>
-          <button class="btn btn-primary" onclick="handleWalletClick()">Connect Phantom Wallet</button>
-          <p style="margin-top: 15px; font-size: 0.85rem;" class="text-dim">
-            Don't have Phantom? <a href="https://phantom.app/" target="_blank" style="color: var(--green);">Download here</a>
-          </p>
+
+        <!-- Step 2: Register -->
+        <div class="setup-step" id="step2">
+          <div class="step-indicator">
+            <div class="step-number" id="step2Num">2</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-content">
+            <h3>Register Miner</h3>
+            <p class="text-secondary mb-md">Choose a name for the leaderboard</p>
+            
+            <div id="registerForm">
+              <div class="input-group mb-md">
+                <input type="text" class="input" id="minerName" placeholder="Enter miner name" maxlength="20">
+                <button class="btn btn-primary" id="registerBtn" onclick="register()">Register</button>
+              </div>
+            </div>
+            
+            <div id="registerSuccess" class="hidden">
+              <div class="alert alert-success">
+                Registered as: <strong id="registeredName"></strong>
+              </div>
+            </div>
+            
+            <div id="registerError" class="alert alert-error hidden"></div>
+          </div>
         </div>
-        
-        <div data-show-connected class="alert alert-success hidden">
-          Connected: <span id="connectedAddress"></span>
+
+        <!-- Step 3: Start Mining -->
+        <div class="setup-step" id="step3">
+          <div class="step-indicator">
+            <div class="step-number" id="step3Num">3</div>
+          </div>
+          <div class="step-content">
+            <h3>Start Mining</h3>
+            <p class="text-secondary mb-md">Choose your mining method</p>
+            
+            <div class="mining-options">
+              <div class="mining-option">
+                <h4>Browser Mining</h4>
+                <p class="text-tertiary mb-md">Mine directly in your browser. Limited rate but easy to start.</p>
+                <button class="btn btn-primary" id="startBrowserBtn" onclick="startBrowserMining()">Start Browser Mining</button>
+              </div>
+              
+              <div class="mining-option">
+                <h4>CLI Miner</h4>
+                <p class="text-tertiary mb-md">Run on your machine for higher rates and better rewards.</p>
+                <div class="code-block">
+                  <code>npm install -g taonet-miner</code>
+                  <code>taonet-miner start --wallet YOUR_WALLET</code>
+                </div>
+                <a href="docs.html#cli" class="btn btn-secondary mt-md">Setup Guide</a>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Step 2: Register -->
-      <div class="card mb-20" id="step2Card">
-        <div class="flex items-center gap-10" style="margin-bottom: 15px;">
-          <div class="step-badge" id="step2Badge">2</div>
-          <h3>Register as Miner</h3>
-        </div>
-        <p class="text-dim" style="margin-bottom: 20px;">Choose a display name for the leaderboard.</p>
-        
-        <div id="registerForm">
-          <div class="input-group" style="margin-bottom: 15px;">
-            <input type="text" id="minerName" placeholder="Enter your miner name" maxlength="20">
-            <button class="btn btn-primary" id="registerBtn" onclick="registerMiner()">Register</button>
+      <!-- Mining Active View -->
+      <div id="miningView" class="hidden">
+        <div class="mining-status-card">
+          <div class="mining-status-header">
+            <div class="mining-pulse"></div>
+            <div>
+              <h2 class="text-accent">Mining Active</h2>
+              <p class="text-secondary">Processing AI inference tasks</p>
+            </div>
+          </div>
+          
+          <div class="mining-stats">
+            <div class="mining-stat">
+              <span class="mining-stat-value" id="mTasksCompleted">0</span>
+              <span class="mining-stat-label">Tasks</span>
+            </div>
+            <div class="mining-stat">
+              <span class="mining-stat-value" id="mTokensEarned">0</span>
+              <span class="mining-stat-label">Tokens</span>
+            </div>
+            <div class="mining-stat">
+              <span class="mining-stat-value" id="mUptime">0:00</span>
+              <span class="mining-stat-label">Uptime</span>
+            </div>
+          </div>
+          
+          <div class="mining-info">
+            <div class="mining-info-row">
+              <span class="text-secondary">Status</span>
+              <span id="mStatus" class="text-accent">Waiting for task...</span>
+            </div>
+            <div class="mining-info-row">
+              <span class="text-secondary">Wallet</span>
+              <span class="font-mono" id="mWallet">-</span>
+            </div>
+            <div class="mining-info-row">
+              <span class="text-secondary">Tier</span>
+              <span id="mTier">Bronze (1x)</span>
+            </div>
+          </div>
+          
+          <div class="mining-actions">
+            <a href="dashboard.html" class="btn btn-secondary">View Dashboard</a>
+            <button class="btn btn-outline" onclick="stopMining()">Stop Mining</button>
           </div>
         </div>
         
-        <div id="registerSuccess" class="alert alert-success hidden">
-          Registered as: <span id="registeredName"></span>
-        </div>
-        
-        <div id="registerError" class="alert alert-error hidden"></div>
-      </div>
-
-      <!-- Step 3: Start -->
-      <div class="card mb-20" id="step3Card">
-        <div class="flex items-center gap-10" style="margin-bottom: 15px;">
-          <div class="step-badge" id="step3Badge">3</div>
-          <h3>Start Mining</h3>
-        </div>
-        <p class="text-dim" style="margin-bottom: 20px;">Choose how to run your miner.</p>
-        
-        <!-- Demo Option -->
-        <div style="background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 15px;">
-          <h4 style="margin-bottom: 10px;">Demo Mode</h4>
-          <p class="text-dim" style="font-size: 0.9rem; margin-bottom: 15px;">Try it out instantly. No setup needed.</p>
-          <button class="btn btn-primary" onclick="startDemoMining()">Start Demo Mining</button>
-        </div>
-        
-        <!-- Real Mining Option -->
-        <div style="background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px;">
-          <h4 style="margin-bottom: 10px;">Real Mining</h4>
-          <p class="text-dim" style="font-size: 0.9rem; margin-bottom: 15px;">Run on your computer with real AI models for maximum earnings.</p>
-          <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 15px; font-family: monospace; font-size: 0.85rem; margin-bottom: 15px;">
-            npm install -g taonet-miner<br>
-            taonet-miner start
+        <!-- Live Log -->
+        <div class="card mt-lg">
+          <div class="card-header">
+            <h3 class="card-title">Activity Log</h3>
+            <button class="btn btn-ghost btn-sm" onclick="clearLog()">Clear</button>
           </div>
-          <a href="docs.html" class="btn btn-secondary">View Setup Guide</a>
+          <div class="log-container" id="logContainer">
+            <div class="log-entry text-tertiary">Waiting for tasks...</div>
+          </div>
         </div>
-      </div>
-    </div>
-
-    <!-- Mining Active View -->
-    <div id="miningView" class="hidden">
-      <!-- Status Banner -->
-      <div class="mining-banner">
-        <div class="mining-indicator"></div>
-        <div>
-          <h2 style="color: var(--green); margin-bottom: 5px;">Mining Active</h2>
-          <p class="text-dim">Your miner is running and earning tokens</p>
-        </div>
-      </div>
-
-      <!-- Stats Grid -->
-      <div class="mining-stats-grid">
-        <div class="mining-stat">
-          <div class="mining-stat-value" id="miningTasks">0</div>
-          <div class="mining-stat-label">Tasks Done</div>
-        </div>
-        <div class="mining-stat">
-          <div class="mining-stat-value" id="miningTokens">0</div>
-          <div class="mining-stat-label">Tokens Earned</div>
-        </div>
-        <div class="mining-stat">
-          <div class="mining-stat-value" id="miningUptime">0:00</div>
-          <div class="mining-stat-label">Uptime</div>
-        </div>
-      </div>
-
-      <!-- Info Card -->
-      <div class="card mb-20">
-        <div class="info-row">
-          <span class="text-dim">Status</span>
-          <span style="color: var(--green);" id="miningStatus">Online</span>
-        </div>
-        <div class="info-row">
-          <span class="text-dim">Miner ID</span>
-          <span id="miningMinerId">-</span>
-        </div>
-        <div class="info-row">
-          <span class="text-dim">Tier</span>
-          <span id="miningTier">Bronze</span>
-        </div>
-      </div>
-
-      <!-- Actions -->
-      <div class="flex gap-10">
-        <a href="dashboard.html" class="btn btn-secondary" style="flex: 1; text-align: center;">View Dashboard</a>
-        <button class="btn btn-danger" onclick="stopMining()">Stop Mining</button>
       </div>
     </div>
   </main>
 
   <style>
-    .step-badge {
-      width: 32px;
-      height: 32px;
-      background: var(--border);
+    .setup-step {
+      display: flex;
+      gap: var(--space-lg);
+      margin-bottom: var(--space-xl);
+    }
+    
+    .step-indicator {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 48px;
+      flex-shrink: 0;
+    }
+    
+    .step-number {
+      width: 48px;
+      height: 48px;
+      background: var(--bg-tertiary);
+      border: 2px solid var(--border);
+      color: var(--text-tertiary);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
+      font-size: 18px;
       font-weight: 700;
-      font-size: 0.9rem;
-      flex-shrink: 0;
-    }
-    .step-badge.done {
-      background: var(--green);
-      color: var(--bg);
-    }
-    .step-badge.active {
-      background: var(--gold);
-      color: var(--bg);
+      transition: all 0.3s;
     }
     
-    .mining-banner {
-      background: linear-gradient(135deg, rgba(0, 255, 65, 0.1), rgba(0, 150, 255, 0.05));
-      border: 1px solid var(--green);
-      border-radius: 16px;
-      padding: 30px;
+    .step-number.active {
+      background: var(--accent-bg);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    
+    .step-number.done {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #000;
+    }
+    
+    .step-line {
+      width: 2px;
+      flex: 1;
+      background: var(--border);
+      margin: var(--space-sm) 0;
+      min-height: 40px;
+    }
+    
+    .step-content {
+      flex: 1;
+      padding-bottom: var(--space-xl);
+    }
+    
+    .step-content h3 {
+      font-size: 20px;
+      margin-bottom: var(--space-xs);
+    }
+    
+    .mining-options {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-lg);
+    }
+    
+    @media (max-width: 768px) {
+      .mining-options {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .mining-option {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+    }
+    
+    .mining-option h4 {
+      font-size: 17px;
+      margin-bottom: var(--space-sm);
+    }
+    
+    .code-block {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      font-family: var(--font-mono);
+      font-size: 13px;
+    }
+    
+    .code-block code {
+      display: block;
+      color: var(--accent);
+      padding: var(--space-xs) 0;
+    }
+    
+    /* Mining View */
+    .mining-status-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--accent-border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-xl);
+    }
+    
+    .mining-status-header {
       display: flex;
       align-items: center;
-      gap: 20px;
-      margin-bottom: 20px;
+      gap: var(--space-lg);
+      margin-bottom: var(--space-xl);
     }
     
-    .mining-indicator {
-      width: 60px;
-      height: 60px;
-      background: var(--green);
+    .mining-pulse {
+      width: 64px;
+      height: 64px;
+      background: var(--accent);
       border-radius: 50%;
       animation: pulse 2s infinite;
     }
@@ -197,263 +304,267 @@
       50% { transform: scale(1.1); opacity: 0.7; }
     }
     
-    .mining-stats-grid {
+    .mining-stats {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 15px;
-      margin-bottom: 20px;
-    }
-    
-    @media (max-width: 600px) {
-      .mining-stats-grid { grid-template-columns: 1fr; }
+      gap: var(--space-md);
+      margin-bottom: var(--space-xl);
     }
     
     .mining-stat {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
       text-align: center;
+      padding: var(--space-lg);
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-md);
     }
     
     .mining-stat-value {
-      font-size: 2rem;
+      display: block;
+      font-size: 32px;
       font-weight: 700;
-      color: var(--green);
+      color: var(--accent);
     }
     
     .mining-stat-label {
-      font-size: 0.8rem;
-      color: var(--text-dim);
-      margin-top: 5px;
+      display: block;
+      font-size: 12px;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      margin-top: var(--space-xs);
     }
     
-    .info-row {
+    .mining-info {
+      margin-bottom: var(--space-xl);
+    }
+    
+    .mining-info-row {
       display: flex;
       justify-content: space-between;
-      padding: 12px 0;
+      padding: var(--space-md) 0;
       border-bottom: 1px solid var(--border);
     }
-    .info-row:last-child { border-bottom: none; }
+    
+    .mining-info-row:last-child {
+      border-bottom: none;
+    }
+    
+    .mining-actions {
+      display: flex;
+      gap: var(--space-md);
+    }
+    
+    .log-container {
+      max-height: 300px;
+      overflow-y: auto;
+      font-family: var(--font-mono);
+      font-size: 13px;
+    }
+    
+    .log-entry {
+      padding: var(--space-sm) 0;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .log-entry:last-child {
+      border-bottom: none;
+    }
+    
+    .log-entry.success {
+      color: var(--accent);
+    }
+    
+    .log-entry.error {
+      color: var(--red);
+    }
   </style>
 
-  <script src="taonet.js"></script>
+  <script src="app.js"></script>
   <script>
-    let isMining = false;
+    let mining = false;
     let miningInterval = null;
     let startTime = null;
-    let tasksCount = 0;
-    let tokensCount = 0;
+    let tasksCompleted = 0;
+    let tokensEarned = 0;
     
-    // Check if already mining
-    const savedState = localStorage.getItem('taonet_mining_state');
-    if (savedState) {
-      const state = JSON.parse(savedState);
-      if (state.isMining) {
-        tasksCount = state.tasks || 0;
-        tokensCount = state.tokens || 0;
-        startTime = new Date(state.startTime);
-        showMiningView();
-        startMiningLoop();
-      }
-    }
-
-    // Handle wallet button click
-    async function handleWalletClick() {
-      if (TAONET.wallet) {
-        // Already connected, show menu or disconnect
-        TAONET.disconnectWallet();
-        return;
-      }
+    // Check miner status on load
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(updateSetupUI, 100);
+    });
+    
+    function updateSetupUI() {
+      const s1 = document.getElementById('step1Num');
+      const s2 = document.getElementById('step2Num');
+      const s3 = document.getElementById('step3Num');
       
-      const addr = await TAONET.connectWallet();
-      if (addr) {
-        updateStepUI();
-        checkExistingMiner();
-      }
-    }
-
-    // Update step UI based on state
-    function updateStepUI() {
-      const step1 = document.getElementById('step1Badge');
-      const step2 = document.getElementById('step2Badge');
-      const step3 = document.getElementById('step3Badge');
-      
-      // Update connected address display
-      const addrDisplay = document.getElementById('connectedAddress');
-      if (addrDisplay && TAONET.wallet) {
-        addrDisplay.textContent = TAONET.shortAddress(TAONET.wallet);
-      }
+      // Reset
+      [s1, s2, s3].forEach(s => s.className = 'step-number');
       
       if (TAONET.wallet) {
-        step1.classList.add('done');
-        step2.classList.add('active');
-      }
-      
-      if (TAONET.miner) {
-        step2.classList.remove('active');
-        step2.classList.add('done');
-        step3.classList.add('active');
+        s1.classList.add('done');
+        s1.textContent = '✓';
+        document.getElementById('connectedAddr').textContent = TAONET.shortAddress(TAONET.wallet);
         
-        document.getElementById('registerForm').classList.add('hidden');
-        document.getElementById('registerSuccess').classList.remove('hidden');
-        document.getElementById('registeredName').textContent = TAONET.miner.name || TAONET.shortAddress(TAONET.wallet);
+        if (TAONET.miner) {
+          s2.classList.add('done');
+          s2.textContent = '✓';
+          document.getElementById('registerForm').classList.add('hidden');
+          document.getElementById('registerSuccess').classList.remove('hidden');
+          document.getElementById('registeredName').textContent = TAONET.miner.name;
+          s3.classList.add('active');
+        } else {
+          s2.classList.add('active');
+        }
+      } else {
+        s1.classList.add('active');
       }
     }
-
-    // Check if already registered
-    async function checkExistingMiner() {
-      if (!TAONET.wallet) return;
-      
-      const miner = await TAONET.getMiner();
-      if (miner) {
-        TAONET.miner = miner;
-        updateStepUI();
-      }
-    }
-
-    // Register miner
-    async function registerMiner() {
-      const nameInput = document.getElementById('minerName');
-      const name = nameInput.value.trim();
-      
+    
+    async function register() {
+      const name = document.getElementById('minerName').value.trim();
       if (!name) {
         showError('Please enter a name');
         return;
       }
       
-      if (!TAONET.wallet) {
-        // Auto-create demo wallet if not connected
-        const demoWallet = 'demo_' + Math.random().toString(36).substr(2, 9);
-        TAONET.wallet = demoWallet;
-        localStorage.setItem('taonet_wallet', demoWallet);
-      }
-      
-      document.getElementById('registerBtn').disabled = true;
-      document.getElementById('registerBtn').textContent = 'Registering...';
+      const btn = document.getElementById('registerBtn');
+      btn.disabled = true;
+      btn.textContent = 'Registering...';
       
       const result = await TAONET.registerMiner(name);
       
       if (result?.error) {
         showError(result.error);
-        document.getElementById('registerBtn').disabled = false;
-        document.getElementById('registerBtn').textContent = 'Register';
+        btn.disabled = false;
+        btn.textContent = 'Register';
       } else if (result?.miner) {
-        updateStepUI();
+        updateSetupUI();
       } else {
-        showError('Registration failed. Try again.');
-        document.getElementById('registerBtn').disabled = false;
-        document.getElementById('registerBtn').textContent = 'Register';
+        showError('Registration failed');
+        btn.disabled = false;
+        btn.textContent = 'Register';
       }
     }
-
+    
     function showError(msg) {
-      const errEl = document.getElementById('registerError');
-      errEl.textContent = msg;
-      errEl.classList.remove('hidden');
-      setTimeout(() => errEl.classList.add('hidden'), 5000);
+      const el = document.getElementById('registerError');
+      el.textContent = msg;
+      el.classList.remove('hidden');
+      setTimeout(() => el.classList.add('hidden'), 5000);
     }
-
-    // Start demo mining
-    async function startDemoMining() {
-      // Ensure registered
-      if (!TAONET.miner) {
-        const nameInput = document.getElementById('minerName');
-        const name = nameInput.value.trim() || 'DemoMiner_' + Math.random().toString(36).substr(2, 4);
-        
-        if (!TAONET.wallet) {
-          const demoWallet = 'demo_' + Math.random().toString(36).substr(2, 9);
-          TAONET.wallet = demoWallet;
-          localStorage.setItem('taonet_wallet', demoWallet);
-        }
-        
-        await TAONET.registerMiner(name);
+    
+    async function startBrowserMining() {
+      if (!TAONET.wallet) {
+        await TAONET.connectWallet();
+        if (!TAONET.wallet) return;
       }
       
-      startTime = new Date();
-      saveMiningState();
-      showMiningView();
-      startMiningLoop();
-    }
-
-    function showMiningView() {
+      if (!TAONET.miner) {
+        const name = document.getElementById('minerName').value.trim() || 'Miner_' + Math.random().toString(36).substr(2, 6);
+        await TAONET.registerMiner(name);
+        if (!TAONET.miner) return;
+      }
+      
+      // Show mining view
       document.getElementById('setupView').classList.add('hidden');
       document.getElementById('miningView').classList.remove('hidden');
       
-      document.getElementById('miningMinerId').textContent = TAONET.shortAddress(TAONET.wallet || TAONET.miner?.address);
-      document.getElementById('miningTier').textContent = (TAONET.miner?.tier || 'bronze').charAt(0).toUpperCase() + (TAONET.miner?.tier || 'bronze').slice(1);
-      document.getElementById('miningTasks').textContent = tasksCount;
-      document.getElementById('miningTokens').textContent = tokensCount;
-    }
-
-    function startMiningLoop() {
-      isMining = true;
+      // Set info
+      document.getElementById('mWallet').textContent = TAONET.shortAddress(TAONET.wallet);
+      const tierInfo = TAONET.getTierInfo(TAONET.miner?.tier);
+      document.getElementById('mTier').textContent = `${tierInfo.name} (${tierInfo.mult}x)`;
       
-      // Update uptime every second
-      setInterval(() => {
-        if (!startTime) return;
-        const elapsed = Math.floor((Date.now() - startTime.getTime()) / 1000);
-        const mins = Math.floor(elapsed / 60);
-        const secs = elapsed % 60;
-        document.getElementById('miningUptime').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
-      }, 1000);
-
-      // Simulate mining every 5 seconds
-      miningInterval = setInterval(async () => {
-        try {
-          // Try to get a real task
-          const data = await TAONET.fetchAPI('/api/tasks/next?minerId=' + (TAONET.wallet || TAONET.miner?.address));
+      // Start mining
+      mining = true;
+      startTime = Date.now();
+      
+      // Update uptime
+      setInterval(updateUptime, 1000);
+      
+      // Mining loop
+      miningLoop();
+    }
+    
+    async function miningLoop() {
+      if (!mining) return;
+      
+      try {
+        setStatus('Requesting task...');
+        
+        const taskData = await TAONET.getNextTask();
+        
+        if (taskData?.task) {
+          setStatus('Processing task...');
+          addLog(`Task received: ${taskData.task._id}`);
           
-          if (data?.task) {
-            // Complete the task
-            await TAONET.postAPI('/api/tasks/' + data.task._id + '/complete', {
-              minerId: TAONET.wallet || TAONET.miner?.address,
-              result: 'Demo response ' + Date.now()
-            });
+          // Simulate processing (in real implementation, this would call AI model)
+          await new Promise(r => setTimeout(r, 2000 + Math.random() * 3000));
+          
+          // Submit result
+          const result = await TAONET.submitTask(taskData.task._id, {
+            response: 'Processed by browser miner',
+            timestamp: Date.now()
+          });
+          
+          if (result?.reward) {
+            tasksCompleted++;
+            tokensEarned += result.reward;
+            document.getElementById('mTasksCompleted').textContent = tasksCompleted;
+            document.getElementById('mTokensEarned').textContent = TAONET.formatTokens(tokensEarned);
+            addLog(`Task completed! +${result.reward} tokens`, 'success');
           }
-          
-          // Update counts
-          tasksCount++;
-          tokensCount += 10 + Math.floor(Math.random() * 10);
-          
-          document.getElementById('miningTasks').textContent = tasksCount;
-          document.getElementById('miningTokens').textContent = tokensCount;
-          
-          saveMiningState();
-        } catch(e) {
-          console.error('Mining error:', e);
+        } else {
+          setStatus('Waiting for tasks...');
         }
-      }, 5000);
+      } catch (err) {
+        addLog(`Error: ${err.message}`, 'error');
+      }
+      
+      // Wait before next iteration
+      const delay = 5000 + Math.random() * 5000;
+      setTimeout(() => miningLoop(), delay);
     }
-
+    
     function stopMining() {
-      isMining = false;
-      if (miningInterval) clearInterval(miningInterval);
-      
-      document.getElementById('miningStatus').textContent = 'Stopped';
-      document.getElementById('miningStatus').style.color = 'var(--red)';
-      
-      localStorage.removeItem('taonet_mining_state');
+      mining = false;
+      document.getElementById('miningView').classList.add('hidden');
+      document.getElementById('setupView').classList.remove('hidden');
     }
-
-    function saveMiningState() {
-      localStorage.setItem('taonet_mining_state', JSON.stringify({
-        isMining: true,
-        tasks: tasksCount,
-        tokens: tokensCount,
-        startTime: startTime.toISOString()
-      }));
+    
+    function updateUptime() {
+      if (!startTime) return;
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      const mins = Math.floor(elapsed / 60);
+      const secs = elapsed % 60;
+      const hrs = Math.floor(mins / 60);
+      
+      if (hrs > 0) {
+        document.getElementById('mUptime').textContent = `${hrs}:${(mins % 60).toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      } else {
+        document.getElementById('mUptime').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+      }
     }
-
-    // Init
-    document.addEventListener('DOMContentLoaded', () => {
-      setTimeout(() => {
-        updateStepUI();
-        if (TAONET.wallet) {
-          checkExistingMiner();
-        }
-      }, 100);
-    });
+    
+    function setStatus(text) {
+      document.getElementById('mStatus').textContent = text;
+    }
+    
+    function addLog(text, type = '') {
+      const container = document.getElementById('logContainer');
+      const entry = document.createElement('div');
+      entry.className = 'log-entry ' + type;
+      const time = new Date().toLocaleTimeString();
+      entry.textContent = `[${time}] ${text}`;
+      container.insertBefore(entry, container.firstChild);
+      
+      // Keep only last 50 entries
+      while (container.children.length > 50) {
+        container.removeChild(container.lastChild);
+      }
+    }
+    
+    function clearLog() {
+      document.getElementById('logContainer').innerHTML = '<div class="log-entry text-tertiary">Log cleared</div>';
+    }
   </script>
 </body>
 </html>

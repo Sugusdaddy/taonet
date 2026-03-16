@@ -3,18 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#00ff41">
-  <meta name="description" content="TaoNet - Earn crypto by running AI. Simple.">
-  <link rel="icon" type="image/svg+xml" href="/icon.svg">
+  <meta name="theme-color" content="#00d632">
+  <meta name="description" content="TaoNet - Decentralized AI inference network. Earn crypto by running AI tasks.">
   <title>TaoNet - Earn Crypto Running AI</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <!-- Header -->
   <header class="header">
     <div class="container header-inner">
-      <a href="/" class="logo">TaoNet</a>
+      <a href="/" class="logo">Tao<span>Net</span></a>
       <nav class="nav">
         <a href="mine.html">Mine</a>
         <a href="dashboard.html">Dashboard</a>
@@ -22,121 +20,123 @@
         <a href="rewards.html">Rewards</a>
         <a href="docs.html">Docs</a>
       </nav>
-      <button class="wallet-btn" data-wallet-btn onclick="TAONET.wallet ? showWalletMenu() : TAONET.connectWallet()">Connect Wallet</button>
-      <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+      <div class="header-actions">
+        <button class="wallet-btn" data-wallet-btn onclick="handleWalletClick()">Connect</button>
+        <button class="menu-btn" onclick="toggleMenu()">&#9776;</button>
+      </div>
     </div>
   </header>
-
-  <!-- Wallet Menu Dropdown -->
-  <div class="wallet-menu hidden" id="walletMenu">
-    <div class="wallet-menu-inner">
-      <div class="wallet-address" id="walletMenuAddress"></div>
-      <a href="dashboard.html" class="wallet-menu-item">Dashboard</a>
-      <a href="rewards.html" class="wallet-menu-item">My Rewards</a>
-      <button class="wallet-menu-item danger" onclick="TAONET.disconnectWallet(); hideWalletMenu();">Disconnect</button>
-    </div>
-  </div>
 
   <main>
     <!-- Hero -->
     <section class="hero">
       <div class="container">
-        <span class="badge">Solana Network</span>
-        <h1>Earn Crypto<br><span class="text-green">Running AI</span></h1>
-        <p class="hero-text">Your computer does AI work. You get paid. That's it.</p>
+        <span class="hero-badge">Built on Solana</span>
+        <h1 class="hero-title">
+          Earn Crypto<br><span class="accent">Running AI</span>
+        </h1>
+        <p class="hero-text">
+          Your computer processes AI tasks. You get paid instantly. 
+          No complex setup. No minimum requirements.
+        </p>
         <div class="hero-buttons">
-          <a href="mine.html" class="btn btn-primary btn-lg">Start Earning</a>
-          <a href="#how-it-works" class="btn btn-secondary btn-lg">Learn More</a>
+          <a href="mine.html" class="btn btn-primary btn-lg">Start Mining</a>
+          <a href="#how" class="btn btn-secondary btn-lg">How It Works</a>
         </div>
       </div>
     </section>
 
     <!-- Live Stats -->
-    <section class="stats-bar">
+    <section class="section-alt">
       <div class="container">
-        <div class="stats-row">
-          <div class="stat-item">
-            <span class="stat-value" id="statMiners">-</span>
-            <span class="stat-label">Miners</span>
+        <div class="stats-grid" id="statsGrid">
+          <div class="stat-card">
+            <div class="stat-value" id="statMiners">-</div>
+            <div class="stat-label">Total Miners</div>
           </div>
-          <div class="stat-item">
-            <span class="stat-value" id="statOnline">-</span>
-            <span class="stat-label">Online</span>
+          <div class="stat-card">
+            <div class="stat-value" id="statOnline">-</div>
+            <div class="stat-label">Online Now</div>
           </div>
-          <div class="stat-item">
-            <span class="stat-value" id="statTasks">-</span>
-            <span class="stat-label">Tasks Done</span>
+          <div class="stat-card">
+            <div class="stat-value" id="statTasks">-</div>
+            <div class="stat-label">Tasks Completed</div>
           </div>
-          <div class="stat-item">
-            <span class="stat-value" id="statRewards">-</span>
-            <span class="stat-label">Tokens Paid</span>
+          <div class="stat-card">
+            <div class="stat-value" id="statRewards">-</div>
+            <div class="stat-label">Tokens Paid</div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- How it Works -->
-    <section class="section" id="how-it-works">
+    <!-- How It Works -->
+    <section class="section" id="how">
       <div class="container">
-        <h2 class="section-title">How It Works</h2>
-        <p class="section-subtitle">Start earning in 3 simple steps</p>
+        <div class="section-header">
+          <h2 class="section-title">How It Works</h2>
+          <p class="section-subtitle">Start earning in 3 simple steps</p>
+        </div>
         
-        <div class="steps-grid">
-          <div class="step-card">
+        <div class="grid-3">
+          <div class="card">
             <div class="step-number">1</div>
-            <h3>Get Tokens</h3>
-            <p>Buy TaoNet tokens. The more you hold, the more you earn per task.</p>
+            <h3 class="mt-md mb-sm">Hold Tokens</h3>
+            <p class="text-secondary">
+              Buy TaoNet tokens. The more you hold, the higher your earning multiplier.
+            </p>
           </div>
-          <div class="step-card">
+          <div class="card">
             <div class="step-number">2</div>
-            <h3>Run AI Tasks</h3>
-            <p>Your computer processes AI requests. It runs automatically in the background.</p>
+            <h3 class="mt-md mb-sm">Run Miner</h3>
+            <p class="text-secondary">
+              Start the miner. It automatically processes AI inference tasks in the background.
+            </p>
           </div>
-          <div class="step-card">
+          <div class="card">
             <div class="step-number">3</div>
-            <h3>Get Paid</h3>
-            <p>Earn tokens instantly for each completed task. Cash out anytime.</p>
+            <h3 class="mt-md mb-sm">Get Paid</h3>
+            <p class="text-secondary">
+              Earn tokens instantly for each completed task. Withdraw anytime.
+            </p>
           </div>
-        </div>
-
-        <div class="cta-box">
-          <p>Ready to start?</p>
-          <a href="mine.html" class="btn btn-primary">Begin Mining Now</a>
         </div>
       </div>
     </section>
 
-    <!-- Earning Tiers -->
+    <!-- Tiers -->
     <section class="section section-alt">
       <div class="container">
-        <h2 class="section-title">Earning Tiers</h2>
-        <p class="section-subtitle">Hold more tokens = earn more per task</p>
+        <div class="section-header">
+          <h2 class="section-title">Earning Tiers</h2>
+          <p class="section-subtitle">Hold more tokens, earn more per task</p>
+        </div>
         
         <div class="tiers-grid">
           <div class="tier-card tier-bronze">
-            <div class="tier-name">Bronze</div>
-            <div class="tier-mult">1x</div>
-            <div class="tier-req">Any amount</div>
+            <span class="tier-name">Bronze</span>
+            <span class="tier-mult">1x</span>
+            <span class="tier-req">Any amount</span>
           </div>
           <div class="tier-card tier-silver">
-            <div class="tier-name">Silver</div>
-            <div class="tier-mult">1.25x</div>
-            <div class="tier-req">10K+ tokens</div>
+            <span class="tier-name">Silver</span>
+            <span class="tier-mult">1.25x</span>
+            <span class="tier-req">10K+ tokens</span>
           </div>
           <div class="tier-card tier-gold">
-            <div class="tier-name">Gold</div>
-            <div class="tier-mult">1.5x</div>
-            <div class="tier-req">100K+ tokens</div>
+            <span class="tier-name">Gold</span>
+            <span class="tier-mult">1.5x</span>
+            <span class="tier-req">100K+ tokens</span>
           </div>
           <div class="tier-card tier-platinum">
-            <div class="tier-name">Platinum</div>
-            <div class="tier-mult">2x</div>
-            <div class="tier-req">1M+ tokens</div>
+            <span class="tier-name">Platinum</span>
+            <span class="tier-mult">2x</span>
+            <span class="tier-req">1M+ tokens</span>
           </div>
           <div class="tier-card tier-diamond">
-            <div class="tier-name">Diamond</div>
-            <div class="tier-mult">3x</div>
-            <div class="tier-req">10M+ tokens</div>
+            <span class="tier-name">Diamond</span>
+            <span class="tier-mult">3x</span>
+            <span class="tier-req">10M+ tokens</span>
           </div>
         </div>
       </div>
@@ -145,29 +145,31 @@
     <!-- Jackpots -->
     <section class="section">
       <div class="container">
-        <h2 class="section-title">Bonus Jackpots</h2>
-        <p class="section-subtitle">Random tasks can win you massive rewards</p>
+        <div class="section-header">
+          <h2 class="section-title">Jackpot Rewards</h2>
+          <p class="section-subtitle">Random tasks can trigger massive bonus payouts</p>
+        </div>
         
-        <div class="jackpots-grid" id="jackpotsGrid">
+        <div class="grid-4" id="jackpotsGrid">
           <div class="jackpot-card jackpot-mini">
-            <div class="jackpot-type">Mini</div>
-            <div class="jackpot-mult">32x</div>
-            <div class="jackpot-info">Every ~50 tasks</div>
+            <span class="jackpot-type">Mini</span>
+            <span class="jackpot-mult">32x</span>
+            <span class="jackpot-info">Loading...</span>
           </div>
           <div class="jackpot-card jackpot-regular">
-            <div class="jackpot-type">Regular</div>
-            <div class="jackpot-mult">144x</div>
-            <div class="jackpot-info">Every ~500 tasks</div>
+            <span class="jackpot-type">Regular</span>
+            <span class="jackpot-mult">144x</span>
+            <span class="jackpot-info">Loading...</span>
           </div>
           <div class="jackpot-card jackpot-mega">
-            <div class="jackpot-type">Mega</div>
-            <div class="jackpot-mult">699x</div>
-            <div class="jackpot-info">Every ~5K tasks</div>
+            <span class="jackpot-type">Mega</span>
+            <span class="jackpot-mult">699x</span>
+            <span class="jackpot-info">Loading...</span>
           </div>
           <div class="jackpot-card jackpot-ultra">
-            <div class="jackpot-type">Ultra</div>
-            <div class="jackpot-mult">5163x</div>
-            <div class="jackpot-info">Every ~50K tasks</div>
+            <span class="jackpot-type">Ultra</span>
+            <span class="jackpot-mult">5163x</span>
+            <span class="jackpot-info">Loading...</span>
           </div>
         </div>
       </div>
@@ -176,135 +178,255 @@
     <!-- Features -->
     <section class="section section-alt">
       <div class="container">
-        <h2 class="section-title">Why TaoNet?</h2>
+        <div class="section-header">
+          <h2 class="section-title">Why TaoNet</h2>
+        </div>
         
-        <div class="features-grid">
-          <div class="feature-card">
+        <div class="grid-2">
+          <div class="card">
             <div class="feature-icon">$</div>
-            <h3>Instant Payments</h3>
-            <p>Get paid immediately after each task. No waiting periods.</p>
+            <h3 class="mt-md mb-sm">Instant Payments</h3>
+            <p class="text-secondary">Get paid immediately after each task. No waiting periods or minimum thresholds.</p>
           </div>
-          <div class="feature-card">
-            <div class="feature-icon">*</div>
-            <h3>Passive Income</h3>
-            <p>Set it up once, earn while you sleep. Fully automated.</p>
+          <div class="card">
+            <div class="feature-icon">~</div>
+            <h3 class="mt-md mb-sm">Passive Income</h3>
+            <p class="text-secondary">Set up once and earn while you sleep. The miner runs automatically.</p>
           </div>
-          <div class="feature-card">
+          <div class="card">
             <div class="feature-icon">!</div>
-            <h3>Random Jackpots</h3>
-            <p>Any task could hit a jackpot. Up to 5000x rewards.</p>
+            <h3 class="mt-md mb-sm">Jackpot System</h3>
+            <p class="text-secondary">Random tasks trigger jackpots with up to 5000x multipliers.</p>
           </div>
-          <div class="feature-card">
-            <div class="feature-icon">+</div>
-            <h3>Daily Competitions</h3>
-            <p>Compete for bonus prizes in daily tournaments.</p>
+          <div class="card">
+            <div class="feature-icon">*</div>
+            <h3 class="mt-md mb-sm">Tournaments</h3>
+            <p class="text-secondary">Compete daily for bonus prize pools and climb the leaderboard.</p>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Final CTA -->
+    <!-- CTA -->
     <section class="section">
       <div class="container">
-        <div class="final-cta">
-          <h2>Start Earning Today</h2>
-          <p>Join thousands already earning with TaoNet</p>
+        <div class="cta-box">
+          <h2 class="section-title">Ready to Start?</h2>
+          <p class="text-secondary mt-sm mb-lg">Join the network and start earning today</p>
           <a href="mine.html" class="btn btn-primary btn-lg">Start Mining</a>
         </div>
       </div>
     </section>
   </main>
 
-  <!-- Footer -->
   <footer class="footer">
     <div class="container">
       <div class="footer-grid">
         <div class="footer-brand">
-          <a href="/" class="logo">TaoNet</a>
-          <p>Decentralized AI network. Earn crypto running AI tasks.</p>
+          <a href="/" class="logo">Tao<span>Net</span></a>
+          <p>Decentralized AI inference network built on Solana. Earn crypto by contributing computing power.</p>
         </div>
         <div class="footer-links">
-          <h4>Start</h4>
+          <h4>Product</h4>
           <a href="mine.html">Mine</a>
           <a href="dashboard.html">Dashboard</a>
+          <a href="leaderboard.html">Leaderboard</a>
           <a href="rewards.html">Rewards</a>
         </div>
         <div class="footer-links">
-          <h4>Compete</h4>
-          <a href="leaderboard.html">Leaderboard</a>
-          <a href="tournaments.html">Tournaments</a>
-          <a href="achievements.html">Achievements</a>
-        </div>
-        <div class="footer-links">
-          <h4>Learn</h4>
+          <h4>Resources</h4>
           <a href="docs.html">Documentation</a>
           <a href="developers.html">API</a>
           <a href="https://github.com/Sugusdaddy/taonet" target="_blank">GitHub</a>
         </div>
+        <div class="footer-links">
+          <h4>Community</h4>
+          <a href="tournaments.html">Tournaments</a>
+          <a href="achievements.html">Achievements</a>
+          <a href="referrals.html">Referrals</a>
+        </div>
       </div>
       <div class="footer-bottom">
-        <p>TaoNet - Built on Solana</p>
+        TaoNet &copy; 2026. Built on Solana.
       </div>
     </div>
   </footer>
 
-  <script src="taonet.js"></script>
+  <style>
+    .step-number {
+      width: 48px;
+      height: 48px;
+      background: var(--accent);
+      color: #000;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 700;
+    }
+    
+    .tiers-grid {
+      display: flex;
+      justify-content: center;
+      gap: var(--space-md);
+      flex-wrap: wrap;
+    }
+    
+    .tier-card {
+      background: var(--bg-secondary);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg) var(--space-xl);
+      text-align: center;
+      min-width: 160px;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    
+    .tier-card:hover {
+      transform: translateY(-4px);
+    }
+    
+    .tier-bronze { border-color: var(--bronze); }
+    .tier-silver { border-color: var(--silver); }
+    .tier-gold { border-color: var(--gold); }
+    .tier-platinum { border-color: var(--platinum); }
+    .tier-diamond { border-color: var(--diamond); }
+    
+    .tier-name {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: var(--space-sm);
+    }
+    
+    .tier-bronze .tier-name { color: var(--bronze); }
+    .tier-silver .tier-name { color: var(--silver); }
+    .tier-gold .tier-name { color: var(--gold); }
+    .tier-platinum .tier-name { color: var(--platinum); }
+    .tier-diamond .tier-name { color: var(--diamond); }
+    
+    .tier-mult {
+      display: block;
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: var(--space-sm);
+    }
+    
+    .tier-bronze .tier-mult { color: var(--bronze); }
+    .tier-silver .tier-mult { color: var(--silver); }
+    .tier-gold .tier-mult { color: var(--gold); }
+    .tier-platinum .tier-mult { color: var(--platinum); }
+    .tier-diamond .tier-mult { color: var(--diamond); }
+    
+    .tier-req {
+      display: block;
+      font-size: 13px;
+      color: var(--text-tertiary);
+    }
+    
+    .jackpot-card {
+      background: var(--bg-secondary);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      text-align: center;
+      transition: transform 0.2s;
+    }
+    
+    .jackpot-card:hover {
+      transform: translateY(-4px);
+    }
+    
+    .jackpot-mini { border-color: var(--accent); }
+    .jackpot-regular { border-color: var(--blue); }
+    .jackpot-mega { border-color: var(--gold); }
+    .jackpot-ultra { border-color: var(--purple); }
+    
+    .jackpot-type {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: var(--space-sm);
+    }
+    
+    .jackpot-mini .jackpot-type { color: var(--accent); }
+    .jackpot-regular .jackpot-type { color: var(--blue); }
+    .jackpot-mega .jackpot-type { color: var(--gold); }
+    .jackpot-ultra .jackpot-type { color: var(--purple); }
+    
+    .jackpot-mult {
+      display: block;
+      font-size: 28px;
+      font-weight: 700;
+    }
+    
+    .jackpot-mini .jackpot-mult { color: var(--accent); }
+    .jackpot-regular .jackpot-mult { color: var(--blue); }
+    .jackpot-mega .jackpot-mult { color: var(--gold); }
+    .jackpot-ultra .jackpot-mult { color: var(--purple); }
+    
+    .jackpot-info {
+      display: block;
+      font-size: 12px;
+      color: var(--text-tertiary);
+      margin-top: var(--space-sm);
+    }
+    
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--accent-bg);
+      color: var(--accent);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 700;
+    }
+    
+    .cta-box {
+      text-align: center;
+      padding: var(--space-3xl);
+      background: linear-gradient(135deg, var(--accent-bg), rgba(10, 132, 255, 0.08));
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+    }
+  </style>
+
+  <script src="app.js"></script>
   <script>
-    // Load stats
     async function loadStats() {
-      const stats = await TAONET.getStats();
-      if (stats) {
-        document.getElementById('statMiners').textContent = TAONET.formatNumber(stats.network?.totalMiners || 0);
-        document.getElementById('statOnline').textContent = stats.network?.onlineMiners || 0;
-        document.getElementById('statTasks').textContent = TAONET.formatNumber(stats.tasks?.completed || 0);
-        document.getElementById('statRewards').textContent = TAONET.formatNumber(stats.rewards?.total || 0);
+      const data = await TAONET.getStats();
+      if (data) {
+        document.getElementById('statMiners').textContent = TAONET.formatNumber(data.network?.totalMiners || 0);
+        document.getElementById('statOnline').textContent = data.network?.onlineMiners || 0;
+        document.getElementById('statTasks').textContent = TAONET.formatNumber(data.tasks?.completed || 0);
+        document.getElementById('statRewards').textContent = TAONET.formatNumber(data.rewards?.total || 0);
       }
     }
-
-    // Load jackpots
+    
     async function loadJackpots() {
       const data = await TAONET.getJackpots();
-      if (data?.jackpots?.length) {
-        const grid = document.getElementById('jackpotsGrid');
-        const types = ['mini', 'regular', 'mega', 'ultra'];
-        grid.innerHTML = data.jackpots
-          .sort((a, b) => types.indexOf(a.type) - types.indexOf(b.type))
-          .map(jp => `
-            <div class="jackpot-card jackpot-${jp.type}">
-              <div class="jackpot-type">${jp.type}</div>
-              <div class="jackpot-mult">${jp.multiplier}x</div>
-              <div class="jackpot-info">${jp.tasksUntilTrigger} tasks left</div>
-            </div>
-          `).join('');
+      if (data?.jackpots) {
+        const order = ['mini', 'regular', 'mega', 'ultra'];
+        data.jackpots
+          .sort((a, b) => order.indexOf(a.type) - order.indexOf(b.type))
+          .forEach(jp => {
+            const card = document.querySelector(`.jackpot-${jp.type}`);
+            if (card) {
+              card.querySelector('.jackpot-mult').textContent = jp.multiplier + 'x';
+              card.querySelector('.jackpot-info').textContent = `${jp.tasksUntilTrigger} tasks left`;
+            }
+          });
       }
     }
-
-    // Wallet menu
-    function showWalletMenu() {
-      const menu = document.getElementById('walletMenu');
-      document.getElementById('walletMenuAddress').textContent = TAONET.shortAddress(TAONET.wallet);
-      menu.classList.remove('hidden');
-    }
-
-    function hideWalletMenu() {
-      document.getElementById('walletMenu').classList.add('hidden');
-    }
-
-    // Close menu when clicking outside
-    document.addEventListener('click', (e) => {
-      const menu = document.getElementById('walletMenu');
-      const btn = document.querySelector('[data-wallet-btn]');
-      if (!menu.contains(e.target) && !btn.contains(e.target)) {
-        hideWalletMenu();
-      }
-    });
-
-    // Mobile menu toggle
-    function toggleMenu() {
-      document.querySelector('.nav').classList.toggle('open');
-    }
-
-    // Init
+    
     loadStats();
     loadJackpots();
     setInterval(loadStats, 30000);

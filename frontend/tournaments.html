@@ -4,324 +4,232 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tournaments - TaoNet</title>
-  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-  <style>
-    :root { --green: #00ff41; --dark-green: #00cc33; --bg: #0a0a0a; --terminal-bg: #0d1117; --border: #1a3a1a; --gold: #ffd700; --purple: #9966ff; }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: var(--bg); color: var(--green); font-family: 'Share Tech Mono', monospace; min-height: 100vh; }
-    body::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: repeating-linear-gradient(0deg, rgba(0,0,0,0.15), rgba(0,0,0,0.15) 1px, transparent 1px, transparent 2px); pointer-events: none; z-index: 1000; }
-    .container { max-width: 1200px; margin: 0 auto; padding: 15px; }
-    header { border-bottom: 1px solid var(--border); padding: 15px 0; margin-bottom: 20px; }
-    .logo { font-family: 'VT323', monospace; font-size: 11px; line-height: 1.2; white-space: pre; text-shadow: 0 0 10px var(--green); overflow-x: auto; }
-    @media (max-width: 600px) { .logo { font-size: 8px; } }
-    nav { display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap; }
-    nav a { color: var(--green); text-decoration: none; padding: 8px 12px; border: 1px solid var(--border); transition: all 0.3s; font-size: 11px; }
-    nav a:hover, nav a.active { background: var(--green); color: var(--bg); }
-    
-    .terminal { background: var(--terminal-bg); border: 1px solid var(--border); border-radius: 5px; padding: 20px; margin-bottom: 15px; }
-    @media (max-width: 600px) { .terminal { padding: 15px; } }
-    .section-title { font-family: 'VT323', monospace; font-size: 22px; margin-bottom: 15px; }
-    .section-title::before { content: "> "; color: var(--dark-green); }
-    
-    /* Tournament Card */
-    .tournament-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; }
-    @media (max-width: 400px) { .tournament-grid { grid-template-columns: 1fr; } }
-    .tournament-card { background: var(--bg); border: 2px solid var(--border); border-radius: 10px; overflow: hidden; transition: all 0.3s; }
-    .tournament-card:hover { border-color: var(--gold); transform: translateY(-3px); }
-    .tournament-card.active { border-color: var(--green); box-shadow: 0 0 20px rgba(0, 255, 65, 0.2); }
-    .tournament-card.upcoming { border-color: var(--purple); }
-    
-    .tournament-header { background: linear-gradient(135deg, rgba(0,255,65,0.1), rgba(255,215,0,0.1)); padding: 20px; position: relative; }
-    @media (max-width: 600px) { .tournament-header { padding: 15px; } }
-    .tournament-badge { position: absolute; top: 10px; right: 10px; padding: 4px 10px; font-size: 9px; border-radius: 3px; text-transform: uppercase; }
-    .badge-active { background: var(--green); color: var(--bg); }
-    .badge-upcoming { background: var(--purple); color: white; }
-    .badge-completed { background: #666; color: white; }
-    
-    .tournament-type { font-size: 10px; color: var(--gold); text-transform: uppercase; letter-spacing: 2px; }
-    .tournament-name { font-family: 'VT323', monospace; font-size: 24px; margin: 8px 0; }
-    @media (max-width: 600px) { .tournament-name { font-size: 20px; } }
-    .tournament-prize { font-size: 12px; color: var(--gold); }
-    .tournament-prize span { font-family: 'VT323', monospace; font-size: 20px; }
-    
-    .tournament-body { padding: 15px; }
-    .tournament-info { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 12px; }
-    .info-item { text-align: center; }
-    .info-label { font-size: 9px; color: var(--dark-green); }
-    .info-value { font-family: 'VT323', monospace; font-size: 16px; margin-top: 3px; }
-    
-    .tournament-countdown { background: var(--terminal-bg); padding: 12px; border-radius: 5px; text-align: center; }
-    .countdown-label { font-size: 10px; color: var(--dark-green); }
-    .countdown-value { font-family: 'VT323', monospace; font-size: 24px; color: var(--gold); margin-top: 3px; }
-    
-    /* Leaderboard */
-    .leaderboard { max-height: 400px; overflow-y: auto; }
-    .leaderboard-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
-    .leaderboard-rank { font-family: 'VT323', monospace; font-size: 20px; width: 35px; text-align: center; }
-    .rank-1 { color: var(--gold); text-shadow: 0 0 10px var(--gold); }
-    .rank-2 { color: #c0c0c0; }
-    .rank-3 { color: #cd7f32; }
-    .leaderboard-info { flex: 1; min-width: 0; }
-    .leaderboard-address { font-size: 11px; }
-    .leaderboard-stats { font-size: 9px; color: var(--dark-green); margin-top: 2px; }
-    .leaderboard-score { font-family: 'VT323', monospace; font-size: 18px; text-align: right; }
-    
-    /* How it works grid */
-    .how-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
-    .how-card { background: var(--bg); padding: 15px; border-radius: 5px; text-align: center; }
-    .how-icon { font-family: 'VT323', monospace; font-size: 28px; margin-bottom: 8px; color: var(--gold); }
-    .how-title { font-size: 12px; margin-bottom: 5px; }
-    .how-desc { font-size: 10px; color: var(--dark-green); }
-    
-    /* Scoring */
-    .scoring-item { display: flex; justify-content: space-between; padding: 10px; background: var(--bg); border-radius: 5px; margin-bottom: 8px; font-size: 12px; }
-    
-    /* Past Winners */
-    .winner-card { background: var(--bg); border: 1px solid var(--border); border-radius: 5px; padding: 12px; margin-bottom: 10px; }
-    .winner-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 5px; }
-    .winner-name { font-size: 13px; }
-    .winner-date { font-size: 10px; color: var(--dark-green); }
-    .winner-list { display: flex; gap: 15px; flex-wrap: wrap; }
-    .winner-place { text-align: center; }
-    .winner-medal { font-family: 'VT323', monospace; font-size: 18px; color: var(--gold); }
-    .winner-address { font-size: 9px; color: var(--dark-green); }
-    .winner-prize-amount { font-size: 11px; color: var(--gold); }
-    
-    footer { border-top: 1px solid var(--border); padding: 25px 0; margin-top: 30px; text-align: center; color: var(--dark-green); font-size: 11px; }
-  </style>
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="container">
-    <header>
-      <div class="logo">
-████████╗ █████╗  ██████╗ ███╗   ██╗███████╗████████╗
-╚══██╔══╝██╔══██╗██╔═══██╗████╗  ██║██╔════╝╚══██╔══╝
-   ██║   ███████║██║   ██║██╔██╗ ██║█████╗     ██║   
-   ██║   ██╔══██║██║   ██║██║╚██╗██║██╔══╝     ██║   
-   ██║   ██║  ██║╚██████╔╝██║ ╚████║███████╗   ██║   
-   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝   ╚═╝   
-      </div>
-      <nav>
-        <a href="index.html">[HOME]</a>
-        <a href="mine.html">[MINE]</a>
-        <a href="leaderboard.html">[LEADERBOARD]</a>
-        <a href="rewards.html">[REWARDS]</a>
-        <a href="tournaments.html" class="active">[TOURNAMENTS]</a>
-        <a href="achievements.html">[ACHIEVEMENTS]</a>
+  <header class="header">
+    <div class="container header-inner">
+      <a href="/" class="logo">Tao<span>Net</span></a>
+      <nav class="nav">
+        <a href="mine.html">Mine</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="leaderboard.html">Leaderboard</a>
+        <a href="rewards.html">Rewards</a>
+        <a href="docs.html">Docs</a>
       </nav>
-    </header>
-
-    <!-- Active Tournaments -->
-    <div class="terminal">
-      <h2 class="section-title">ACTIVE TOURNAMENTS</h2>
-      <div class="tournament-grid" id="activeTournaments">
-        <div style="text-align: center; padding: 40px; color: var(--dark-green); grid-column: 1 / -1;">
-          <div style="font-family: 'VT323', monospace; font-size: 36px; margin-bottom: 15px;">[TOURNAMENTS]</div>
-          <div style="font-size: 14px; margin-bottom: 8px;">No Active Tournaments</div>
-          <div style="font-size: 11px;">Check back soon for weekly competitions</div>
-        </div>
+      <div class="header-actions">
+        <button class="wallet-btn" data-wallet-btn onclick="handleWalletClick()">Connect</button>
+        <button class="menu-btn" onclick="toggleMenu()">&#9776;</button>
       </div>
     </div>
+  </header>
 
-    <!-- Current Tournament Leaderboard -->
-    <div class="terminal" id="currentLeaderboardSection" style="display: none;">
-      <h2 class="section-title">TOURNAMENT LEADERBOARD</h2>
-      <div class="leaderboard" id="currentLeaderboard"></div>
-    </div>
+  <main>
+    <div class="container">
+      <div class="page-header">
+        <h1 class="page-title">Tournaments</h1>
+        <p class="page-subtitle">Compete for bonus prize pools</p>
+      </div>
 
-    <!-- How Tournaments Work -->
-    <div class="terminal">
-      <h2 class="section-title">HOW TOURNAMENTS WORK</h2>
-      <div class="how-grid">
-        <div class="how-card">
-          <div class="how-icon">[TIME]</div>
-          <div class="how-title">TIME-LIMITED</div>
-          <div class="how-desc">Compete during the tournament window</div>
-        </div>
-        <div class="how-card">
-          <div class="how-icon">[SCORE]</div>
-          <div class="how-title">EARN POINTS</div>
-          <div class="how-desc">Tasks + Quality + Speed = Score</div>
-        </div>
-        <div class="how-card">
-          <div class="how-icon">[TOP3]</div>
-          <div class="how-title">TOP 3 WIN</div>
-          <div class="how-desc">Prize pool: 50% / 30% / 20%</div>
-        </div>
-        <div class="how-card">
-          <div class="how-icon">[MULT]</div>
-          <div class="how-title">STREAK BONUS</div>
-          <div class="how-desc">Your streak multiplier applies</div>
-        </div>
+      <!-- Active Tournaments -->
+      <div id="tournamentsContainer">
+        <div class="text-center text-tertiary" style="padding: 60px;">Loading tournaments...</div>
       </div>
     </div>
+  </main>
 
-    <!-- Scoring System -->
-    <div class="terminal">
-      <h2 class="section-title">SCORING SYSTEM</h2>
-      <div>
-        <div class="scoring-item">
-          <span>Task Completion</span>
-          <span style="color: var(--gold);">+10 points</span>
-        </div>
-        <div class="scoring-item">
-          <span>Quality Score</span>
-          <span style="color: var(--gold);">+1 point per quality</span>
-        </div>
-        <div class="scoring-item">
-          <span>Speed Bonus (less than 2s)</span>
-          <span style="color: var(--gold);">+5 points</span>
-        </div>
-        <div class="scoring-item">
-          <span>Streak Multiplier</span>
-          <span style="color: var(--gold);">+2% per day</span>
-        </div>
-      </div>
-    </div>
+  <style>
+    .tournament-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-xl);
+      margin-bottom: var(--space-lg);
+    }
+    
+    .tournament-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: var(--space-lg);
+    }
+    
+    .tournament-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: var(--space-xs);
+    }
+    
+    .tournament-status {
+      padding: 6px 12px;
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    
+    .status-active {
+      background: var(--accent-bg);
+      color: var(--accent);
+    }
+    
+    .status-upcoming {
+      background: rgba(255, 159, 10, 0.12);
+      color: var(--orange);
+    }
+    
+    .status-ended {
+      background: var(--bg-tertiary);
+      color: var(--text-tertiary);
+    }
+    
+    .tournament-info {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-md);
+      margin-bottom: var(--space-xl);
+    }
+    
+    @media (max-width: 768px) {
+      .tournament-info { grid-template-columns: repeat(2, 1fr); }
+    }
+    
+    .info-item {
+      text-align: center;
+      padding: var(--space-md);
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-md);
+    }
+    
+    .info-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    
+    .info-label {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      margin-top: var(--space-xs);
+    }
+    
+    .prize-distribution {
+      margin-bottom: var(--space-lg);
+    }
+    
+    .prize-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-md) 0;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .prize-row:last-child {
+      border-bottom: none;
+    }
+    
+    .prize-rank {
+      font-weight: 600;
+    }
+    
+    .prize-rank.gold { color: var(--gold); }
+    .prize-rank.silver { color: var(--silver); }
+    .prize-rank.bronze { color: var(--bronze); }
+    
+    .prize-amount {
+      color: var(--accent);
+      font-weight: 600;
+    }
+    
+    .tournament-leaderboard h4 {
+      margin-bottom: var(--space-md);
+    }
+  </style>
 
-    <!-- Past Winners -->
-    <div class="terminal">
-      <h2 class="section-title">PAST TOURNAMENTS</h2>
-      <div id="pastTournaments">
-        <div style="text-align: center; padding: 30px; color: var(--dark-green);">
-          No completed tournaments yet
-        </div>
-      </div>
-    </div>
-
-    <footer>
-      <p>TaoNet - Decentralized AI Inference Network</p>
-    </footer>
-  </div>
-
+  <script src="app.js"></script>
   <script>
-    const API_URL = 'https://api.taonet.fun';
-
     async function loadTournaments() {
-      try {
-        const response = await fetch(`${API_URL}/api/tournaments/active`);
-        const data = await response.json();
+      const container = document.getElementById('tournamentsContainer');
+      
+      const data = await TAONET.getTournaments();
+      
+      if (!data?.tournaments?.length) {
+        container.innerHTML = `
+          <div class="text-center" style="padding: 60px;">
+            <h3 class="mb-sm">No Active Tournaments</h3>
+            <p class="text-tertiary">Check back later for upcoming competitions</p>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = data.tournaments.map(t => {
+        const now = Date.now();
+        const start = new Date(t.startTime).getTime();
+        const end = new Date(t.endTime).getTime();
         
-        const container = document.getElementById('activeTournaments');
-        
-        if (!data.tournaments || data.tournaments.length === 0) {
-          return;
+        let status = 'upcoming';
+        let statusText = 'Upcoming';
+        if (now >= start && now <= end) {
+          status = 'active';
+          statusText = 'Active';
+        } else if (now > end) {
+          status = 'ended';
+          statusText = 'Ended';
         }
         
-        container.innerHTML = data.tournaments.map(t => {
-          const isActive = t.status === 'active';
-          const prize = (Number(t.prizePool) / 1e18).toFixed(0);
-          const endTime = new Date(t.endTime);
-          const now = new Date();
-          const msLeft = endTime - now;
-          
-          let timeLeft = '';
-          if (msLeft > 0) {
-            const days = Math.floor(msLeft / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((msLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const mins = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
+        const timeLeft = status === 'active' ? Math.floor((end - now) / 1000 / 60 / 60) : 0;
+        
+        return `
+          <div class="tournament-card">
+            <div class="tournament-header">
+              <div>
+                <h2 class="tournament-title">${t.name}</h2>
+                <p class="text-secondary">${t.description || 'Compete for prizes'}</p>
+              </div>
+              <span class="tournament-status status-${status}">${statusText}</span>
+            </div>
             
-            if (days > 0) timeLeft = `${days}d ${hours}h`;
-            else if (hours > 0) timeLeft = `${hours}h ${mins}m`;
-            else timeLeft = `${mins}m`;
-          }
-          
-          return `
-            <div class="tournament-card ${t.status}" onclick="showLeaderboard('${t._id}')">
-              <div class="tournament-header">
-                <span class="tournament-badge badge-${t.status}">${t.status}</span>
-                <div class="tournament-type">${t.type} Tournament</div>
-                <div class="tournament-name">${t.name}</div>
-                <div class="tournament-prize">Prize Pool: <span>${prize}</span> tokens</div>
+            <div class="tournament-info">
+              <div class="info-item">
+                <div class="info-value">${TAONET.formatNumber(t.prizePool)}</div>
+                <div class="info-label">Prize Pool</div>
               </div>
-              <div class="tournament-body">
-                <div class="tournament-info">
-                  <div class="info-item">
-                    <div class="info-label">Participants</div>
-                    <div class="info-value">${t.leaderboard?.length || 0}</div>
-                  </div>
-                  <div class="info-item">
-                    <div class="info-label">Ends In</div>
-                    <div class="info-value">${timeLeft || 'Soon'}</div>
-                  </div>
-                </div>
-                ${t.requirements?.minLevel > 1 ? `<div style="font-size: 10px; color: var(--dark-green);">Requires: Level ${t.requirements.minLevel}+</div>` : ''}
+              <div class="info-item">
+                <div class="info-value">${t.participants || 0}</div>
+                <div class="info-label">Participants</div>
+              </div>
+              <div class="info-item">
+                <div class="info-value">${status === 'active' ? timeLeft + 'h' : '-'}</div>
+                <div class="info-label">Time Left</div>
+              </div>
+              <div class="info-item">
+                <div class="info-value">#${t.yourRank || '-'}</div>
+                <div class="info-label">Your Rank</div>
               </div>
             </div>
-          `;
-        }).join('');
-        
-      } catch (error) {
-        console.error('Failed to load tournaments:', error);
-      }
-    }
-
-    async function showLeaderboard(tournamentId) {
-      try {
-        const response = await fetch(`${API_URL}/api/tournaments/${tournamentId}/leaderboard`);
-        const data = await response.json();
-        
-        const section = document.getElementById('currentLeaderboardSection');
-        const container = document.getElementById('currentLeaderboard');
-        
-        if (!data.leaderboard || data.leaderboard.length === 0) {
-          container.innerHTML = '<div style="text-align: center; padding: 30px; color: var(--dark-green);">No participants yet</div>';
-        } else {
-          container.innerHTML = data.leaderboard.map((entry, i) => `
-            <div class="leaderboard-item">
-              <div class="leaderboard-rank ${i < 3 ? 'rank-' + (i + 1) : ''}">#${entry.rank}</div>
-              <div class="leaderboard-info">
-                <div class="leaderboard-address">${entry.miner.slice(0, 10)}...${entry.miner.slice(-6)}</div>
-                <div class="leaderboard-stats">${entry.tasksCompleted} tasks | ${entry.avgQuality} avg quality</div>
-              </div>
-              <div class="leaderboard-score">${entry.score.toLocaleString()}</div>
-            </div>
-          `).join('');
-        }
-        
-        section.style.display = 'block';
-        section.scrollIntoView({ behavior: 'smooth' });
-      } catch (error) {
-        console.error('Failed to load leaderboard:', error);
-      }
-    }
-
-    async function loadPastTournaments() {
-      try {
-        const response = await fetch(`${API_URL}/api/tournaments/history`);
-        const data = await response.json();
-        
-        const container = document.getElementById('pastTournaments');
-        
-        if (!data.tournaments || data.tournaments.length === 0) {
-          return;
-        }
-        
-        container.innerHTML = data.tournaments.map(t => `
-          <div class="winner-card">
-            <div class="winner-header">
-              <span class="winner-name">${t.name}</span>
-              <span class="winner-date">${new Date(t.endTime).toLocaleDateString()}</span>
-            </div>
-            <div class="winner-list">
-              ${t.winners.map((w, i) => `
-                <div class="winner-place">
-                  <div class="winner-medal">[#${i + 1}]</div>
-                  <div class="winner-address">${w.miner.slice(0, 8)}...</div>
-                  <div class="winner-prize-amount">${(Number(w.prize) / 1e18).toFixed(2)} tokens</div>
+            
+            <div class="prize-distribution">
+              <h4 class="mb-md">Prize Distribution</h4>
+              ${(t.prizes || []).map((prize, i) => `
+                <div class="prize-row">
+                  <span class="prize-rank ${i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : ''}">#${i + 1}</span>
+                  <span class="prize-amount">${TAONET.formatNumber(prize)} tokens</span>
                 </div>
               `).join('')}
             </div>
+            
+            ${status === 'active' ? `
+              <a href="mine.html" class="btn btn-primary w-full">Start Mining to Compete</a>
+            ` : ''}
           </div>
-        `).join('');
-      } catch (error) {
-        console.error('Failed to load past tournaments:', error);
-      }
+        `;
+      }).join('');
     }
-
+    
     loadTournaments();
-    loadPastTournaments();
-    setInterval(loadTournaments, 30000);
   </script>
 </body>
 </html>

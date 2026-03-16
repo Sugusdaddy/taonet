@@ -4,174 +4,196 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Rewards - TaoNet</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
   <link rel="stylesheet" href="styles.css">
-  <link rel="icon" type="image/svg+xml" href="/icon.svg">
 </head>
 <body>
   <header class="header">
     <div class="container header-inner">
-      <a href="/" class="logo">TaoNet</a>
+      <a href="/" class="logo">Tao<span>Net</span></a>
       <nav class="nav">
         <a href="mine.html">Mine</a>
         <a href="dashboard.html">Dashboard</a>
         <a href="leaderboard.html">Leaderboard</a>
         <a href="rewards.html" class="active">Rewards</a>
+        <a href="docs.html">Docs</a>
       </nav>
-      <button class="wallet-btn" data-wallet-btn onclick="TAONET.wallet ? TAONET.disconnectWallet() : TAONET.connectWallet()">Connect Wallet</button>
-      <button class="menu-toggle" onclick="document.querySelector('.nav').classList.toggle('open')">☰</button>
+      <div class="header-actions">
+        <button class="wallet-btn" data-wallet-btn onclick="handleWalletClick()">Connect</button>
+        <button class="menu-btn" onclick="toggleMenu()">&#9776;</button>
+      </div>
     </div>
   </header>
 
-  <main class="container" style="padding-top: 40px; padding-bottom: 60px;">
-    <h1 style="font-size: 2rem; margin-bottom: 10px;">Rewards</h1>
-    <p class="text-dim" style="margin-bottom: 40px;">Multiple ways to earn with TaoNet</p>
+  <main>
+    <div class="container">
+      <div class="page-header">
+        <h1 class="page-title">Rewards</h1>
+        <p class="page-subtitle">How you earn tokens on TaoNet</p>
+      </div>
 
-    <!-- Your Rewards (if connected) -->
-    <div class="card mb-20" id="yourRewards" style="display: none;">
-      <div class="card-header">
-        <h3 class="card-title">Your Rewards</h3>
-      </div>
-      <div class="your-rewards-grid">
-        <div class="your-reward-item">
-          <div class="your-reward-value" id="yourTotal">0</div>
-          <div class="your-reward-label">Total Earned</div>
-        </div>
-        <div class="your-reward-item">
-          <div class="your-reward-value" id="yourPending">0</div>
-          <div class="your-reward-label">Pending</div>
-        </div>
-        <div class="your-reward-item">
-          <button class="btn btn-primary" onclick="claimRewards()">Claim All</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Base Rewards -->
-    <div class="card mb-20">
-      <div class="card-header">
-        <h3 class="card-title">Base Rewards</h3>
-      </div>
-      <p class="text-dim" style="margin-bottom: 20px;">What you earn for each task</p>
-      
-      <div class="reward-breakdown">
-        <div class="reward-row">
-          <span>Base task reward</span>
-          <span class="reward-amount">10 tokens</span>
-        </div>
-        <div class="reward-row">
-          <span>Quality bonus (score 80+)</span>
-          <span class="reward-amount">+5 tokens</span>
-        </div>
-        <div class="reward-row">
-          <span>Speed bonus (&lt;30s)</span>
-          <span class="reward-amount">+3 tokens</span>
-        </div>
-        <div class="reward-row highlight">
-          <span>Max per task</span>
-          <span class="reward-amount">18 tokens</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Jackpots -->
-    <div class="card mb-20">
-      <div class="card-header">
-        <h3 class="card-title">Jackpots</h3>
-      </div>
-      <p class="text-dim" style="margin-bottom: 20px;">Random bonus rewards - any task could trigger one</p>
-      
-      <div class="jackpots-grid" id="jackpotsGrid">
-        <!-- Loaded dynamically -->
-      </div>
-    </div>
-
-    <!-- Tier Multipliers -->
-    <div class="card mb-20">
-      <div class="card-header">
-        <h3 class="card-title">Tier Multipliers</h3>
-      </div>
-      <p class="text-dim" style="margin-bottom: 20px;">Hold more tokens to multiply ALL your rewards</p>
-      
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>Tier</th>
-              <th>Tokens Required</th>
-              <th>Multiplier</th>
-              <th>Example Reward</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><span class="tier-badge-sm bronze">Bronze</span></td>
-              <td>Any amount</td>
-              <td>1x</td>
-              <td>10 tokens</td>
-            </tr>
-            <tr>
-              <td><span class="tier-badge-sm silver">Silver</span></td>
-              <td>10,000+</td>
-              <td>1.25x</td>
-              <td>12.5 tokens</td>
-            </tr>
-            <tr>
-              <td><span class="tier-badge-sm gold">Gold</span></td>
-              <td>100,000+</td>
-              <td>1.5x</td>
-              <td>15 tokens</td>
-            </tr>
-            <tr>
-              <td><span class="tier-badge-sm platinum">Platinum</span></td>
-              <td>1,000,000+</td>
-              <td>2x</td>
-              <td>20 tokens</td>
-            </tr>
-            <tr>
-              <td><span class="tier-badge-sm diamond">Diamond</span></td>
-              <td>10,000,000+</td>
-              <td>3x</td>
-              <td>30 tokens</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Other Bonuses -->
-    <div class="card">
-      <div class="card-header">
-        <h3 class="card-title">Other Bonuses</h3>
-      </div>
-      
-      <div class="bonus-grid">
-        <div class="bonus-item">
-          <div class="bonus-icon">*</div>
-          <div>
-            <h4>Streak Bonus</h4>
-            <p class="text-dim">+2% per consecutive day mining (max +20%)</p>
+      <!-- Your Stats (connected) -->
+      <div data-show-connected class="hidden">
+        <div class="reward-summary mb-lg">
+          <div class="reward-summary-item">
+            <span class="reward-summary-value" id="yourTotal">0</span>
+            <span class="reward-summary-label">Total Earned</span>
+          </div>
+          <div class="reward-summary-item">
+            <span class="reward-summary-value" id="yourPending">0</span>
+            <span class="reward-summary-label">Pending</span>
+          </div>
+          <div class="reward-summary-item">
+            <button class="btn btn-primary" onclick="alert('Coming soon: Token launch required')">Claim Rewards</button>
           </div>
         </div>
-        <div class="bonus-item">
-          <div class="bonus-icon">!</div>
-          <div>
-            <h4>Level Bonus</h4>
-            <p class="text-dim">+5% per level (max +100% at level 20)</p>
+      </div>
+
+      <!-- Base Rewards -->
+      <div class="card mb-lg">
+        <div class="card-header">
+          <h3 class="card-title">Base Rewards</h3>
+        </div>
+        <p class="text-secondary mb-lg">What you earn for each completed task</p>
+        
+        <div class="reward-table">
+          <div class="reward-row">
+            <span>Base task reward</span>
+            <span class="reward-amount">10 tokens</span>
+          </div>
+          <div class="reward-row">
+            <span>Quality bonus (80%+ score)</span>
+            <span class="reward-amount">+5 tokens</span>
+          </div>
+          <div class="reward-row">
+            <span>Speed bonus (&lt;30s response)</span>
+            <span class="reward-amount">+3 tokens</span>
+          </div>
+          <div class="reward-row highlight">
+            <span>Maximum per task</span>
+            <span class="reward-amount">18 tokens</span>
           </div>
         </div>
-        <div class="bonus-item">
-          <div class="bonus-icon">+</div>
-          <div>
-            <h4>Referrals</h4>
-            <p class="text-dim">5% of everything your referrals earn</p>
+      </div>
+
+      <!-- Jackpots -->
+      <div class="card mb-lg">
+        <div class="card-header">
+          <h3 class="card-title">Jackpot System</h3>
+        </div>
+        <p class="text-secondary mb-lg">Random tasks can trigger massive bonus multipliers</p>
+        
+        <div class="grid-4" id="jackpotsGrid">
+          <div class="jackpot-card jackpot-mini">
+            <span class="jackpot-type">Mini</span>
+            <span class="jackpot-mult">32x</span>
+            <span class="jackpot-info">Loading...</span>
+          </div>
+          <div class="jackpot-card jackpot-regular">
+            <span class="jackpot-type">Regular</span>
+            <span class="jackpot-mult">144x</span>
+            <span class="jackpot-info">Loading...</span>
+          </div>
+          <div class="jackpot-card jackpot-mega">
+            <span class="jackpot-type">Mega</span>
+            <span class="jackpot-mult">699x</span>
+            <span class="jackpot-info">Loading...</span>
+          </div>
+          <div class="jackpot-card jackpot-ultra">
+            <span class="jackpot-type">Ultra</span>
+            <span class="jackpot-mult">5163x</span>
+            <span class="jackpot-info">Loading...</span>
           </div>
         </div>
-        <div class="bonus-item">
-          <div class="bonus-icon">$</div>
-          <div>
-            <h4>Tournaments</h4>
-            <p class="text-dim">Compete for bonus prize pools daily</p>
+      </div>
+
+      <!-- Tier Multipliers -->
+      <div class="card mb-lg">
+        <div class="card-header">
+          <h3 class="card-title">Tier Multipliers</h3>
+        </div>
+        <p class="text-secondary mb-lg">Hold more tokens to multiply all your rewards</p>
+        
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Tier</th>
+                <th>Required</th>
+                <th>Multiplier</th>
+                <th>Example</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="badge badge-bronze">Bronze</span></td>
+                <td>Any amount</td>
+                <td>1x</td>
+                <td>10 tokens</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-silver">Silver</span></td>
+                <td>10,000+</td>
+                <td>1.25x</td>
+                <td>12.5 tokens</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-gold">Gold</span></td>
+                <td>100,000+</td>
+                <td>1.5x</td>
+                <td>15 tokens</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-platinum">Platinum</span></td>
+                <td>1,000,000+</td>
+                <td>2x</td>
+                <td>20 tokens</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-diamond">Diamond</span></td>
+                <td>10,000,000+</td>
+                <td>3x</td>
+                <td>30 tokens</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Other Bonuses -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Additional Bonuses</h3>
+        </div>
+        
+        <div class="bonus-grid">
+          <div class="bonus-item">
+            <div class="bonus-icon">*</div>
+            <div class="bonus-content">
+              <h4>Streak Bonus</h4>
+              <p class="text-tertiary">+2% for each consecutive mining day, up to +20%</p>
+            </div>
+          </div>
+          <div class="bonus-item">
+            <div class="bonus-icon">^</div>
+            <div class="bonus-content">
+              <h4>Level Bonus</h4>
+              <p class="text-tertiary">+5% per level, up to +100% at level 20</p>
+            </div>
+          </div>
+          <div class="bonus-item">
+            <div class="bonus-icon">+</div>
+            <div class="bonus-content">
+              <h4>Referral Commission</h4>
+              <p class="text-tertiary">Earn 10% of everything your referrals earn</p>
+            </div>
+          </div>
+          <div class="bonus-item">
+            <div class="bonus-icon">!</div>
+            <div class="bonus-content">
+              <h4>Tournament Prizes</h4>
+              <p class="text-tertiary">Compete daily for bonus token prize pools</p>
+            </div>
           </div>
         </div>
       </div>
@@ -179,144 +201,170 @@
   </main>
 
   <style>
-    .your-rewards-grid {
+    .reward-summary {
       display: flex;
       align-items: center;
-      gap: 30px;
-      flex-wrap: wrap;
+      gap: var(--space-2xl);
+      padding: var(--space-xl);
+      background: var(--bg-secondary);
+      border: 1px solid var(--accent-border);
+      border-radius: var(--radius-lg);
     }
-    .your-reward-item { text-align: center; }
-    .your-reward-value { font-size: 2rem; font-weight: 700; color: var(--green); }
-    .your-reward-label { font-size: 0.8rem; color: var(--text-dim); }
     
-    .reward-breakdown {
-      background: var(--bg);
-      border-radius: 10px;
+    .reward-summary-value {
+      display: block;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    
+    .reward-summary-label {
+      font-size: 13px;
+      color: var(--text-tertiary);
+    }
+    
+    .reward-table {
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-md);
       overflow: hidden;
     }
+    
     .reward-row {
       display: flex;
       justify-content: space-between;
-      padding: 15px 20px;
+      padding: var(--space-md) var(--space-lg);
       border-bottom: 1px solid var(--border);
-      font-size: 0.95rem;
+      font-size: 14px;
     }
-    .reward-row:last-child { border-bottom: none; }
-    .reward-row.highlight { background: var(--green-bg); }
-    .reward-amount { color: var(--green); font-weight: 600; }
+    
+    .reward-row:last-child {
+      border-bottom: none;
+    }
+    
+    .reward-row.highlight {
+      background: var(--accent-bg);
+    }
+    
+    .reward-amount {
+      color: var(--accent);
+      font-weight: 600;
+    }
+    
+    .jackpot-card {
+      background: var(--bg-secondary);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      text-align: center;
+    }
+    
+    .jackpot-mini { border-color: var(--accent); }
+    .jackpot-regular { border-color: var(--blue); }
+    .jackpot-mega { border-color: var(--gold); }
+    .jackpot-ultra { border-color: var(--purple); }
+    
+    .jackpot-type {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: var(--space-sm);
+    }
+    
+    .jackpot-mini .jackpot-type { color: var(--accent); }
+    .jackpot-regular .jackpot-type { color: var(--blue); }
+    .jackpot-mega .jackpot-type { color: var(--gold); }
+    .jackpot-ultra .jackpot-type { color: var(--purple); }
+    
+    .jackpot-mult {
+      display: block;
+      font-size: 28px;
+      font-weight: 700;
+    }
+    
+    .jackpot-mini .jackpot-mult { color: var(--accent); }
+    .jackpot-regular .jackpot-mult { color: var(--blue); }
+    .jackpot-mega .jackpot-mult { color: var(--gold); }
+    .jackpot-ultra .jackpot-mult { color: var(--purple); }
+    
+    .jackpot-info {
+      display: block;
+      font-size: 12px;
+      color: var(--text-tertiary);
+      margin-top: var(--space-sm);
+    }
     
     .bonus-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 15px;
+      gap: var(--space-md);
     }
-    @media (max-width: 600px) {
+    
+    @media (max-width: 640px) {
       .bonus-grid { grid-template-columns: 1fr; }
+      .reward-summary { flex-direction: column; text-align: center; }
     }
+    
     .bonus-item {
       display: flex;
-      gap: 15px;
-      padding: 20px;
-      background: var(--bg);
-      border-radius: 10px;
+      gap: var(--space-md);
+      padding: var(--space-lg);
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-md);
     }
+    
     .bonus-icon {
       width: 40px;
       height: 40px;
-      background: var(--green-bg);
-      border-radius: 10px;
+      background: var(--accent-bg);
+      color: var(--accent);
+      border-radius: var(--radius-sm);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.2rem;
+      font-size: 20px;
       font-weight: 700;
-      color: var(--green);
       flex-shrink: 0;
     }
-    .bonus-item h4 { margin-bottom: 5px; font-size: 1rem; }
-    .bonus-item p { font-size: 0.85rem; }
     
-    .tier-badge-sm {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 4px;
-      font-size: 0.7rem;
-      font-weight: 600;
-      text-transform: uppercase;
+    .bonus-content h4 {
+      font-size: 15px;
+      margin-bottom: var(--space-xs);
     }
-    .tier-badge-sm.bronze { background: rgba(205, 127, 50, 0.15); color: var(--bronze); }
-    .tier-badge-sm.silver { background: rgba(192, 192, 192, 0.15); color: var(--silver); }
-    .tier-badge-sm.gold { background: rgba(255, 215, 0, 0.15); color: var(--gold); }
-    .tier-badge-sm.platinum { background: rgba(229, 228, 226, 0.15); color: var(--platinum); }
-    .tier-badge-sm.diamond { background: rgba(185, 242, 255, 0.15); color: var(--diamond); }
+    
+    .bonus-content p {
+      font-size: 13px;
+    }
   </style>
 
-  <script src="taonet.js"></script>
+  <script src="app.js"></script>
   <script>
     async function loadJackpots() {
-      const grid = document.getElementById('jackpotsGrid');
-      
-      try {
-        const data = await TAONET.getJackpots();
-        
-        if (data?.jackpots?.length) {
-          const types = ['mini', 'regular', 'mega', 'ultra'];
-          grid.innerHTML = data.jackpots
-            .sort((a, b) => types.indexOf(a.type) - types.indexOf(b.type))
-            .map(jp => `
-              <div class="jackpot-card jackpot-${jp.type}">
-                <div class="jackpot-type">${jp.type}</div>
-                <div class="jackpot-mult">${jp.multiplier}x</div>
-                <div class="jackpot-info">${jp.tasksUntilTrigger} tasks until next</div>
-              </div>
-            `).join('');
-        } else {
-          grid.innerHTML = `
-            <div class="jackpot-card jackpot-mini">
-              <div class="jackpot-type">Mini</div>
-              <div class="jackpot-mult">32x</div>
-              <div class="jackpot-info">Every ~50 tasks</div>
-            </div>
-            <div class="jackpot-card jackpot-regular">
-              <div class="jackpot-type">Regular</div>
-              <div class="jackpot-mult">144x</div>
-              <div class="jackpot-info">Every ~500 tasks</div>
-            </div>
-            <div class="jackpot-card jackpot-mega">
-              <div class="jackpot-type">Mega</div>
-              <div class="jackpot-mult">699x</div>
-              <div class="jackpot-info">Every ~5,000 tasks</div>
-            </div>
-            <div class="jackpot-card jackpot-ultra">
-              <div class="jackpot-type">Ultra</div>
-              <div class="jackpot-mult">5163x</div>
-              <div class="jackpot-info">Every ~50,000 tasks</div>
-            </div>
-          `;
-        }
-      } catch(e) {}
-    }
-
-    async function loadUserRewards() {
-      if (!TAONET.wallet && !localStorage.getItem('taonet_miner')) return;
-      
-      const minerId = TAONET.wallet || JSON.parse(localStorage.getItem('taonet_miner') || '{}').address;
-      if (!minerId) return;
-      
-      document.getElementById('yourRewards').style.display = 'block';
-      
-      const miner = await TAONET.getMiner(minerId);
-      if (miner) {
-        document.getElementById('yourTotal').textContent = (miner.totalRewards || 0).toLocaleString();
-        document.getElementById('yourPending').textContent = (miner.pendingRewards || 0).toLocaleString();
+      const data = await TAONET.getJackpots();
+      if (data?.jackpots) {
+        const order = ['mini', 'regular', 'mega', 'ultra'];
+        data.jackpots
+          .sort((a, b) => order.indexOf(a.type) - order.indexOf(b.type))
+          .forEach(jp => {
+            const card = document.querySelector(`.jackpot-${jp.type}`);
+            if (card) {
+              card.querySelector('.jackpot-mult').textContent = jp.multiplier + 'x';
+              card.querySelector('.jackpot-info').textContent = `${jp.tasksUntilTrigger} tasks until next`;
+            }
+          });
       }
     }
-
-    async function claimRewards() {
-      alert('Rewards will be claimable once the token is launched!');
+    
+    async function loadUserRewards() {
+      if (!TAONET.wallet) return;
+      await TAONET.refreshMiner();
+      if (TAONET.miner) {
+        document.getElementById('yourTotal').textContent = TAONET.formatNumber(TAONET.miner.totalRewards || 0);
+        document.getElementById('yourPending').textContent = TAONET.formatNumber(TAONET.miner.pendingRewards || 0);
+      }
     }
-
-    // Init
+    
     loadJackpots();
     setTimeout(loadUserRewards, 200);
   </script>
