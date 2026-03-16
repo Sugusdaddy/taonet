@@ -1,0 +1,148 @@
+.rewards-page {
+  padding: var(--space-2xl) 0;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: var(--space-2xl);
+}
+
+.page-title {
+  font-size: 40px;
+  font-weight: 700;
+  margin-bottom: var(--space-sm);
+}
+
+.page-subtitle {
+  color: var(--text-secondary);
+}
+
+.section {
+  margin-bottom: var(--space-3xl);
+}
+
+.section-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: var(--space-sm);
+}
+
+.section-subtitle {
+  color: var(--text-secondary);
+  margin-bottom: var(--space-xl);
+}
+
+/* Reward Cards */
+.reward-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  text-align: center;
+}
+
+.reward-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: var(--space-sm);
+}
+
+.reward-label {
+  font-weight: 600;
+  margin-bottom: var(--space-xs);
+}
+
+.reward-desc {
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+
+/* Tier Table */
+.mult {
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.mult-bronze { color: var(--bronze); }
+.mult-silver { color: var(--silver); }
+.mult-gold { color: var(--gold); }
+.mult-platinum { color: var(--platinum); }
+.mult-diamond { color: var(--diamond); }
+
+/* Jackpots */
+.jackpot-card {
+  background: var(--bg-secondary);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  text-align: center;
+  transition: transform 0.2s;
+}
+
+.jackpot-card:hover { transform: translateY(-4px); }
+
+.jackpot-mini { border-color: var(--accent); }
+.jackpot-regular { border-color: var(--blue); }
+.jackpot-mega { border-color: var(--gold); }
+.jackpot-ultra { border-color: var(--purple); }
+
+.jackpot-type {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: var(--space-sm);
+}
+
+.jackpot-mini .jackpot-type { color: var(--accent); }
+.jackpot-regular .jackpot-type { color: var(--blue); }
+.jackpot-mega .jackpot-type { color: var(--gold); }
+.jackpot-ultra .jackpot-type { color: var(--purple); }
+
+.jackpot-mult {
+  display: block;
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: var(--space-sm);
+}
+
+.jackpot-mini .jackpot-mult { color: var(--accent); }
+.jackpot-regular .jackpot-mult { color: var(--blue); }
+.jackpot-mega .jackpot-mult { color: var(--gold); }
+.jackpot-ultra .jackpot-mult { color: var(--purple); }
+
+.jackpot-trigger {
+  display: block;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.jackpot-status {
+  display: block;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: var(--space-sm);
+}
+
+/* Bonus Cards */
+.bonus-card {
+  text-align: center;
+}
+
+.bonus-card h3 {
+  margin-bottom: var(--space-md);
+}
+
+.bonus-value {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: var(--space-sm);
+}
+
+.bonus-desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
