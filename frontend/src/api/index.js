@@ -9,6 +9,7 @@ class TaoNetAPI {
   async get(endpoint) {
     try {
       const res = await fetch(`${API_URL}${endpoint}`);
+      if (!res.ok) return null;
       return await res.json();
     } catch (e) {
       console.error('API Error:', e);
@@ -89,11 +90,15 @@ class TaoNetAPI {
     this.wallet = address;
     localStorage.setItem('taonet_wallet', address);
     
-    // Try to get existing miner data
+    // Try to get existing miner data (may not exist if not registered)
     const minerData = await this.getMiner(address);
     if (minerData?.miner) {
       this.miner = minerData.miner;
       localStorage.setItem('taonet_miner', JSON.stringify(this.miner));
+    } else {
+      // Not registered yet - clear any stale miner data
+      this.miner = null;
+      localStorage.removeItem('taonet_miner');
     }
     
     return address;
@@ -122,6 +127,9 @@ class TaoNetAPI {
       if (minerData?.miner) {
         this.miner = minerData.miner;
         localStorage.setItem('taonet_miner', JSON.stringify(this.miner));
+      } else {
+        this.miner = null;
+        localStorage.removeItem('taonet_miner');
       }
       
       return address;
