@@ -108,17 +108,17 @@ export default function Mine() {
 
             {/* GPU Status */}
             {gpuInfo && (
-              <div className={`gpu-status ${gpuInfo.supported ? 'success' : 'error'}`}>
+              <div className={`gpu-status ${gpuInfo.supported ? 'success' : 'warning'}`}>
                 <svg className="gpu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="4" y="4" width="16" height="16" rx="2"/>
                   <rect x="9" y="9" width="6" height="6"/>
                 </svg>
                 <div className="gpu-info">
                   <span className="gpu-title">
-                    {gpuInfo.supported ? 'WebGPU Ready' : 'WebGPU Not Available'}
+                    {gpuInfo.supported ? 'WebGPU Ready' : 'Server Mode'}
                   </span>
                   <span className="gpu-detail">
-                    {gpuInfo.supported ? gpuInfo.adapter || 'GPU detected' : 'Chrome 113+ required'}
+                    {gpuInfo.supported ? gpuInfo.adapter : 'Tasks processed on server'}
                   </span>
                 </div>
               </div>
@@ -168,7 +168,6 @@ export default function Mine() {
                     <button 
                       onClick={startMining} 
                       className="btn btn-primary btn-lg full-width"
-                      disabled={!gpuInfo?.supported}
                     >
                       Start Mining
                     </button>
@@ -212,7 +211,7 @@ export default function Mine() {
                         <span className="pulse-dot"></span>
                         Processing Task
                       </div>
-                      <span className="task-id">#{currentTask.id?.slice(-8)}</span>
+                      <span className="task-id">#{currentTask.id?.slice(-8) || currentTask._id?.slice(-8)}</span>
                     </div>
                     <div className="task-content">
                       <div className="task-prompt">
@@ -259,18 +258,17 @@ export default function Mine() {
               <div className="info-card">
                 <h3>How Mining Works</h3>
                 <ul>
-                  <li>Your browser downloads a small AI model (~500MB)</li>
+                  <li>Connect your Phantom wallet to register</li>
                   <li>Tasks are assigned from the TaoNet network</li>
-                  <li>Your GPU processes real AI inference</li>
+                  <li>AI processes inference (GPU or server)</li>
                   <li>Completed tasks earn TAO tokens instantly</li>
-                  <li>All proofs are verified and anchored to Solana</li>
+                  <li>All proofs are verified on-chain</li>
                 </ul>
                 <div className="requirements">
-                  <h4>Requirements</h4>
+                  <h4>Modes</h4>
                   <ul>
-                    <li>Chrome 113+ or Edge 113+</li>
-                    <li>GPU with WebGPU support</li>
-                    <li>Phantom wallet</li>
+                    <li><strong>GPU Mode:</strong> Chrome 113+ with WebGPU</li>
+                    <li><strong>Server Mode:</strong> Any modern browser</li>
                   </ul>
                 </div>
               </div>

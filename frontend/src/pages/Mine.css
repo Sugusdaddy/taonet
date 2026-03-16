@@ -124,6 +124,11 @@
   border: 1px solid rgba(239,68,68,0.3);
 }
 
+.gpu-status.warning {
+  background: rgba(245,158,11,0.1);
+  border: 1px solid rgba(245,158,11,0.3);
+}
+
 .gpu-icon {
   width: 24px;
   height: 24px;
@@ -132,6 +137,7 @@
 
 .gpu-status.success .gpu-icon { color: var(--success); }
 .gpu-status.error .gpu-icon { color: var(--danger); }
+.gpu-status.warning .gpu-icon { color: #f59e0b; }
 
 .gpu-info {
   flex: 1;
@@ -146,6 +152,7 @@
 
 .gpu-status.success .gpu-title { color: var(--success); }
 .gpu-status.error .gpu-title { color: var(--danger); }
+.gpu-status.warning .gpu-title { color: #f59e0b; }
 
 .gpu-detail {
   font-size: 12px;

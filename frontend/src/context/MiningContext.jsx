@@ -8,95 +8,81 @@ export function MiningProvider({ children }) {
   
   // Mining state
   const [isMining, setIsMining] = useState(false);
-  const [modelStatus, setModelStatus] = useState('idle'); // idle, checking, loading, ready, error, no-gpu
+  const [modelStatus, setModelStatus] = useState('idle'); // idle, checking, loading, ready, error
   const [modelProgress, setModelProgress] = useState(0);
   const [currentTask, setCurrentTask] = useState(null);
-  const [streamingResponse, setStreamingResponse] = useState('');
-  const [taskMetrics, setTaskMetrics] = useState({ tokens: 0, tokensPerSec: 0 });
+  const [taskOutput, setTaskOutput] = useState('');
   const [sessionStats, setSessionStats] = useState({
-    startTime: null,
-    tasksCompleted: 0,
-    tokensGenerated: 0,
-    taoEarned: 0
+    tasks: 0,
+    earned: 0,
+    tokens: 0,
+    time: '0:00'
   });
   const [logs, setLogs] = useState([]);
-  const [lastProof, setLastProof] = useState(null);
   const [gpuInfo, setGpuInfo] = useState(null);
+  const [modelLoading, setModelLoading] = useState(false);
   
   // Refs
   const wsRef = useRef(null);
   const engineRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
+  const sessionStartRef = useRef(null);
+  const timerRef = useRef(null);
+  const backendModeRef = useRef(false);
   
-  const addLog = useCallback((msg, type = 'info') => {
+  const addLog = useCallback((message, type = 'info') => {
     setLogs(prev => [...prev.slice(-49), { 
       time: new Date().toLocaleTimeString(), 
-      msg, 
+      message, 
       type 
     }]);
   }, []);
 
-  // Check WebGPU support
+  // Check GPU support
   const checkGPUSupport = useCallback(async () => {
-    setModelStatus('checking');
-    addLog('Checking GPU compatibility...', 'info');
-    
-    // Check if WebGPU is available
     if (!navigator.gpu) {
-      setModelStatus('no-gpu');
-      setGpuInfo({ supported: false, reason: 'WebGPU not available in this browser' });
-      addLog('WebGPU not supported. Try Chrome 113+, Edge 113+, or Firefox Nightly.', 'error');
+      setGpuInfo({ supported: false, adapter: 'Using CPU fallback' });
+      addLog('WebGPU not available - will use server-side processing', 'warning');
       return false;
     }
     
     try {
       const adapter = await navigator.gpu.requestAdapter();
       if (!adapter) {
-        setModelStatus('no-gpu');
-        setGpuInfo({ supported: false, reason: 'No GPU adapter found' });
-        addLog('No compatible GPU found. Check your graphics drivers.', 'error');
+        setGpuInfo({ supported: false, adapter: 'No GPU adapter' });
+        addLog('No GPU adapter found - will use server-side processing', 'warning');
         return false;
       }
       
-      const info = await adapter.requestAdapterInfo();
-      const device = await adapter.requestDevice();
+      let adapterName = 'WebGPU Ready';
+      try {
+        const info = await adapter.requestAdapterInfo?.();
+        if (info) {
+          adapterName = [info.vendor, info.device || info.architecture].filter(Boolean).join(' ') || 'WebGPU Ready';
+        }
+      } catch {}
       
-      const gpuDetails = {
-        supported: true,
-        vendor: info.vendor || 'Unknown',
-        architecture: info.architecture || 'Unknown',
-        device: info.device || 'Unknown',
-        description: info.description || 'WebGPU Ready'
-      };
-      
-      setGpuInfo(gpuDetails);
-      addLog(`GPU detected: ${gpuDetails.vendor} ${gpuDetails.device || gpuDetails.architecture}`, 'success');
-      setModelStatus('idle');
+      setGpuInfo({ supported: true, adapter: adapterName });
+      addLog(`GPU detected: ${adapterName}`, 'success');
       return true;
     } catch (err) {
-      setModelStatus('no-gpu');
-      setGpuInfo({ supported: false, reason: err.message });
-      addLog(`GPU check failed: ${err.message}`, 'error');
+      setGpuInfo({ supported: false, adapter: 'GPU check failed' });
+      addLog('GPU check failed - will use server-side processing', 'warning');
       return false;
     }
   }, [addLog]);
 
-  // Check GPU on mount
-  useEffect(() => {
-    checkGPUSupport();
-  }, []);
-
-  // Load WebLLM engine
+  // Load WebLLM (only if GPU available)
   const loadModel = useCallback(async () => {
-    if (engineRef.current || modelStatus === 'loading') return;
-    
-    // Re-check GPU if needed
-    if (modelStatus === 'no-gpu' || !gpuInfo?.supported) {
-      const hasGPU = await checkGPUSupport();
-      if (!hasGPU) return false;
+    if (engineRef.current) return true;
+    if (!gpuInfo?.supported) {
+      // Use backend processing mode
+      backendModeRef.current = true;
+      addLog('Using server-side AI processing', 'info');
+      return true;
     }
     
-    setModelStatus('loading');
+    setModelLoading(true);
     setModelProgress(0);
     addLog('Loading AI model (Llama 3.2 1B)...', 'info');
     
@@ -109,32 +95,39 @@ export function MiningProvider({ children }) {
           initProgressCallback: (progress) => {
             const pct = Math.round(progress.progress * 100);
             setModelProgress(pct);
-            if (progress.text) {
-              addLog(progress.text, 'info');
-            }
           }
         }
       );
       
       engineRef.current = engine;
-      setModelStatus('ready');
-      addLog('AI model loaded successfully!', 'success');
+      backendModeRef.current = false;
+      setModelLoading(false);
+      addLog('AI model ready!', 'success');
       return true;
     } catch (err) {
       console.error('Model load error:', err);
-      
-      // Check if it's a GPU error
-      if (err.message.includes('GPU') || err.message.includes('WebGPU')) {
-        setModelStatus('no-gpu');
-        setGpuInfo({ supported: false, reason: err.message });
-        addLog('GPU error: ' + err.message, 'error');
-      } else {
-        setModelStatus('error');
-        addLog(`Failed to load model: ${err.message}`, 'error');
-      }
-      return false;
+      // Fallback to backend mode
+      backendModeRef.current = true;
+      setModelLoading(false);
+      addLog('Using server-side AI (GPU model failed)', 'warning');
+      return true; // Still allow mining with backend
     }
-  }, [modelStatus, gpuInfo, addLog, checkGPUSupport]);
+  }, [gpuInfo, addLog]);
+
+  // Session timer
+  useEffect(() => {
+    if (isMining && sessionStartRef.current) {
+      timerRef.current = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - sessionStartRef.current) / 1000);
+        const mins = Math.floor(elapsed / 60);
+        const secs = elapsed % 60;
+        setSessionStats(prev => ({ ...prev, time: `${mins}:${secs.toString().padStart(2, '0')}` }));
+      }, 1000);
+    }
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [isMining]);
 
   // Connect WebSocket
   const connectWebSocket = useCallback(() => {
@@ -151,7 +144,7 @@ export function MiningProvider({ children }) {
         address: wallet,
         capabilities: {
           gpu: gpuInfo?.supported || false,
-          gpuVendor: gpuInfo?.vendor || 'unknown'
+          backend: backendModeRef.current
         }
       }));
     };
@@ -161,52 +154,42 @@ export function MiningProvider({ children }) {
       
       switch (data.type) {
         case 'auth_success':
-          addLog(`Authenticated (Lv.${data.miner?.level || 1})`, 'success');
+          addLog(`Authenticated as ${data.miner?.name || 'Miner'}`, 'success');
           ws.send(JSON.stringify({ type: 'ready' }));
-          addLog('Ready for tasks', 'info');
+          addLog('Waiting for tasks...', 'info');
           break;
           
         case 'task':
-          console.log('[Mining] Task received:', data.task);
           setCurrentTask(data.task);
-          addLog(`Task: ${data.task?.prompt?.slice(0, 50)}...`, 'task');
-          if (engineRef.current) {
-            await processTask(data.task);
-          } else {
-            addLog('Engine not ready, skipping task', 'error');
-            ws.send(JSON.stringify({ type: 'ready' }));
-          }
+          setTaskOutput('');
+          addLog(`Task received: ${data.task?.prompt?.slice(0, 40)}...`, 'task');
+          await processTask(data.task);
           break;
           
         case 'task_accepted':
-          const reward = parseFloat(data.reward) / 1e18;
+        case 'task_received':
+          const reward = data.reward ? parseFloat(data.reward) / 1e18 : 0.001;
           setSessionStats(prev => ({
             ...prev,
-            tasksCompleted: prev.tasksCompleted + 1,
-            taoEarned: prev.taoEarned + reward
+            tasks: prev.tasks + 1,
+            earned: prev.earned + reward
           }));
-          addLog(`+${data.xp} XP, +${reward.toFixed(4)} TAO`, 'success');
-          if (data.leveledUp) {
-            addLog(`LEVEL UP! Now Lv.${data.level}`, 'success');
-          }
-          setLastProof({ id: data.proofId, taskId: data.taskId });
+          addLog(`Task completed! +${reward.toFixed(4)} TAO`, 'success');
+          setCurrentTask(null);
+          setTaskOutput('');
           break;
           
         case 'heartbeat_ack':
-          // Silent
           break;
           
         case 'error':
           addLog(`Error: ${data.message}`, 'error');
           break;
-          
-        default:
-          console.log('[WS] Unknown message:', data.type);
       }
     };
     
     ws.onclose = () => {
-      addLog('Disconnected', 'error');
+      addLog('Disconnected from TaoNet', 'warning');
       wsRef.current = null;
       
       if (isMining) {
@@ -217,25 +200,42 @@ export function MiningProvider({ children }) {
       }
     };
     
-    ws.onerror = () => {
-      addLog('Connection error', 'error');
-    };
+    ws.onerror = () => addLog('Connection error', 'error');
   }, [wallet, isMining, gpuInfo, addLog]);
 
-  // Process task with AI
+  // Process task
   const processTask = useCallback(async (task) => {
-    if (!engineRef.current) return;
-    
     const startTime = Date.now();
-    setStreamingResponse('');
-    setTaskMetrics({ tokens: 0, tokensPerSec: 0 });
     
+    // Backend mode - server processes the task
+    if (backendModeRef.current || !engineRef.current) {
+      setTaskOutput('Processing on server...');
+      addLog('Server processing task...', 'info');
+      
+      // Send acknowledgment - backend will process
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({
+          type: 'task_response',
+          taskId: task._id || task.id,
+          response: '[SERVER_PROCESS]',
+          processingTime: Date.now() - startTime,
+          backend: true
+        }));
+      }
+      
+      // Ready for next
+      setTimeout(() => {
+        if (wsRef.current?.readyState === WebSocket.OPEN) {
+          wsRef.current.send(JSON.stringify({ type: 'ready' }));
+        }
+      }, 500);
+      return;
+    }
+    
+    // GPU mode - local processing
     try {
       const messages = [
-        { 
-          role: "system", 
-          content: "You are SolanaGPT, a helpful AI assistant specialized in Solana blockchain development. Provide accurate, concise answers about Solana, Anchor, Rust, SPL tokens, NFTs, and DeFi. Include code examples when relevant."
-        },
+        { role: "system", content: "You are SolanaGPT, a helpful AI assistant. Provide accurate, concise answers." },
         { role: "user", content: task.prompt }
       ];
       
@@ -252,41 +252,27 @@ export function MiningProvider({ children }) {
         const content = chunk.choices[0]?.delta?.content || '';
         fullResponse += content;
         tokenCount++;
-        
-        setStreamingResponse(fullResponse);
-        setTaskMetrics({
-          tokens: tokenCount,
-          tokensPerSec: tokenCount / ((Date.now() - startTime) / 1000)
-        });
+        setTaskOutput(fullResponse);
       }
       
       const processingTime = Date.now() - startTime;
       
       setSessionStats(prev => ({
         ...prev,
-        tokensGenerated: prev.tokensGenerated + tokenCount
+        tokens: prev.tokens + tokenCount
       }));
       
-      // Send response
       if (wsRef.current?.readyState === WebSocket.OPEN) {
         wsRef.current.send(JSON.stringify({
           type: 'task_response',
           taskId: task._id || task.id,
           response: fullResponse,
           processingTime,
-          modelInfo: {
-            name: 'Llama-3.2-1B-Instruct',
-            parameters: '1B',
-            quantization: 'q4f16'
-          }
+          tokensGenerated: tokenCount
         }));
-        
-        addLog(`Response sent (${tokenCount} tokens, ${(processingTime/1000).toFixed(1)}s)`, 'success');
+        addLog(`Sent ${tokenCount} tokens in ${(processingTime/1000).toFixed(1)}s`, 'success');
       }
       
-      setCurrentTask(null);
-      
-      // Ready for next task
       setTimeout(() => {
         if (wsRef.current?.readyState === WebSocket.OPEN) {
           wsRef.current.send(JSON.stringify({ type: 'ready' }));
@@ -294,10 +280,7 @@ export function MiningProvider({ children }) {
       }, 500);
       
     } catch (err) {
-      addLog(`Task failed: ${err.message}`, 'error');
-      setCurrentTask(null);
-      
-      // Still send ready
+      addLog(`Processing error: ${err.message}`, 'error');
       if (wsRef.current?.readyState === WebSocket.OPEN) {
         wsRef.current.send(JSON.stringify({ type: 'ready' }));
       }
@@ -306,14 +289,12 @@ export function MiningProvider({ children }) {
 
   // Heartbeat
   useEffect(() => {
-    if (!isMining || !wsRef.current) return;
-    
+    if (!isMining) return;
     const interval = setInterval(() => {
       if (wsRef.current?.readyState === WebSocket.OPEN) {
         wsRef.current.send(JSON.stringify({ type: 'heartbeat' }));
       }
     }, 30000);
-    
     return () => clearInterval(interval);
   }, [isMining]);
 
@@ -324,20 +305,15 @@ export function MiningProvider({ children }) {
       return;
     }
     
-    // Load model if needed
-    if (!engineRef.current) {
-      const loaded = await loadModel();
-      if (!loaded) return;
+    const loaded = await loadModel();
+    if (!loaded) {
+      addLog('Failed to initialize', 'error');
+      return;
     }
     
+    sessionStartRef.current = Date.now();
+    setSessionStats({ tasks: 0, earned: 0, tokens: 0, time: '0:00' });
     setIsMining(true);
-    setSessionStats({
-      startTime: Date.now(),
-      tasksCompleted: 0,
-      tokensGenerated: 0,
-      taoEarned: 0
-    });
-    
     addLog('Mining started!', 'success');
     connectWebSocket();
   }, [wallet, miner, loadModel, connectWebSocket, addLog]);
@@ -345,43 +321,36 @@ export function MiningProvider({ children }) {
   // Stop mining
   const stopMining = useCallback(() => {
     setIsMining(false);
-    
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-    }
-    
+    if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
     if (wsRef.current) {
       wsRef.current.close();
       wsRef.current = null;
     }
-    
     addLog('Mining stopped', 'info');
   }, [addLog]);
 
-  // Cleanup on unmount
+  // Cleanup
   useEffect(() => {
     return () => {
       if (wsRef.current) wsRef.current.close();
       if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
+      if (timerRef.current) clearInterval(timerRef.current);
     };
   }, []);
 
   return (
     <MiningContext.Provider value={{
       isMining,
-      modelStatus,
-      modelProgress,
-      currentTask,
-      streamingResponse,
-      taskMetrics,
-      sessionStats,
-      logs,
-      lastProof,
-      gpuInfo,
-      loadModel,
       startMining,
       stopMining,
-      checkGPUSupport
+      currentTask,
+      taskOutput,
+      sessionStats,
+      logs,
+      gpuInfo,
+      checkGPUSupport,
+      modelLoading,
+      modelProgress
     }}>
       {children}
     </MiningContext.Provider>
