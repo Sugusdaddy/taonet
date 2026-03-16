@@ -77,9 +77,9 @@ export default function Mine() {
     addLog('info', 'Loading AI model (Llama 3.2 1B)... This may take a few minutes on first load.');
 
     try {
-      // Dynamic import WebLLM
+      // Dynamic import WebLLM from correct package
       if (!webllm) {
-        webllm = await import('https://esm.run/@anthropic-ai/webllm');
+        webllm = await import('https://esm.run/@mlc-ai/web-llm');
       }
 
       engine = await webllm.CreateMLCEngine('Llama-3.2-1B-Instruct-q4f16_1-MLC', {
