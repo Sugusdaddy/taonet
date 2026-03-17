@@ -319,29 +319,165 @@
   color: var(--text-4);
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 900px) {
+  .leaderboard-page {
+    padding: 0;
+  }
+  
+  .leaderboard-page .page-header {
+    flex-direction: column;
+    gap: var(--space-sm);
+    align-items: center;
+    text-align: center;
+    margin-bottom: var(--space-md);
+  }
+  
+  .leaderboard-page .page-header h1 {
+    font-size: 1.25rem;
+  }
+  
+  .live-indicator {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+  }
+  
   .mini-stats {
     grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-sm);
+    margin: 0 calc(-1 * var(--space-md));
+    width: calc(100% + var(--space-md) * 2);
+    padding: 0 var(--space-md);
+    margin-bottom: var(--space-md);
   }
-}
-
-@media (max-width: 768px) {
+  
+  .mini-stat {
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+  }
+  
+  .mini-stat .value {
+    font-size: 1.25rem;
+  }
+  
+  .mini-stat .label {
+    font-size: 0.625rem;
+  }
+  
   .leaderboard-filters {
     flex-direction: column;
     align-items: stretch;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
   }
   
   .sort-tabs {
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+  
+  .tab {
+    padding: 10px 14px;
+    font-size: 0.8125rem;
+    white-space: nowrap;
+  }
+  
+  /* Table full width */
+  .table-container {
+    margin: 0 calc(-1 * var(--space-md));
+    width: calc(100% + var(--space-md) * 2);
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+  
+  .leaderboard-table {
+    font-size: 0.8125rem;
+  }
+  
+  .leaderboard-table th,
+  .leaderboard-table td {
+    padding: var(--space-sm) var(--space-md);
+  }
+  
+  /* Hide less important columns on mobile */
+  .leaderboard-table th:nth-child(4),
+  .leaderboard-table td:nth-child(4),
+  .leaderboard-table th:nth-child(5),
+  .leaderboard-table td:nth-child(5),
+  .leaderboard-table th:nth-child(6),
+  .leaderboard-table td:nth-child(6) {
+    display: none;
+  }
+  
+  .rank-cell {
+    font-size: 0.875rem;
+    min-width: 32px;
+  }
+  
+  .miner-name-cell {
+    gap: var(--space-sm);
+  }
+  
+  .miner-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.75rem;
+  }
+  
+  .miner-name {
+    font-size: 0.8125rem;
+  }
+  
+  .level-info {
+    flex-direction: row;
+    gap: 4px;
+  }
+  
+  .level-badge {
+    font-size: 0.625rem;
+    padding: 2px 6px;
+  }
+  
+  .xp-text {
+    display: none;
   }
   
   .leaderboard-legend {
+    margin: var(--space-md) calc(-1 * var(--space-md)) 0;
+    width: calc(100% + var(--space-md) * 2);
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
     grid-template-columns: 1fr;
+    gap: var(--space-md);
+    padding: var(--space-md);
+  }
+  
+  .legend-items {
+    gap: var(--space-md);
+  }
+  
+  .legend-item {
+    font-size: 0.75rem;
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 380px) {
   .mini-stats {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .mini-stat .value {
+    font-size: 1.125rem;
+  }
+  
+  .miner-avatar {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .miner-name {
+    font-size: 0.75rem;
   }
 }

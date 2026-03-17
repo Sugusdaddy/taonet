@@ -209,16 +209,128 @@
 }
 
 @media (max-width: 900px) {
+  .dashboard-page {
+    padding: 0;
+  }
+  
+  .dashboard-page .page-header {
+    flex-direction: column;
+    gap: var(--space-sm);
+    text-align: center;
+    margin-bottom: var(--space-md);
+  }
+  
+  .dashboard-page .page-header h1 {
+    font-size: 1.25rem;
+  }
+  
   .dashboard-grid {
     grid-template-columns: 1fr;
+    gap: var(--space-md);
+  }
+  
+  /* Miner card - full width app style */
+  .miner-card {
+    margin: 0 calc(-1 * var(--space-md));
+    width: calc(100% + var(--space-md) * 2);
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    padding: var(--space-md);
+    margin-bottom: var(--space-md);
   }
   
   .miner-header {
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: var(--space-md);
+  }
+  
+  .miner-avatar {
+    width: 64px;
+    height: 64px;
+    font-size: 1.75rem;
+  }
+  
+  .miner-details {
+    text-align: center;
+  }
+  
+  .miner-details h2 {
+    font-size: 1.25rem;
+  }
+  
+  .wallet-addr {
+    font-size: 0.75rem;
   }
   
   .miner-badges {
+    justify-content: center;
     width: 100%;
     margin-top: var(--space-sm);
+  }
+  
+  .level-badge,
+  .tier-badge {
+    padding: 6px 14px;
+    font-size: 0.8125rem;
+  }
+  
+  .xp-progress {
+    flex-direction: column;
+    gap: var(--space-sm);
+    margin-top: var(--space-md);
+  }
+  
+  .xp-bar {
+    height: 10px;
+    border-radius: 5px;
+  }
+  
+  .xp-text {
+    text-align: center;
+    min-width: auto;
+    font-size: 0.875rem;
+  }
+  
+  /* Cards full width */
+  .card {
+    margin: 0 calc(-1 * var(--space-md));
+    width: calc(100% + var(--space-md) * 2);
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+  
+  .proof-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: var(--space-md) 0;
+  }
+  
+  .proof-hash {
+    font-size: 0.75rem;
+    word-break: break-all;
+  }
+  
+  .network-stat {
+    padding: var(--space-sm) 0;
+  }
+  
+  .network-stat .value {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .miner-avatar {
+    width: 56px;
+    height: 56px;
+  }
+  
+  .miner-details h2 {
+    font-size: 1.125rem;
   }
 }
